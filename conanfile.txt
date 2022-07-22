@@ -1,0 +1,13 @@
+[requires]
+boost/1.78.0
+gtest/cci.20210126
+openssl/1.1.1n
+mio/cci.20201220
+fmt/8.0.1
+tl-expected/1.0.0
+nlohmann_json/3.10.5
+decimal_for_cpp/1.18
+date/3.0.1
+
+[generators]
+cmake
