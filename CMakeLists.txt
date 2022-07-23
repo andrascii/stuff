@@ -24,7 +24,7 @@ if (UNIX AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_COMPILE
   set(CMAKE_CXX_COMPILER "clang++")
 endif()
 
-project("mpserver" LANGUAGES C CXX)
+project("stuff" LANGUAGES C CXX)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
