@@ -1,10 +1,8 @@
-#include "tuple.h"
-#include <variant>
 #include <iostream>
 #include <type_traits>
-#include <chrono>
-#include <date/date.h>
-#include <date/tz.h>
+#include <variant>
+
+#include "tuple.h"
 
 struct DataSet1 {
   int value = 1;
@@ -48,7 +46,8 @@ auto CreateDataSet(DataSetType type) -> DataSet {
   throw std::runtime_error("Unknown data set");
 }
 
-template <typename... Args> struct TypeList {};
+template <typename... Args>
+struct TypeList {};
 
 template <template <typename... Args> class C, typename... Args>
 TypeList<Args...> FromType(C<Args...>&&) {
@@ -60,14 +59,14 @@ struct CallbackPackage : Callbacks... {
   using Callbacks::operator()...;
 };
 
-template <typename ...Callbacks>
+template <typename... Callbacks>
 CallbackPackage(Callbacks...) -> CallbackPackage<Callbacks...>;
 
 int main(int argc, char* argv[]) {
   using namespace std::chrono_literals;
 
-  (void)argc;
-  (void)argv;
+  (void) argc;
+  (void) argv;
 
   DataSet data_set = CreateDataSet(DataSetType::TypeDataSet4);
   //assert(TypeAtIndex<data_set.index(), >);
@@ -77,25 +76,26 @@ int main(int argc, char* argv[]) {
       std::cout << "Data set value: " << data.value << std::endl;
     } else if constexpr (std::is_same_v<DataSet2, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
       std::cout << "Data set value: " << data.value << std::endl;
-    } else if constexpr  (std::is_same_v<DataSet3, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
+    } else if constexpr (std::is_same_v<DataSet3, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
       std::cout << "Data set value: " << data.value << std::endl;
-    } else if constexpr  (std::is_same_v<DataSet4, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
+    } else if constexpr (std::is_same_v<DataSet4, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
       std::cout << "Data set value: " << data.value << std::endl;
     } else if constexpr (std::is_same_v<DataSet5, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
       std::cout << "Data set value: " << data.value << std::endl;
     }
-  }, data_set);
-
+  },
+             data_set);
 
   std::cout << "Handle variant value by CallbacksPackage:" << std::endl;
 
-  std::visit(CallbackPackage{
-    [](const DataSet1& data) { std::cout << data.value << std::endl; },
-    [](const DataSet2& data) { std::cout << data.value << std::endl; },
-    [](const DataSet3& data) { std::cout << data.value << std::endl; },
-    [](const DataSet4& data) { std::cout << data.value << std::endl; },
-    [](const DataSet5& data) { std::cout << data.value << std::endl; }
-  }, data_set);
+  std::visit(
+    CallbackPackage{
+      [](const DataSet1& data) { std::cout << data.value << std::endl; },
+      [](const DataSet2& data) { std::cout << data.value << std::endl; },
+      [](const DataSet3& data) { std::cout << data.value << std::endl; },
+      [](const DataSet4& data) { std::cout << data.value << std::endl; },
+      [](const DataSet5& data) { std::cout << data.value << std::endl; }},
+    data_set);
 
   //=============================== Tuple ===============================
 
