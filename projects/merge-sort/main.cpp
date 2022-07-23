@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-const auto print = [](auto const rem, auto const &v) {
+const auto print = [](const auto rem, const auto& v) {
   std::cout << rem;
   std::copy(v.begin(), v.end(), std::ostream_iterator<int>(std::cout, " "));
   std::cout << '\n';

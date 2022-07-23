@@ -4,7 +4,6 @@
 #include <queue>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 void* operator new(std::size_t count) {
   if (!count) {
@@ -33,23 +32,23 @@ struct Node {
     std::cout << "Node " << std::quoted(name) << " destroyed\n";
   }
 
-  std::vector<Node *> edges;
+  std::vector<Node*> edges;
   std::string name;
 };
 
-void FreeGraph(Node *graph) {
-  std::deque<Node *> to_visit;
-  std::vector<Node *> visited;
+void FreeGraph(Node* graph) {
+  std::deque<Node*> to_visit;
+  std::vector<Node*> visited;
   to_visit.push_back(graph);
 
   while (!to_visit.empty()) {
-    auto *node = to_visit.front();
+    auto* node = to_visit.front();
     visited.push_back(node);
     to_visit.pop_front();
 
     std::cout << "Visiting " << std::quoted(node->name) << std::endl;
 
-    for (auto *edge : node->edges) {
+    for (auto* edge : node->edges) {
       const auto already_marked_to_visit =
         std::find(to_visit.begin(), to_visit.end(), edge) != to_visit.end();
 
@@ -76,7 +75,7 @@ void FreeGraph(Node *graph) {
     delete node;
 
     std::string to_visit_str;
-    std::for_each(to_visit.begin(), to_visit.end(), [&](Node *node) {
+    std::for_each(to_visit.begin(), to_visit.end(), [&](Node* node) {
       if (to_visit_str.empty()) {
         to_visit_str = node->name;
       } else {
@@ -93,10 +92,10 @@ void FreeGraph(Node *graph) {
 }
 
 int main() {
-  auto a = new Node{"a"};
-  auto b = new Node{"b"};
-  auto c = new Node{"c"};
-  auto d = new Node{"d"};
+  const auto a = new Node{"a"};
+  const auto b = new Node{"b"};
+  const auto c = new Node{"c"};
+  const auto d = new Node{"d"};
 
   a->edges.push_back(a);
   a->edges.push_back(b);
