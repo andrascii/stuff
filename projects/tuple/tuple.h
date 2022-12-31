@@ -97,7 +97,7 @@ TypeAtSpecifiedIndex<Idx, Args...> get(Tuple<Args...>&& tuple) {
 // get by type implementation
 
 template <typename Searching, typename... Args>
-typename const TypeInPackHelper<0, Searching, Args...>::Type& get(const Tuple<Args...>& tuple) {
+const typename TypeInPackHelper<0, Searching, Args...>::Type& get(const Tuple<Args...>& tuple) {
   constexpr size_t index = TypeInPackHelper<0, Searching, Args...>::index;
   return static_cast<const TupleElement<index, TypeAtSpecifiedIndex<index, Args...>>&>(tuple).value;
 }

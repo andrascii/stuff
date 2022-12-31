@@ -44,8 +44,8 @@ int main() {
   const auto it = Search(v.begin(), v.end(), 767);
 
   if (it == v.end()) {
-    std::cout << "element not found\n";
+    std::cout << "element 767 not found\n";
   } else {
-    std::cout << "element found\n";
+    std::cout << "element 767 found\n";
   }
 }

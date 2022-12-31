@@ -72,6 +72,6 @@ EmptyLineAfterAccessModifier: Never
 UseTab: Never
 AlwaysBreakBeforeMultilineStrings: true
 DerivePointerAlignment: false
-QualifierAlignment: Left
+#QualifierAlignment: Left
 PointerAlignment: Left
-ReferenceAlignment: Left
+#ReferenceAlignment: Left
