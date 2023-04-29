@@ -13,6 +13,10 @@ struct ThreadData {
         thread{},
         is_adopted{} {}
 
+  ~ThreadData() {
+    std::cout << "thread object destroyed\n";
+  }
+
   void Ref() noexcept {
     ref_count.fetch_add(1, std::memory_order_relaxed);
   }

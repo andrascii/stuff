@@ -2,6 +2,7 @@
 
 namespace eo {
 
+class Object;
 class IEventVisitor;
 
 class IEvent {
@@ -15,6 +16,8 @@ class IEvent {
 
   [[nodiscard]] virtual EventType Type() const noexcept = 0;
   virtual void Accept(IEventVisitor& visitor) const noexcept = 0;
+  virtual Object* Sender() const noexcept = 0;
+  virtual Object* Receiver() const noexcept = 0;
 };
 
 }

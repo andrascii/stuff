@@ -1,5 +1,7 @@
 #include "thread.h"
 #include "adopted_thread.h"
+#include "ievent.h"
+#include "object.h"
 
 namespace {
 
@@ -108,6 +110,12 @@ void Thread::Run() {
 
     if (event) {
       std::cout << "the thread '" << tid << "' got an event\n";
+    }
+
+    if (event->Receiver()->ThreadAffinity() == current_thread_data->thread.load(std::memory_order_relaxed)) {
+      event->Receiver()->Event(event);
+    } else {
+      GetThreadData(event->Receiver()->ThreadAffinity())->event_loop.Push(event);
     }
   }
 }

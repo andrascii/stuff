@@ -11,10 +11,13 @@ namespace eo {
 
 class Application : public Object {
  public:
-  Application(Object* parent = nullptr);
+  static Application& Instance();
 
   std::error_code Exec();
   void Quit();
+
+ private:
+  Application();
 };
 
 }
