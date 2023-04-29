@@ -1,5 +1,7 @@
 #pragma once
 
+namespace eo {
+
 class IEventVisitor;
 
 class IEvent {
@@ -14,3 +16,5 @@ class IEvent {
   [[nodiscard]] virtual EventType Type() const noexcept = 0;
   virtual void Accept(IEventVisitor& visitor) const noexcept = 0;
 };
+
+}

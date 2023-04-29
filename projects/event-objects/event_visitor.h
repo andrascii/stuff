@@ -2,15 +2,19 @@
 
 #include "ievent_visitor.h"
 
-class AbstractObject;
+namespace eo {
+
+class Object;
 
 class EventVisitor : public IEventVisitor {
  public:
-  explicit EventVisitor(AbstractObject* object);
+  explicit EventVisitor(Object* object);
 
   void Visit(const Message1Event& event) override;
   void Visit(const Message2Event& event) override;
 
  private:
-  AbstractObject* object_;
+  Object* object_;
 };
+
+}

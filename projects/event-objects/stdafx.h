@@ -12,5 +12,8 @@
 #include <utility>
 #include <queue>
 #include <chrono>
+#include <future>
+#include <sstream>
+#include <csignal>
 
 using namespace std::chrono_literals;

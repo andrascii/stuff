@@ -1,63 +1,71 @@
-#include "abstract_object.h"
 #include "message1_event.h"
 #include "message2_event.h"
+#include "object.h"
+#include "thread.h"
+#include "application.h"
 
 std::ostream& Log() {
   return std::cout << std::this_thread::get_id() << ": ";
 }
 
-class Message1EventSpammer : public AbstractObject {
+class Message1EventSpammer : public eo::Object {
  public:
-  void Start() {
-    for (int i = 0; i < 10; ++i) {
-      Log() << "################ broadcasting Message1Event \"################\n";
-      BroadcastEvent(std::make_shared<Message1Event>());
-      std::this_thread::sleep_for(1s);
-    }
+  explicit Message1EventSpammer(Object* parent = nullptr) : Object{parent} {}
+
+  ~Message1EventSpammer() {
+    Log() << "Message1EventSpammer destructed\n";
+  }
+
+  void Broadcast() {
+    Log() << "################ broadcasting Message1Event \"################\n";
+    BroadcastEvent(std::make_shared<eo::Message1Event>());
   }
 };
 
-class Message2EventSpammer : public AbstractObject {
+class Message2EventSpammer : public eo::Object {
  public:
-  void Start() {
-    for (int i = 0; i < 10; ++i) {
-      Log() << "################ broadcasting Message2Event ################\n";
-      BroadcastEvent(std::make_shared<Message2Event>());
-      std::this_thread::sleep_for(900ms);
-    }
+  explicit Message2EventSpammer(eo::Object* parent = nullptr) : Object{parent} {}
+
+  ~Message2EventSpammer() {
+    Log() << "Message2EventSpammer destructed\n";
+  }
+
+  void Broadcast() {
+    Log() << "################ broadcasting Message2Event ################\n";
+    BroadcastEvent(std::make_shared<eo::Message2Event>());
   }
 };
 
-class Receiver : public AbstractObject {
+class Receiver : public eo::Object {
+ public:
+  explicit Receiver(eo::Object* parent = nullptr) : eo::Object{parent} {}
+
  protected:
-  bool OnMessage1Event(const Message1Event&) override {
+  bool OnMessage1Event(const eo::Message1Event&) override {
     Log() << "**************** received Message1Event ****************\n";
     return true;
   }
 
-  bool OnMessage2Event(const Message2Event&) override {
+  bool OnMessage2Event(const eo::Message2Event&) override {
     Log() << "**************** received Message2Event ****************\n";
     return true;
   }
 };
 
 int main() {
-  Receiver receiver;
+  /*Receiver receiver;
 
-  auto t1 = std::thread([&]{
-    Message1EventSpammer spammer1;
-    spammer1.ConnectEventReceiver(&receiver, IEvent::kMessage1);
-    spammer1.Start();
-  });
+  auto s1 = new Message1EventSpammer{&receiver};
+  auto s2 = new Message2EventSpammer{&receiver};
 
-  auto t2 = std::thread([&]{
-    Message2EventSpammer spammer2;
-    spammer2.ConnectEventReceiver(&receiver, IEvent::kMessage2);
-    spammer2.Start();
-  });
+  s1->Broadcast();
+  s2->Broadcast();*/
 
-  receiver.Exec();
+  eo::Application app;
+  const std::error_code error = app.Exec();
 
-  t1.join();
-  t2.join();
+  if (error) {
+    std::cerr << error.message() << std::endl;
+    return EXIT_FAILURE;
+  }
 }

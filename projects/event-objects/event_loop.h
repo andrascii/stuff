@@ -1,5 +1,7 @@
 #pragma once
 
+namespace eo {
+
 class IEvent;
 
 class EventLoop {
@@ -7,8 +9,9 @@ class EventLoop {
   EventLoop();
 
   void Push(std::shared_ptr<IEvent> event);
-  std::shared_ptr<IEvent> Pop() noexcept;
-  void InterruptPopWaiting() noexcept;
+  std::error_code Poll(std::shared_ptr<IEvent>& event, const std::chrono::seconds& timeout = 0s) noexcept;
+
+  void Exit() noexcept;
 
  private:
   mutable std::mutex mutex_;
@@ -16,3 +19,5 @@ class EventLoop {
   std::queue<std::shared_ptr<IEvent>> events_;
   bool interrupt_;
 };
+
+}

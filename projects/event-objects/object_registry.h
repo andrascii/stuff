@@ -1,6 +1,8 @@
 #pragma once
 
-class AbstractObject;
+namespace eo {
+
+class Object;
 
 class ObjectsRegistry final {
  public:
@@ -23,17 +25,17 @@ class ObjectsRegistry final {
     }
   }
 
-  void RegisterObject(AbstractObject* object) {
+  void RegisterObject(Object* object) {
     std::lock_guard _{mutex_};
     objects_.insert(object);
   }
 
-  void UnregisterObject(AbstractObject* object) {
+  void UnregisterObject(Object* object) {
     std::lock_guard _{mutex_};
     objects_.erase(object);
   }
 
-  bool HasObject(AbstractObject* object) {
+  bool HasObject(Object* object) {
     std::lock_guard _{mutex_};
     return objects_.contains(object);
   }
@@ -43,5 +45,7 @@ class ObjectsRegistry final {
 
  private:
   mutable std::mutex mutex_;
-  std::set<AbstractObject*> objects_;
+  std::set<Object*> objects_;
 };
+
+}

@@ -2,6 +2,8 @@
 
 #include "ievent.h"
 
+namespace eo {
+
 class IEventVisitor;
 
 class Message1Event : public IEvent {
@@ -9,3 +11,5 @@ class Message1Event : public IEvent {
   [[nodiscard]] EventType Type() const noexcept override;
   void Accept(IEventVisitor& visitor) const noexcept override;
 };
+
+}
