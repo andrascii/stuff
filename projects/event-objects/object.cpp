@@ -1,15 +1,14 @@
 #include "object.h"
-#include "event_visitor.h"
-#include "message1_event.h"
-#include "message2_event.h"
-#include "object_registry.h"
+
+#include "kafka_message_notification.h"
+#include "message_visitor.h"
+#include "thread.h"
 
 namespace eo {
 
-Object::Object(Object* parent) : parent_{nullptr} {
-  SetParent(parent);
-  ObjectsRegistry::Instance().RegisterObject(this);
-  thread_ = Thread::Current();
+Object::Object(Object* parent)
+    : Object{Thread::Current(), parent} {
+  printf("-------------- created %p --------------\n", reinterpret_cast<void*>(this));
 }
 
 Object::~Object() {
@@ -17,7 +16,7 @@ Object::~Object() {
     delete child;
   }
 
-  ObjectsRegistry::Instance().UnregisterObject(this);
+  printf("-------------- destroyed %p --------------\n", reinterpret_cast<void*>(this));
 }
 
 Object* Object::Parent() const noexcept {
@@ -32,7 +31,7 @@ void Object::SetParent(Object* parent) {
   }
 }
 
-void Object::BroadcastEvent(const std::shared_ptr<IEvent>& event) {
+void Object::BroadcastMessage(const std::shared_ptr<IMessage>& message) {
   const auto find_parent = [](Object* object) -> Object* {
     while (object->Parent()) {
       object = object->Parent();
@@ -42,15 +41,18 @@ void Object::BroadcastEvent(const std::shared_ptr<IEvent>& event) {
   };
 
   Object* parent = find_parent(this);
-  parent->Event(event);
+  parent->OnMessage(message);
 }
 
-bool Object::Event(const std::shared_ptr<IEvent>& event) {
-  EventVisitor visitor{this};
-  event->Accept(visitor);
+bool Object::OnMessage(const std::shared_ptr<IMessage>& message) {
+  MessageVisitor visitor{this};
 
-  for (Object* child : children_) {
-    if (child->Event(event)) {
+  if (message->Accept(visitor)) {
+    return true;
+  }
+
+  for (auto* child : children_) {
+    if (child->OnMessage(message)) {
       return true;
     }
   }
@@ -58,23 +60,30 @@ bool Object::Event(const std::shared_ptr<IEvent>& event) {
   return false;
 }
 
-Thread* Object::ThreadAffinity() const noexcept {
-  return thread_;
+eo::Thread* Object::Thread() const noexcept {
+  return thread_.load(std::memory_order_relaxed);
 }
 
-void Object::MoveToThread(Thread* thread) noexcept {
+void Object::MoveToThread(eo::Thread* thread) noexcept {
   //
-  // TODO: implement
+  // possibly must be atomic pointer in order
+  // to support ability for safe changing thread where this object lives
   //
-  thread_ = thread;
+  thread_.store(thread, std::memory_order_relaxed);
 }
 
-bool Object::OnMessage1Event(const Message1Event& event) {
+Object::Object(eo::Thread* thread, Object* parent)
+    : parent_{nullptr},
+      thread_{thread} {
+  SetParent(parent);
+}
+
+bool Object::OnKafkaMessageNotification(const KafkaMessageNotification& message) {
   // do nothing here
   return false;
 }
 
-bool Object::OnMessage2Event(const Message2Event& event) {
+bool Object::OnDeliveryMessage(const DeliveryMessage& message) {
   // do nothing here
   return false;
 }

@@ -8,6 +8,8 @@ tl-expected/1.0.0
 nlohmann_json/3.10.5
 decimal_for_cpp/1.18
 date/3.0.1
+spdlog/1.11.0
+cppkafka/0.4.0
 
 [generators]
 cmake

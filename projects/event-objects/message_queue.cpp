@@ -1,21 +1,22 @@
-#include "event_loop.h"
-#include "ievent.h"
+#include "message_queue.h"
+
+#include "imessage.h"
 
 namespace eo {
 
-EventLoop::EventLoop() : interrupt_{} {}
+MessageQueue::MessageQueue() : interrupt_{} {}
 
-void EventLoop::Push(std::shared_ptr<IEvent> event) {
+void MessageQueue::Push(std::shared_ptr<IMessage> message) {
   std::lock_guard _{mutex_};
-  events_.push(std::move(event));
+  messages_.push(std::move(message));
   condition_.notify_all();
 }
 
-std::error_code EventLoop::Poll(std::shared_ptr<IEvent>& event, const std::chrono::seconds& timeout) noexcept {
+std::error_code MessageQueue::Poll(std::shared_ptr<IMessage>& message, const std::chrono::seconds& timeout) noexcept {
   std::unique_lock _{mutex_};
 
   const auto has_event_or_interrupted = [this] {
-    return interrupt_ || !events_.empty();
+    return interrupt_ || !messages_.empty();
   };
 
   if (!condition_.wait_for(_, timeout, has_event_or_interrupted)) {
@@ -26,13 +27,13 @@ std::error_code EventLoop::Poll(std::shared_ptr<IEvent>& event, const std::chron
     return std::make_error_code(std::errc::interrupted);
   }
 
-  event = std::move_if_noexcept(events_.back());
-  events_.pop();
+  message = std::move_if_noexcept(messages_.back());
+  messages_.pop();
 
   return {};
 }
 
-void EventLoop::Exit() noexcept {
+void MessageQueue::Exit() noexcept {
   std::lock_guard _{mutex_};
   interrupt_ = true;
   condition_.notify_all();

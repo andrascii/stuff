@@ -1,18 +1,6 @@
 #include "thread.h"
 #include "adopted_thread.h"
-#include "ievent.h"
 #include "object.h"
-
-namespace {
-
-template <typename T>
-std::string ToString(const T& data) {
-  std::stringstream ss;
-  ss << data;
-  return ss.str();
-}
-
-}
 
 namespace eo {
 
@@ -46,21 +34,23 @@ Thread* Thread::Current() {
   return current_thread_data->thread;
 }
 
-Thread::Thread(ThreadData* data) : data_{data} {
-  std::cout << "thread created\n";
-
+Thread::Thread(ThreadData* data, Object* parent)
+    : Object{this, parent},
+      data_{data} {
   if (!data_) {
-    data_.store(new ThreadData, std::memory_order_relaxed);
+    data_ = new ThreadData;
   }
 
-  data_.load(std::memory_order_relaxed)->thread = this;
+  data_->thread = this;
 }
 
 Thread::~Thread() {
-  std::cout << "thread destroyed\n";
+  StopImpl();
 
-  data_.load(std::memory_order_relaxed)->thread = nullptr;
-  data_.load(std::memory_order_relaxed)->Deref();
+  SPDLOG_TRACE("thread destroyed");
+
+  data_->thread = nullptr;
+  data_->Deref();
 }
 
 void Thread::Start() {
@@ -69,55 +59,60 @@ void Thread::Start() {
   }
 
   future_ = std::async(std::launch::async, [this] {
-    current_thread_data = data_.load(std::memory_order_relaxed);
+    current_thread_data = data_;
     current_thread_data->id = std::this_thread::get_id();
-    Run();
+    ThreadEntryPoint();
   });
 }
 
 void Thread::Stop() {
-  if (!future_.valid()) {
-    return;
-  }
-
-  const auto tid = ToString(data_.load(std::memory_order_relaxed)->id);
-  data_.load(std::memory_order_relaxed)->event_loop.Exit();
-
-  while (future_.wait_for(1s) == std::future_status::timeout) {
-    std::cout << "waiting for " << tid << " thread to stop\n";
-  }
-
-  future_.get();
-  std::cout << "thread " << tid << " has stopped\n";
+  StopImpl();
 }
 
-void Thread::Run() {
+void Thread::ThreadEntryPoint() {
   const auto tid = ToString(current_thread_data->id.load(std::memory_order_relaxed));
 
   for (;;) {
-    std::shared_ptr<IEvent> event;
-    const auto error = current_thread_data->event_loop.Poll(event, 1s);
+    std::shared_ptr<IMessage> event;
+    const auto error = current_thread_data->event_queue.Poll(event, 1s);
 
     if (error == std::errc::interrupted) {
-      std::cout << "the thread '" << tid << "' is interrupted\n";
+      SPDLOG_TRACE("the thread '{}' is interrupted", tid);
       break;
     }
 
     if (error == std::errc::timed_out) {
-      std::cout << "the thread '" << tid << "' has no events\n";
+      SPDLOG_TRACE("the thread '{}' has no events", tid);
       continue;
     }
 
     if (event) {
-      std::cout << "the thread '" << tid << "' got an event\n";
+      SPDLOG_TRACE("the thread '{}' got an event", tid);
     }
 
-    if (event->Receiver()->ThreadAffinity() == current_thread_data->thread.load(std::memory_order_relaxed)) {
-      event->Receiver()->Event(event);
+    if (event->Receiver()->Thread() == current_thread_data->thread.load(std::memory_order_relaxed)) {
+      event->Receiver()->OnMessage(event);
     } else {
-      GetThreadData(event->Receiver()->ThreadAffinity())->event_loop.Push(event);
+      GetThreadData(event->Receiver()->Thread())->event_queue.Push(event);
     }
   }
+}
+
+void Thread::StopImpl() {
+  if (!future_.valid()) {
+    return;
+  }
+
+  const auto tid = ToString(data_->id);
+  data_->event_queue.Exit();
+
+  while (future_.wait_for(1s) == std::future_status::timeout) {
+    SPDLOG_INFO("waiting for '{}' thread to stop", tid);
+  }
+
+  future_.get();
+
+  SPDLOG_INFO("thread '{}' has stopped", tid);
 }
 
 }

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "event_loop.h"
+#include "message_queue.h"
+#include "object.h"
 
 namespace eo {
-
-class Thread;
 
 struct ThreadData {
   explicit ThreadData(uint64_t initial_ref_count = 1)
@@ -14,7 +13,7 @@ struct ThreadData {
         is_adopted{} {}
 
   ~ThreadData() {
-    std::cout << "thread object destroyed\n";
+    SPDLOG_TRACE("thread object destroyed");
   }
 
   void Ref() noexcept {
@@ -27,7 +26,7 @@ struct ThreadData {
     }
   }
 
-  EventLoop event_loop;
+  MessageQueue event_queue;
   std::atomic<std::thread::id> id;
   std::atomic_uint64_t ref_count;
   std::atomic<Thread*> thread;
@@ -37,23 +36,26 @@ struct ThreadData {
 static thread_local ThreadData* current_thread_data = nullptr;
 extern std::atomic<Thread*> the_main_thread;
 
-class Thread {
+class Thread : public Object {
  public:
   friend ThreadData* GetThreadData(Thread* thread) noexcept;
 
   static Thread* Current();
 
-  explicit Thread(ThreadData* data = nullptr);
+  explicit Thread(ThreadData* data = nullptr, Object* parent = nullptr);
   ~Thread();
 
   virtual void Start();
   virtual void Stop();
 
  protected:
-  static void Run();
+  static void ThreadEntryPoint();
 
  private:
-  std::atomic<ThreadData*> data_;
+  void StopImpl();
+
+ private:
+  ThreadData* data_;
   std::future<void> future_;
 };
 

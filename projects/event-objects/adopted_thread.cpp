@@ -5,11 +5,11 @@ namespace eo {
 AdoptedThread::AdoptedThread(ThreadData* data) : Thread{data} {}
 
 void AdoptedThread::Start() {
-  Run();
+  ThreadEntryPoint();
 }
 
 void AdoptedThread::Stop() {
-  GetThreadData(this)->event_loop.Exit();
+  GetThreadData(this)->event_queue.Exit();
 }
 
 }

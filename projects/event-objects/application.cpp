@@ -1,38 +1,55 @@
 #include "application.h"
+#include "dispatcher.h"
+#include "kafka_message_notification.h"
+#include "delivery_message.h"
+
+namespace {
+
+void SigIntHandler(int signal) {
+  if (signal == SIGINT) {
+    eo::Dispatcher::Quit();
+  }
+}
+
+}
 
 namespace eo {
 
-void SigIntHandler(int signal) {
-  switch (signal) {
-    case SIGINT: {
-      //printf("SIGINT, called from thread: %d", std::this_thread::get_id());
-      the_main_thread.load(std::memory_order_relaxed)->Stop();
-      break;
-    }
-  }
+Application::Application()
+    : Object{&Dispatcher::Instance()},
+      consumer_{"localhost:9092", "EO"},
+      counter_{} {
+  std::signal(SIGINT, SigIntHandler);
+
+  start_ = system_clock::now();
 }
 
-Application& Application::Instance() {
-  static std::unique_ptr<Application> app = nullptr;
-
-  if (!app) {
-    app.reset(new Application);
-  }
-
-  return *app;
+Application::~Application() {
+  auto end = system_clock::now();
+  SPDLOG_INFO("received {} messages, elapsed time: {} milliseconds", counter_, duration_cast<milliseconds>(end - start_).count());
 }
 
 std::error_code Application::Exec() {
-  ThreadAffinity()->Start();
-  return {};
+  return Dispatcher::Instance().Exec();
 }
 
-void Application::Quit() {
-  ThreadAffinity()->Stop();
-}
+bool Application::OnKafkaMessageNotification(const KafkaMessageNotification& message) {
+  cppkafka::Message msg = consumer_.Poll(1s);
 
-Application::Application() {
-  std::signal(SIGINT, SigIntHandler);
+  if (!msg) {
+    SPDLOG_INFO("topic is empty...");
+    return false;
+  }
+
+  const std::string payload = msg.get_payload();
+  SPDLOG_INFO("received message from kafka: {}", payload);
+
+  if (message.Sender()) {
+    Dispatcher::Post(std::make_shared<DeliveryMessage>(this, message.Sender()));
+  }
+
+  ++counter_;
+  return true;
 }
 
 }

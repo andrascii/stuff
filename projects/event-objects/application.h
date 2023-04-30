@@ -1,23 +1,26 @@
 #pragma once
 
 #include "object.h"
-#include "event_loop.h"
-
-//
-// 1. the thread where we create Application object is the main thread
-//
+#include "kafka_consumer.h"
 
 namespace eo {
 
+using namespace std::chrono;
+
 class Application : public Object {
  public:
-  static Application& Instance();
+  Application();
+  ~Application();
 
-  std::error_code Exec();
-  void Quit();
+  static std::error_code Exec();
 
  private:
-  Application();
+  bool OnKafkaMessageNotification(const KafkaMessageNotification& event) override;
+
+ private:
+  KafkaConsumer consumer_;
+  time_point<system_clock, microseconds> start_;
+  uint64_t counter_;
 };
 
 }
