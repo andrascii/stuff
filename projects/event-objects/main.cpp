@@ -1,36 +1,44 @@
 #include "application.h"
 #include "dispatcher.h"
-#include "kafka_message_notification.h"
-#include "delivery_message.h"
-#include "kafka_publisher.h"
 #include "logger.h"
+#include "text_message.h"
 #include "thread.h"
 
-using namespace eo;
+/*
+ *
+ * 1. Implement signals/slots
+ * 2. do I need to implement building a tree using Objects? For what?
+ *
+ * */
+
+using namespace message_driven_objects;
 
 class Producer : public Object {
  public:
-  Producer(Object* observer, const std::string& broker_list, const std::string& topic)
-      : observer_{observer},
-        publisher_{broker_list, topic} {
-    SendKafkaMessage();
-  }
+  explicit Producer(Object* observer, Object* parent = nullptr)
+      : Object{parent},
+        observer_{observer} {}
 
  protected:
-  bool OnDeliveryMessage(const DeliveryMessage&) override {
-    SendKafkaMessage();
+  bool OnTextMessage(const TextMessage& message) override {
+    SPDLOG_INFO("{}: received message: {}", Thread()->Name(), message.Message());
+    SendMessage();
+    std::this_thread::sleep_for(400ms);
+    return true;
+  }
+
+  bool OnLoopStarted(const LoopStarted&) override {
+    SendMessage();
     return true;
   }
 
  private:
-  void SendKafkaMessage() {
-    publisher_.Publish("Hello, World");
-    Dispatcher::Post(std::make_shared<KafkaMessageNotification>(this, observer_));
+  void SendMessage() {
+    Dispatcher::Post(std::make_shared<TextMessage>("Hello from Producer", this, observer_));
   }
 
  private:
   Object* observer_;
-  KafkaPublisher publisher_;
 };
 
 int main() {
@@ -39,13 +47,15 @@ int main() {
 
   SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 
-  auto* app = new Application;
-
-  auto thread = std::make_shared<Thread>();
-  auto producer = std::make_shared<Producer>(app, "localhost:9092", "EO");
-  producer->MoveToThread(thread.get());
-
+  const auto thread = std::make_shared<Thread>();
+  thread->SetName("BackgroundThread");
   thread->Start();
+
+  auto* app = new Application;
+  app->Thread()->SetName("MainThread");
+
+  new Producer{app, thread.get()};
+
   const auto error = Application::Exec();
 
   if (error) {

@@ -2,61 +2,42 @@
 
 #include "message_queue.h"
 #include "object.h"
+#include "thread_data.h"
 
-namespace eo {
+namespace message_driven_objects {
 
-struct ThreadData {
-  explicit ThreadData(uint64_t initial_ref_count = 1)
-      : id{std::this_thread::get_id()},
-        ref_count{initial_ref_count},
-        thread{},
-        is_adopted{} {}
-
-  ~ThreadData() {
-    SPDLOG_TRACE("thread object destroyed");
-  }
-
-  void Ref() noexcept {
-    ref_count.fetch_add(1, std::memory_order_relaxed);
-  }
-
-  void Deref() noexcept {
-    if (!ref_count.fetch_sub(1, std::memory_order_relaxed)) {
-      delete this;
-    }
-  }
-
-  MessageQueue event_queue;
-  std::atomic<std::thread::id> id;
-  std::atomic_uint64_t ref_count;
-  std::atomic<Thread*> thread;
-  bool is_adopted;
-};
-
-static thread_local ThreadData* current_thread_data = nullptr;
+static thread_local ThreadDataPtr current_thread_data = nullptr;
 extern std::atomic<Thread*> the_main_thread;
 
 class Thread : public Object {
  public:
-  friend ThreadData* GetThreadData(Thread* thread) noexcept;
-
+  friend ThreadDataPtr GetThreadData(Thread* thread) noexcept;
   static Thread* Current();
 
-  explicit Thread(ThreadData* data = nullptr, Object* parent = nullptr);
-  ~Thread();
+  explicit Thread(ThreadDataPtr data = nullptr, Object* parent = nullptr);
+  ~Thread() override;
+
+  const std::string& Name() const noexcept;
+  void SetName(const std::string& name);
 
   virtual void Start();
   virtual void Stop();
 
+  bool IsRunning() const noexcept;
+
  protected:
-  static void ThreadEntryPoint();
+  static void Run();
+  static void SetCurrentThreadName(const std::string& name) noexcept;
 
  private:
   void StopImpl();
 
+  void AddChild(Object* child) noexcept override;
+
  private:
-  ThreadData* data_;
+  ThreadDataPtr data_;
   std::future<void> future_;
+  std::string name_;
 };
 
 }

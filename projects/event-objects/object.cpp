@@ -1,10 +1,10 @@
 #include "object.h"
-
-#include "kafka_message_notification.h"
 #include "message_visitor.h"
+#include "objects_registry.h"
+#include "atomic_helpers.h"
 #include "thread.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 Object::Object(Object* parent)
     : Object{Thread::Current(), parent} {
@@ -15,6 +15,8 @@ Object::~Object() {
   for (const auto* child : children_) {
     delete child;
   }
+
+  ObjectsRegistry::Instance().UnregisterObject(this);
 
   printf("-------------- destroyed %p --------------\n", reinterpret_cast<void*>(this));
 }
@@ -28,7 +30,12 @@ void Object::SetParent(Object* parent) {
 
   if (parent_) {
     parent_->AddChild(this);
+    thread_ = parent_->Thread();
   }
+}
+
+const std::set<Object*>& Object::Children() const noexcept {
+  return children_;
 }
 
 void Object::BroadcastMessage(const std::shared_ptr<IMessage>& message) {
@@ -60,36 +67,37 @@ bool Object::OnMessage(const std::shared_ptr<IMessage>& message) {
   return false;
 }
 
-eo::Thread* Object::Thread() const noexcept {
-  return thread_.load(std::memory_order_relaxed);
+message_driven_objects::Thread* Object::Thread() const noexcept {
+  return LoadRelaxed(thread_);
 }
 
-void Object::MoveToThread(eo::Thread* thread) noexcept {
+void Object::MoveToThread(message_driven_objects::Thread* thread) noexcept {
   //
-  // possibly must be atomic pointer in order
-  // to support ability for safe changing thread where this object lives
+  // TODO: here we must wait until all messages will be received to us from queue in previous thread
   //
-  thread_.store(thread, std::memory_order_relaxed);
+  StoreRelaxed(thread_, thread);
 }
 
-Object::Object(eo::Thread* thread, Object* parent)
+Object::Object(message_driven_objects::Thread* thread, Object* parent)
     : parent_{nullptr},
       thread_{thread} {
   SetParent(parent);
-}
 
-bool Object::OnKafkaMessageNotification(const KafkaMessageNotification& message) {
-  // do nothing here
-  return false;
-}
-
-bool Object::OnDeliveryMessage(const DeliveryMessage& message) {
-  // do nothing here
-  return false;
+  ObjectsRegistry::Instance().RegisterObject(this);
 }
 
 void Object::AddChild(Object* child) noexcept {
   children_.insert(child);
+}
+
+bool Object::OnTextMessage(const TextMessage& message) {
+  // do nothing here
+  return false;
+}
+
+bool Object::OnLoopStarted(const LoopStarted& message) {
+  // do nothing here
+  return false;
 }
 
 }

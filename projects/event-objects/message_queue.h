@@ -1,6 +1,6 @@
 #pragma once
 
-namespace eo {
+namespace message_driven_objects {
 
 class IMessage;
 

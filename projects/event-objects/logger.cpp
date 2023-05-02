@@ -25,7 +25,7 @@ using DailyFileSink = spdlog::sinks::daily_file_sink<std::mutex, DailyLogFileNam
 
 }// namespace
 
-namespace eo {
+namespace message_driven_objects {
 
 std::shared_ptr<spdlog::logger> Logger() noexcept {
   using namespace spdlog;

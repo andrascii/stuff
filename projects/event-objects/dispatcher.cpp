@@ -1,8 +1,8 @@
 #include "dispatcher.h"
-
 #include "thread.h"
+#include "atomic_helpers.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 Dispatcher& Dispatcher::Instance() {
   static std::unique_ptr<Dispatcher> app = nullptr;
@@ -20,12 +20,12 @@ std::error_code Dispatcher::Exec() {
 }
 
 void Dispatcher::Quit() {
-  the_main_thread.load(std::memory_order_relaxed)->Stop();
+  LoadRelaxed(the_main_thread)->Stop();
 }
 
 void Dispatcher::Post(std::shared_ptr<IMessage> message) {
-  ThreadData* data = GetThreadData(eo::Dispatcher::Instance().Thread());
-  data->event_queue.Push(std::move(message));
+  ThreadDataPtr data = GetThreadData(Dispatcher::Instance().Thread());
+  data->queue.Push(std::move(message));
 }
 
 }

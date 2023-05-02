@@ -15,6 +15,7 @@
 #include <future>
 #include <sstream>
 #include <csignal>
+#include <cstdlib>
 
 //
 // Spdlog

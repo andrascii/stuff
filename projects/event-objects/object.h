@@ -3,11 +3,11 @@
 #include "imessage.h"
 #include "message_queue.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 class Thread;
-class KafkaMessageNotification;
-class DeliveryMessage;
+class TextMessage;
+class LoopStarted;
 
 //
 // 1. each object must have thread affinity
@@ -31,16 +31,21 @@ class Object {
   virtual ~Object();
 
   //!
-  //! \return a pointer to the parent object of this object
+  //! \return a pointer to the parent object of this object. Function is reentrant.
   //!
   [[nodiscard]] Object* Parent() const noexcept;
 
   //!
   //! \param parent
   //!
-  //! Sets the parent of this object
+  //! Sets the parent of this object. Function is reentrant.
   //!
   void SetParent(Object* parent);
+
+  //!
+  //! \return a set of children of this object. Function is reentrant.
+  //!
+  const std::set<Object*>& Children() const noexcept;
 
   //!
   //! \param message is a message that will be broadcasted
@@ -65,21 +70,20 @@ class Object {
   //!
   //! Returns the pointer to the thread where this object "lives".
   //!
-  [[nodiscard]] eo::Thread* Thread() const noexcept;
-  void MoveToThread(eo::Thread* thread) noexcept;
+  [[nodiscard]] message_driven_objects::Thread* Thread() const noexcept;
+  void MoveToThread(message_driven_objects::Thread* thread) noexcept;
 
  protected:
-  Object(eo::Thread* thread, Object* parent);
+  Object(message_driven_objects::Thread* thread, Object* parent);
 
-  virtual bool OnKafkaMessageNotification(const KafkaMessageNotification& message);
-  virtual bool OnDeliveryMessage(const DeliveryMessage& message);
+  virtual void AddChild(Object* child) noexcept;
 
- private:
-  void AddChild(Object* child) noexcept;
+  virtual bool OnTextMessage(const TextMessage& message);
+  virtual bool OnLoopStarted(const LoopStarted& message);
 
  private:
   Object* parent_;
-  std::atomic<eo::Thread*> thread_;
+  std::atomic<message_driven_objects::Thread*> thread_;
   std::set<Object*> children_;
 };
 

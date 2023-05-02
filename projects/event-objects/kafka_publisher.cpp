@@ -1,6 +1,6 @@
 #include "kafka_publisher.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 KafkaPublisher::KafkaPublisher(const std::string& broker_list, const std::string& topic)
     : producer_{CreateConfiguration(broker_list)},

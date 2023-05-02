@@ -1,15 +1,15 @@
 #include "adopted_thread.h"
 
-namespace eo {
+namespace message_driven_objects {
 
-AdoptedThread::AdoptedThread(ThreadData* data) : Thread{data} {}
+AdoptedThread::AdoptedThread(const ThreadDataPtr& data) : Thread{data} {}
 
 void AdoptedThread::Start() {
-  ThreadEntryPoint();
+  Run();
 }
 
 void AdoptedThread::Stop() {
-  GetThreadData(this)->event_queue.Exit();
+  GetThreadData(this)->queue.Exit();
 }
 
 }

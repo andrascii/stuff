@@ -1,6 +1,6 @@
 #include "kafka_consumer.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 KafkaConsumer::KafkaConsumer(const std::string& broker_list, const std::string& topic)
     : consumer_{CreateConfiguration(broker_list)} {

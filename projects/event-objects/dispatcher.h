@@ -7,7 +7,7 @@
 // 1. the thread where we create Dispatcher object is the main thread
 //
 
-namespace eo {
+namespace message_driven_objects {
 
 class Dispatcher : public Object {
  public:

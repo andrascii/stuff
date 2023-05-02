@@ -1,6 +1,6 @@
 #pragma once
 
-namespace eo {
+namespace message_driven_objects {
 
 class Object;
 class IMessageVisitor;
@@ -8,8 +8,8 @@ class IMessageVisitor;
 class IMessage {
  public:
   enum MessageType {
-    kKafkaMessageNotification,
-    kDeliveryMessage,
+    kTextMessage,
+    kLoopStarted,
   };
 
   virtual ~IMessage() = default;

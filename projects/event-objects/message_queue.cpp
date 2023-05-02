@@ -2,7 +2,7 @@
 
 #include "imessage.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 MessageQueue::MessageQueue() : interrupt_{} {}
 

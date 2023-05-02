@@ -1,6 +1,6 @@
 #include "abstract_message.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 AbstractMessage::AbstractMessage(MessageType type, Object* sender, Object* receiver)
     : type_{type},

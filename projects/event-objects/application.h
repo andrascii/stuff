@@ -3,7 +3,7 @@
 #include "object.h"
 #include "kafka_consumer.h"
 
-namespace eo {
+namespace message_driven_objects {
 
 using namespace std::chrono;
 
@@ -15,10 +15,9 @@ class Application : public Object {
   static std::error_code Exec();
 
  private:
-  bool OnKafkaMessageNotification(const KafkaMessageNotification& event) override;
+  bool OnTextMessage(const TextMessage& message) override;
 
  private:
-  KafkaConsumer consumer_;
   time_point<system_clock, microseconds> start_;
   uint64_t counter_;
 };

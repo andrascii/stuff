@@ -1,23 +1,23 @@
 #include "application.h"
+
 #include "dispatcher.h"
-#include "kafka_message_notification.h"
-#include "delivery_message.h"
+#include "text_message.h"
+#include "thread.h"
 
 namespace {
 
 void SigIntHandler(int signal) {
   if (signal == SIGINT) {
-    eo::Dispatcher::Quit();
+    message_driven_objects::Dispatcher::Quit();
   }
 }
 
 }
 
-namespace eo {
+namespace message_driven_objects {
 
 Application::Application()
     : Object{&Dispatcher::Instance()},
-      consumer_{"localhost:9092", "EO"},
       counter_{} {
   std::signal(SIGINT, SigIntHandler);
 
@@ -33,19 +33,11 @@ std::error_code Application::Exec() {
   return Dispatcher::Instance().Exec();
 }
 
-bool Application::OnKafkaMessageNotification(const KafkaMessageNotification& message) {
-  cppkafka::Message msg = consumer_.Poll(1s);
-
-  if (!msg) {
-    SPDLOG_INFO("topic is empty...");
-    return false;
-  }
-
-  const std::string payload = msg.get_payload();
-  SPDLOG_INFO("received message from kafka: {}", payload);
+bool Application::OnTextMessage(const TextMessage& message) {
+  SPDLOG_INFO("{}: received message: {}", Thread()->Name(), message.Message());
 
   if (message.Sender()) {
-    Dispatcher::Post(std::make_shared<DeliveryMessage>(this, message.Sender()));
+    Dispatcher::Post(std::make_shared<TextMessage>("Hello from Application object", this, message.Sender()));
   }
 
   ++counter_;
