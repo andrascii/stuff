@@ -1,4 +1,3 @@
-#include "application.h"
 #include "dispatcher.h"
 #include "logger.h"
 #include "text_message.h"
@@ -11,7 +10,54 @@
  *
  * */
 
+namespace {
+
+void SigIntHandler(int signal) {
+  if (signal == SIGINT) {
+    message_driven_objects::Dispatcher::Quit();
+  }
+}
+
+}
+
+using namespace std::chrono;
 using namespace message_driven_objects;
+
+class Application : public Object {
+ public:
+  Application()
+      : Object{&Dispatcher::Instance()},
+        counter_{} {
+    std::signal(SIGINT, SigIntHandler);
+
+    start_ = system_clock::now();
+  }
+
+  ~Application() {
+    auto end = system_clock::now();
+    SPDLOG_INFO("received {} messages, elapsed time: {} milliseconds", counter_, duration_cast<milliseconds>(end - start_).count());
+  }
+
+  static std::error_code Exec() {
+    return Dispatcher::Instance().Exec();
+  }
+
+ private:
+  bool OnTextMessage(const TextMessage& message) override {
+    SPDLOG_INFO("{}: received message: {}", Thread()->Name(), message.Message());
+
+    if (message.Sender()) {
+      Dispatcher::Post(std::make_shared<TextMessage>("Hello from Application object", this, message.Sender()));
+    }
+
+    ++counter_;
+    return true;
+  }
+
+ private:
+  time_point<system_clock, microseconds> start_;
+  uint64_t counter_;
+};
 
 class Producer : public Object {
  public:

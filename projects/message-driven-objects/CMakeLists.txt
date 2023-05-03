@@ -11,15 +11,33 @@ project(${THIS_TARGET_NAME})
 set(PRECOMPILED_HEADER "stdafx.h")
 
 #
+# deps include directories
+#
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CPPKAFKA_INCLUDES}")
+
+#
 # deps
 #
-list(APPEND DEPS ${CONAN_LIBS})
+list(APPEND DEPS ${Boost_LIBRARIES})
+list(APPEND DEPS spdlog::spdlog)
+list(APPEND DEPS GTest::GTest)
+#list(APPEND DEPS cppkafka::cppkafka)
+list(APPEND DEPS ${CPPKAFKA_LIBRARY})
+list(APPEND DEPS RdKafka::rdkafka)
+list(APPEND DEPS RdKafka::rdkafka++)
+list(APPEND DEPS tl::expected)
 
 #
 # collecting sources and headers
 #
 file(GLOB_RECURSE SOURCES_LIST "*.cpp")
 file(GLOB_RECURSE HEADERS_LIST "*.h")
+
+#
+# adding include directories to created target
+#
+include_directories(${ADDITIONAL_INCLUDE_DIRECTORIES})
 
 #
 # creating target
