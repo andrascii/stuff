@@ -2,7 +2,7 @@
 
 namespace {
 
-constexpr auto kLogFileName{"event-objects.log"};
+constexpr auto kLogFileName{"message-driven-objects.log"};
 
 struct DailyLogFileName final {
   static spdlog::filename_t calc_filename(const spdlog::filename_t& filename, const tm& now_tm) {

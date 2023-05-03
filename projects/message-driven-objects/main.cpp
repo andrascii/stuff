@@ -28,6 +28,7 @@ class Producer : public Object {
   }
 
   bool OnLoopStarted(const LoopStarted&) override {
+    SPDLOG_INFO("OnLoopStarted called for Producer");
     SendMessage();
     return true;
   }

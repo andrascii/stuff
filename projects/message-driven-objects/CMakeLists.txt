@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include(make_static_library_sanitized_target)
 
-set(THIS_TARGET_NAME event-objects)
+set(THIS_TARGET_NAME message-driven-objects)
 project(${THIS_TARGET_NAME})
 
 #
