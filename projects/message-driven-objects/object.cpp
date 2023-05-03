@@ -8,7 +8,7 @@ namespace message_driven_objects {
 
 Object::Object(Object* parent)
     : Object{Thread::Current(), parent} {
-  printf("-------------- created %p --------------\n", reinterpret_cast<void*>(this));
+  //printf("-------------- created %p --------------\n", reinterpret_cast<void*>(this));
 }
 
 Object::~Object() {
@@ -18,7 +18,7 @@ Object::~Object() {
 
   ObjectsRegistry::Instance().UnregisterObject(this);
 
-  printf("-------------- destroyed %p --------------\n", reinterpret_cast<void*>(this));
+  //printf("-------------- destroyed %p --------------\n", reinterpret_cast<void*>(this));
 }
 
 Object* Object::Parent() const noexcept {

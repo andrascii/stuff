@@ -29,13 +29,16 @@ class Application : public Object {
       : Object{&Dispatcher::Instance()},
         counter_{} {
     std::signal(SIGINT, SigIntHandler);
-
     start_ = system_clock::now();
   }
 
   ~Application() {
     auto end = system_clock::now();
-    SPDLOG_INFO("received {} messages, elapsed time: {} milliseconds", counter_, duration_cast<milliseconds>(end - start_).count());
+
+    SPDLOG_INFO(
+      "received {} messages, elapsed time: {} milliseconds",
+      counter_,
+      duration_cast<milliseconds>(end - start_).count());
   }
 
   static std::error_code Exec() {
@@ -44,7 +47,7 @@ class Application : public Object {
 
  private:
   bool OnTextMessage(const TextMessage& message) override {
-    SPDLOG_INFO("{}: received message: {}", Thread()->Name(), message.Message());
+    SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
 
     if (message.Sender()) {
       Dispatcher::Post(std::make_shared<TextMessage>("Hello from Application object", this, message.Sender()));
@@ -67,7 +70,7 @@ class Producer : public Object {
 
  protected:
   bool OnTextMessage(const TextMessage& message) override {
-    SPDLOG_INFO("{}: received message: {}", Thread()->Name(), message.Message());
+    SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
     SendMessage();
     std::this_thread::sleep_for(400ms);
     return true;
@@ -90,7 +93,7 @@ class Producer : public Object {
 
 int main() {
   EnableConsoleLogging();
-  Logger()->set_level(spdlog::level::trace);
+  Logger()->set_level(spdlog::level::info);
 
   SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 

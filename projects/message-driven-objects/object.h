@@ -15,9 +15,11 @@ class LoopStarted;
  The most parent object of this class takes ownership of all his children.
  It means that when we delete the most parent object (the object that has children and has no parent)
  it automatically deletes all his children objects.
+ It means that when you create a child object, you must do it allocating a memory on the heap.
+ Consequently, if your Object has a parent you must not to delete it manually.
 
  Each object has thread affinity.
- Object O lives in thread T means that messages to O would be delivered (called function handler for this message) in the thread T.
+ "Object O lives in thread T" - means that messages to O would be delivered (called function handler for this message) in the thread T.
  Assume that we have two objects: Client1 and Client2.
  Client1 lives in the main thread and Client2 lives in the background thread.
  When Client1 sends a message TextMessage to Client2, then this message would be posted to the thread T message queue.
@@ -53,12 +55,12 @@ class Object {
   //! \param message is a message that will be broadcasted
   //!
   //! It calls Object::OnMessage function for the most parent object.
-  //! This lead to sending a message for all children tree.
+  //! This lead to sending a message for all children tree including caller object.
   //!
   void BroadcastMessage(const std::shared_ptr<IMessage>& message);
 
   //!
-  //! \param message is a message that must be handled of this object
+  //! \param message is a message that must be handled by this object
   //!
   //! Receives a message and calls corresponding handle function for it for this object.
   //! Then by default it sends a message to all children of this object.
@@ -75,7 +77,7 @@ class Object {
   [[nodiscard]] message_driven_objects::Thread* Thread() const noexcept;
 
   //!
-  //! \param thread tets the thread where this object will "live".
+  //! \param thread sets the thread where this object will "live".
   //!
   void MoveToThread(message_driven_objects::Thread* thread) noexcept;
 
