@@ -10,8 +10,9 @@ class MessageVisitor : public IMessageVisitor {
  public:
   explicit MessageVisitor(Object* object);
 
-  bool Visit(const TextMessage& message) override;
-  bool Visit(const LoopStarted& message) override;
+  bool Visit(TextMessage& message) override;
+  bool Visit(LoopStarted& message) override;
+  bool Visit(InvokeSlotMessage& message) override;
 
  private:
   Object* object_;

@@ -23,7 +23,7 @@ void Dispatcher::Quit() {
   LoadRelaxed(the_main_thread)->Stop();
 }
 
-void Dispatcher::Post(std::shared_ptr<IMessage> message) {
+void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {
   ThreadDataPtr data = GetThreadData(Dispatcher::Instance().Thread());
   data->queue.Push(std::move(message));
 }

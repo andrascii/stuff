@@ -3,22 +3,29 @@
 #include "objects_registry.h"
 #include "atomic_helpers.h"
 #include "thread.h"
+#include "invoke_slot_message.h"
 
 namespace message_driven_objects {
 
 Object::Object(Object* parent)
     : Object{Thread::Current(), parent} {
-  //printf("-------------- created %p --------------\n", reinterpret_cast<void*>(this));
 }
 
 Object::~Object() {
-  for (const auto* child : children_) {
-    delete child;
+  if (parent_) {
+    parent_->RemoveChild(this);
   }
 
-  ObjectsRegistry::Instance().UnregisterObject(this);
+  //
+  // The copy is needed to avoid iterators invalidation after 'delete child;' invocation.
+  // Because all children inherit Object class so when we delete them they effectively invoke 'parent_->RemoveChild(this);'.
+  // This invocation leads to erasing an item from 'this->children_' an as a result we cannot more iterates over this container.
+  //
+  const auto children = children_;
 
-  //printf("-------------- destroyed %p --------------\n", reinterpret_cast<void*>(this));
+  for (const auto* child : children) {
+    delete child;
+  }
 }
 
 Object* Object::Parent() const noexcept {
@@ -82,22 +89,29 @@ Object::Object(message_driven_objects::Thread* thread, Object* parent)
     : parent_{nullptr},
       thread_{thread} {
   SetParent(parent);
-
-  ObjectsRegistry::Instance().RegisterObject(this);
 }
 
 void Object::AddChild(Object* child) noexcept {
   children_.insert(child);
 }
 
-bool Object::OnTextMessage(const TextMessage& message) {
+void Object::RemoveChild(Object* child) noexcept {
+  children_.erase(child);
+}
+
+bool Object::OnTextMessage(TextMessage&) {
   // do nothing here
   return false;
 }
 
-bool Object::OnLoopStarted(const LoopStarted& message) {
+bool Object::OnLoopStarted(LoopStarted&) {
   // do nothing here
   return false;
+}
+
+bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
+  message.Invoke();
+  return true;
 }
 
 }

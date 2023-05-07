@@ -138,17 +138,13 @@ void Thread::Run() {
       continue;
     }
 
-    //
-    // TODO: optimize it.
-    // 1. avoid heap allocation
-    //
     const auto loop_started_msg = std::make_shared<LoopStarted>(nullptr, object);
     object->OnMessage(loop_started_msg);
   }
 
   for (;;) {
-    std::shared_ptr<IMessage> event;
-    const auto error = current_thread_data->queue.Poll(event, 1s);
+    std::shared_ptr<IMessage> message;
+    const auto error = current_thread_data->queue.Poll(message, 1s);
 
     if (error == std::errc::interrupted) {
       SPDLOG_TRACE("the thread '{}' is interrupted", tid);
@@ -160,14 +156,14 @@ void Thread::Run() {
       continue;
     }
 
-    if (event) {
+    if (message) {
       SPDLOG_TRACE("the thread '{}' got a message", tid);
     }
 
-    if (event->Receiver()->Thread() == LoadRelaxed(current_thread_data->thread)) {
-      event->Receiver()->OnMessage(event);
+    if (message->Receiver()->Thread() == LoadRelaxed(current_thread_data->thread)) {
+      message->Receiver()->OnMessage(message);
     } else {
-      GetThreadData(event->Receiver()->Thread())->queue.Push(event);
+      GetThreadData(message->Receiver()->Thread())->queue.Push(message);
     }
   }
 }

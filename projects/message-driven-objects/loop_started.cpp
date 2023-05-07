@@ -6,7 +6,7 @@ namespace message_driven_objects {
 LoopStarted::LoopStarted(Object* sender, Object* receiver)
     : AbstractMessage{kLoopStarted, sender, receiver} {}
 
-bool LoopStarted::Accept(IMessageVisitor& visitor) const noexcept {
+bool LoopStarted::Accept(IMessageVisitor& visitor) noexcept {
   return visitor.Visit(*this);
 }
 

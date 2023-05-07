@@ -8,6 +8,7 @@ namespace message_driven_objects {
 class Thread;
 class TextMessage;
 class LoopStarted;
+class InvokeSlotMessage;
 
 /*!
 
@@ -85,9 +86,11 @@ class Object {
   Object(message_driven_objects::Thread* thread, Object* parent);
 
   virtual void AddChild(Object* child) noexcept;
+  virtual void RemoveChild(Object* child) noexcept;
 
-  virtual bool OnTextMessage(const TextMessage& message);
-  virtual bool OnLoopStarted(const LoopStarted& message);
+  virtual bool OnTextMessage(TextMessage& message);
+  virtual bool OnLoopStarted(LoopStarted& message);
+  virtual bool OnInvokeSlotMessage(InvokeSlotMessage& message);
 
  private:
   Object* parent_;

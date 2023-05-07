@@ -27,7 +27,7 @@ std::error_code MessageQueue::Poll(std::shared_ptr<IMessage>& message, const std
     return std::make_error_code(std::errc::interrupted);
   }
 
-  message = std::move_if_noexcept(messages_.back());
+  message = std::move_if_noexcept(messages_.front());
   messages_.pop();
 
   return {};

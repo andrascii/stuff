@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "text_message.h"
 #include "thread.h"
+#include "signal.h"
 
 /*
  *
@@ -26,7 +27,8 @@ using namespace message_driven_objects;
 class Application : public Object {
  public:
   Application()
-      : Object{&Dispatcher::Instance()},
+      : Object{Dispatcher::Instance().Thread()},
+        MySignal{MakeNotNull(this)},
         counter_{} {
     std::signal(SIGINT, SigIntHandler);
     start_ = system_clock::now();
@@ -45,15 +47,23 @@ class Application : public Object {
     return Dispatcher::Instance().Exec();
   }
 
+  Signal<int> MySignal;
+
  private:
-  bool OnTextMessage(const TextMessage& message) override {
+  bool OnTextMessage(TextMessage& message) override {
     SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
 
     if (message.Sender()) {
-      Dispatcher::Post(std::make_shared<TextMessage>("Hello from Application object", this, message.Sender()));
+      Dispatcher::Dispatch(std::make_shared<TextMessage>("Hello from Application object", this, message.Sender()));
     }
 
     ++counter_;
+    return true;
+  }
+
+  bool OnLoopStarted(LoopStarted&) override {
+    SPDLOG_INFO("OnLoopStarted called for Application");
+    MySignal(42);
     return true;
   }
 
@@ -68,15 +78,19 @@ class Producer : public Object {
       : Object{parent},
         observer_{observer} {}
 
+  void MySlot(int v) {
+    SPDLOG_INFO("called MySlot for value {}", v);
+  }
+
  protected:
-  bool OnTextMessage(const TextMessage& message) override {
+  bool OnTextMessage(TextMessage& message) override {
     SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
     SendMessage();
     std::this_thread::sleep_for(400ms);
     return true;
   }
 
-  bool OnLoopStarted(const LoopStarted&) override {
+  bool OnLoopStarted(LoopStarted&) override {
     SPDLOG_INFO("OnLoopStarted called for Producer");
     SendMessage();
     return true;
@@ -84,7 +98,7 @@ class Producer : public Object {
 
  private:
   void SendMessage() {
-    Dispatcher::Post(std::make_shared<TextMessage>("Hello from Producer", this, observer_));
+    Dispatcher::Dispatch(std::make_shared<TextMessage>("Hello from Producer", this, observer_));
   }
 
  private:
@@ -104,7 +118,9 @@ int main() {
   auto* app = new Application;
   app->Thread()->SetName("MainThread");
 
-  new Producer{app, thread.get()};
+  auto* producer = new Producer{app, thread.get()};
+
+  app->MySignal.Connect(producer, &Producer::MySlot);
 
   const auto error = Application::Exec();
 

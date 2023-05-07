@@ -4,7 +4,7 @@
 #include "object.h"
 
 //
-// 1. the thread where we create Dispatcher object is the main thread
+// 1. the thread where we create Dispatch object is the main thread
 //
 
 namespace message_driven_objects {
@@ -16,7 +16,7 @@ class Dispatcher : public Object {
   std::error_code Exec();
 
   static void Quit();
-  static void Post(std::shared_ptr<IMessage> message);
+  static void Dispatch(std::shared_ptr<IMessage> message);
 
  private:
   Dispatcher() = default;

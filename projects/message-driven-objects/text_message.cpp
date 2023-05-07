@@ -8,7 +8,7 @@ TextMessage::TextMessage(const std::string& message, Object* sender, Object* rec
     : AbstractMessage{kTextMessage, sender, receiver},
       message_{message} {}
 
-bool TextMessage::Accept(IMessageVisitor& visitor) const noexcept {
+bool TextMessage::Accept(IMessageVisitor& visitor) noexcept {
   return visitor.Visit(*this);
 }
 
