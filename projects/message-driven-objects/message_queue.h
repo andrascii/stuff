@@ -9,7 +9,11 @@ class MessageQueue {
   MessageQueue();
 
   void Push(std::shared_ptr<IMessage> message);
-  std::error_code Poll(std::shared_ptr<IMessage>& message, const std::chrono::seconds& timeout = 0s) noexcept;
+
+  std::error_code Poll(
+    std::shared_ptr<IMessage>& message,
+    const std::chrono::seconds& timeout = 0s
+  ) noexcept;
 
   void Exit() noexcept;
 

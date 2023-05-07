@@ -12,7 +12,10 @@ void MessageQueue::Push(std::shared_ptr<IMessage> message) {
   condition_.notify_all();
 }
 
-std::error_code MessageQueue::Poll(std::shared_ptr<IMessage>& message, const std::chrono::seconds& timeout) noexcept {
+std::error_code MessageQueue::Poll(
+  std::shared_ptr<IMessage>& message,
+  const std::chrono::seconds& timeout
+) noexcept {
   std::unique_lock _{mutex_};
 
   const auto has_event_or_interrupted = [this] {

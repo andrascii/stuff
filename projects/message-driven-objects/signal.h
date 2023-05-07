@@ -8,62 +8,86 @@
 namespace message_driven_objects {
 
 template <typename ... Args>
-class Signal {
+class Signal final {
  public:
+  using FunctionSlot = void(*)(Args...);
+
+  template <typename ObjectType>
+  using MethodSlot = void(ObjectType::*)(Args...);
+
   using Slot = std::function<void(Args...)>;
 
   explicit Signal(NotNull<Object*> owner) : owner_{owner} {}
 
-  /*using Method = void(Object::*)(Args...);
-  using FunctionSlot = void(*)(Args...);*/
-
   void operator()(Args&&... args) {
     for (const auto& slot : slots_) {
       slot(std::forward<Args>(args)...);
-
-      /*const auto visitor = [&](auto&& v){
-        using T = std::decay_t<decltype(v)>;
-
-        if constexpr (std::is_same_v<T, MethodSlot>) {
-          if (owner_->Thread() == v.object->Thread()) {
-            v.object->*v.method(std::forward<Args>(args)...);
-          } else {
-            const auto invoker = [=] {
-              v.object->*v.method(std::forward<Args>(args)...);
-            };
-
-            Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>(invoker, owner_, v.object));
-          }
-        } else if constexpr (std::is_same_v<T, FunctionSlot>) {
-          v(std::forward<Args>(args)...);
-        } else {
-          SPDLOG_CRITICAL("invalid state of the slot");
-          std::terminate();
-        }
-      };*/
     }
   }
 
   template <typename ObjectType>
-  void Connect(ObjectType* object, void(ObjectType::*method)(Args...)) {
+  void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
-    Slot slot = [=](Args&&... args) {
-
+    Slot wrapper = [=](Args&&... args) {
       if (owner_->Thread() == object->Thread()) {
-        (object->*method)(std::forward<Args>(args)...);
+        std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
-        Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
-          (object->*method)(args...);
+        Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([&, object, slot] {
+          std::invoke(slot, object, std::forward<Args>(args)...);
         }, owner_, object));
       }
     };
 
-    slots_.push_back(slot);
+    slots_.push_back(wrapper);
   }
 
-  void Connect(void(*slot)(Args...)) {
-    slots_.push_back(slot);
+  void Connect(FunctionSlot slot) {
+    slots_.emplace_back(slot);
+  }
+
+ private:
+  Object* owner_;
+  std::vector<Slot> slots_;
+};
+
+template <>
+class Signal<void> {
+ public:
+  using FunctionSlot = void(*)();
+
+  template <typename ObjectType>
+  using MethodSlot = void(ObjectType::*)();
+
+  using Slot = std::function<void()>;
+
+  explicit Signal(NotNull<Object*> owner) : owner_{owner} {}
+
+  void operator()() {
+    for (const auto& slot : slots_) {
+      slot();
+    }
+  }
+
+  template <typename ObjectType>
+  void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
+    static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
+
+    Slot wrapper = [=]() {
+      if (owner_->Thread() == object->Thread()) {
+        std::invoke(slot, object);
+      } else {
+        Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
+          std::invoke(slot, object);
+        }, owner_, object));
+      }
+    };
+
+    slots_.push_back(wrapper);
+  }
+
+  void Connect(FunctionSlot slot) {
+    slots_.emplace_back(slot);
   }
 
  private:

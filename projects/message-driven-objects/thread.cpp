@@ -1,4 +1,6 @@
 #include "thread.h"
+
+#include <utility>
 #include "adopted_thread.h"
 #include "object.h"
 #include "loop_started.h"
@@ -74,15 +76,15 @@ Thread* Thread::Current() {
   return current_thread_data->thread;
 }
 
-Thread::Thread(ThreadDataPtr data, Object* parent)
-    : Object{this, parent},
-      data_{std::move(data)} {
-  if (!data_) {
-    data_ = std::make_shared<ThreadData>();
-  }
-
-  data_->thread = this;
+void Thread::YieldCurrentThread() {
+  std::this_thread::yield();
 }
+
+void Thread::Sleep(const std::chrono::milliseconds& ms) {
+  std::this_thread::sleep_for(ms);
+}
+
+Thread::Thread(ThreadDataPtr data, Object* parent) : Thread{{}, std::move(data), parent} {}
 
 Thread::~Thread() {
   StopImpl();
@@ -111,8 +113,39 @@ void Thread::Start() {
     SetCurrentThreadName(name_);
     current_thread_data = data_;
     current_thread_data->id = std::this_thread::get_id();
-    Run();
+
+    if (alternative_entry_point_) {
+      alternative_entry_point_();
+    } else {
+      Run();
+    }
   });
+}
+
+void Thread::Wait() const noexcept {
+  if (!future_.valid()) {
+  }
+
+  future_.wait();
+}
+
+bool Thread::WaitFor(const std::chrono::milliseconds& ms) const noexcept {
+  if (!future_.valid()) {
+    return true;
+  }
+
+  const auto await_result = future_.wait_for(ms);
+
+  if (await_result == std::future_status::deferred) {
+    SPDLOG_CRITICAL("the thread function must not be in a deferred state");
+    std::terminate();
+  }
+
+  if (await_result == std::future_status::timeout) {
+    return false;
+  }
+
+  return true;
 }
 
 void Thread::Stop() {
@@ -121,6 +154,14 @@ void Thread::Stop() {
 
 bool Thread::IsRunning() const noexcept {
   return future_.valid() && future_.wait_for(0s) == std::future_status::timeout;
+}
+
+void Thread::RequestInterruption() const noexcept {
+  StoreRelaxed(data_->interruption_requested, true);
+}
+
+bool Thread::IsInterruptionRequested() const noexcept {
+  return LoadRelaxed(data_->interruption_requested);
 }
 
 void Thread::Run() {
@@ -133,16 +174,20 @@ void Thread::Run() {
 
   Thread* this_thread = LoadRelaxed(current_thread_data->thread);
 
+  //
+  // emit 'Started' signal
+  //
+  this_thread->Started();
+
   for (Object* object : this_thread->Children()) {
     if (object->Thread() != this_thread) {
       continue;
     }
 
-    const auto loop_started_msg = std::make_shared<LoopStarted>(nullptr, object);
-    object->OnMessage(loop_started_msg);
+    object->OnMessage(std::make_shared<LoopStarted>(this_thread, object));
   }
 
-  for (;;) {
+  for (; !LoadRelaxed(current_thread_data->interruption_requested);) {
     std::shared_ptr<IMessage> message;
     const auto error = current_thread_data->queue.Poll(message, 1s);
 
@@ -166,6 +211,11 @@ void Thread::Run() {
       GetThreadData(message->Receiver()->Thread())->queue.Push(message);
     }
   }
+
+  //
+  // emit 'Finished' signal
+  //
+  this_thread->Finished();
 }
 
 void Thread::SetCurrentThreadName(const std::string& name) noexcept {
@@ -201,6 +251,19 @@ void Thread::AddChild(Object* child) noexcept {
   if (IsRunning()) {
     current_thread_data->queue.Push(std::make_shared<LoopStarted>(nullptr, child));
   }
+}
+
+Thread::Thread(std::function<void()> alternative_entry_point, ThreadDataPtr data, Object* parent)
+    : Object{this, parent},
+      Finished{this},
+      Started{this},
+      data_{std::move(data)},
+      alternative_entry_point_{std::move(alternative_entry_point)} {
+  if (!data_) {
+    data_ = std::make_shared<ThreadData>();
+  }
+
+  data_->thread = this;
 }
 
 }

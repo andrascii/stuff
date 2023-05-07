@@ -48,13 +48,13 @@ class NotNull {
 
   NotNull(std::nullptr_t) = delete;
 
-  constexpr explicit NotNull(T t)
+  constexpr NotNull(T t)
       : pointer_{std::move(t)} {
     details::Expects(pointer_ != nullptr);
   }
 
   template <typename U>
-  constexpr explicit NotNull(U&& u)
+  constexpr NotNull(U&& u)
       : pointer_{std::forward<U>(u)} {
     static_assert(std::is_convertible<U, T>::value, "U must be convertible to T");
     details::Expects(pointer_ != nullptr);

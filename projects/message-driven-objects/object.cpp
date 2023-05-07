@@ -1,6 +1,5 @@
 #include "object.h"
 #include "message_visitor.h"
-#include "objects_registry.h"
 #include "atomic_helpers.h"
 #include "thread.h"
 #include "invoke_slot_message.h"

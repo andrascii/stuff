@@ -36,24 +36,22 @@ class Object {
   virtual ~Object();
 
   //!
-  //! \return a pointer to the parent object of this object. Function is reentrant.
+  //! Returns a pointer to the parent object of this object. Function is reentrant.
   //!
   [[nodiscard]] Object* Parent() const noexcept;
 
-  //!
-  //! \param parent
   //!
   //! Sets the parent of this object. Function is reentrant.
   //!
   void SetParent(Object* parent);
 
   //!
-  //! \return a set of children of this object. Function is reentrant.
+  //! Returns a set of children of this object. Function is reentrant.
   //!
   const std::set<Object*>& Children() const noexcept;
 
   //!
-  //! \param message is a message that will be broadcasted
+  //! \param message is a message that will be broadcasted.
   //!
   //! It calls Object::OnMessage function for the most parent object.
   //! This lead to sending a message for all children tree including caller object.

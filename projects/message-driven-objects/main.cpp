@@ -5,10 +5,7 @@
 #include "signal.h"
 
 /*
- *
- * 1. Implement signals/slots
- * 2. do I need to implement building a tree using Objects? For what?
- *
+ * do I need to implement building a tree using Objects? For what?
  * */
 
 namespace {
@@ -28,9 +25,10 @@ class Application : public Object {
  public:
   Application()
       : Object{Dispatcher::Instance().Thread()},
-        MySignal{MakeNotNull(this)},
+        MySignal{this},
         counter_{} {
     std::signal(SIGINT, SigIntHandler);
+    MySignal.Connect(this, &Application::MySlot);
     start_ = system_clock::now();
   }
 
@@ -45,6 +43,14 @@ class Application : public Object {
 
   static std::error_code Exec() {
     return Dispatcher::Instance().Exec();
+  }
+
+  void MySlot(int v) {
+    SPDLOG_INFO("{}: Application called MySlot for value {}", ToString(std::this_thread::get_id()), v);
+  }
+
+  void OnThreadStarted() {
+    SPDLOG_INFO("{}: Application called OnThreadStarted", ToString(std::this_thread::get_id()));
   }
 
   Signal<int> MySignal;
@@ -79,14 +85,18 @@ class Producer : public Object {
         observer_{observer} {}
 
   void MySlot(int v) {
-    SPDLOG_INFO("called MySlot for value {}", v);
+    SPDLOG_INFO("{}: Producer called MySlot for value {}", ToString(std::this_thread::get_id()), v);
+  }
+
+  void OnThreadStarted() {
+    SPDLOG_INFO("{}: Producer called OnThreadStarted", ToString(std::this_thread::get_id()));
   }
 
  protected:
   bool OnTextMessage(TextMessage& message) override {
     SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
     SendMessage();
-    std::this_thread::sleep_for(400ms);
+    std::this_thread::sleep_for(1s);
     return true;
   }
 
@@ -105,7 +115,59 @@ class Producer : public Object {
   Object* observer_;
 };
 
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/event.h>
+
+int kq;
+
+struct context {
+  void (*handler)(struct context *obj);
+};
+
+void timer_handler(struct context *obj)
+{
+  static int n;
+  printf("Received timer event via kqueue: %d\n", n++);
+}
+
 int main() {
+  kq = kqueue();
+  assert(kq != -1);
+
+  struct context obj = {};
+  obj.handler = timer_handler;
+
+  // start system timer
+  int period_ms = 1000;
+  struct kevent events[1];
+  EV_SET(&events[0], 1234, EVFILT_TIMER, EV_ADD | EV_ENABLE, 0, period_ms, &obj);
+  assert(0 == kevent(kq, events, 1, NULL, 0, NULL));
+
+  for (;;) {
+    //struct timespec *timeout = NULL; // wait indefinitely
+
+    struct timespec timeout;
+    timeout.tv_sec  = 0;
+    timeout.tv_nsec = 0;
+
+    int n = kevent(kq, NULL, 0, events, 1, &timeout);
+
+    if (n <= 0) {
+      continue;
+    }
+
+    assert(n > 0);
+
+    context *o = static_cast<context*>(events[0].udata);
+    if (events[0].filter == EVFILT_TIMER)
+      o->handler(o); // handle timer event
+  }
+
+  close(kq);
+
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 
@@ -113,15 +175,17 @@ int main() {
 
   const auto thread = std::make_shared<Thread>();
   thread->SetName("BackgroundThread");
-  thread->Start();
 
   auto* app = new Application;
   app->Thread()->SetName("MainThread");
 
   auto* producer = new Producer{app, thread.get()};
 
+  thread->Started.Connect(app, &Application::OnThreadStarted);
+  thread->Started.Connect(producer, &Producer::OnThreadStarted);
   app->MySignal.Connect(producer, &Producer::MySlot);
 
+  thread->Start();
   const auto error = Application::Exec();
 
   if (error) {
