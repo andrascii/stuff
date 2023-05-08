@@ -17,20 +17,15 @@ class TimerService {
   void RemoveTimer(int id);
 
  private:
-  int NextTimerId() const noexcept;
+  static int NextTimerId() noexcept;
 
   void Run();
 
  private:
-  struct TimerContext {
-    Object* object;
-  };
-
   int kq_;
   mutable std::mutex mutex_;
   std::shared_ptr<Thread> managing_thread_;
-  std::vector<struct kevent> kevents_;
-  std::map<int, TimerContext> timer_contexts_;
+  uint64_t events_count_;
 };
 
 }

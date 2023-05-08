@@ -5,7 +5,9 @@
 
 namespace mdo {
 
-TimerService::TimerService() : kq_{kqueue()} {
+TimerService::TimerService()
+    : kq_{kqueue()},
+      events_count_{} {
   if (kq_ == -1) {
     SPDLOG_CRITICAL("error initializing kqueue");
     std::terminate();
@@ -52,20 +54,13 @@ int TimerService::AddTimer(NotNull<Object*> object, const std::chrono::milliseco
 
   int timer_id = NextTimerId();
 
-  timer_contexts_[timer_id] = {
-    object
-  };
-
   struct kevent evt{};
-  EV_SET(&evt, timer_id, EVFILT_TIMER, EV_ADD | EV_ENABLE, 0, ms.count(), nullptr);
+  EV_SET(&evt, timer_id, EVFILT_TIMER, EV_ADD | EV_ENABLE, 0, ms.count(), object);
 
-  kevents_.push_back(evt);
+  ++events_count_;
 
-  //
-  // TODO: kevents_ is a vector that can overwrite himself and pointer will be invalid
-  //
-  if (kevent(kq_, kevents_.data(), kevents_.size(), nullptr, 0, nullptr)) {
-    SPDLOG_CRITICAL("cannot add kevent");
+  if (kevent(kq_, &evt, 1, nullptr, 0, nullptr)) {
+    SPDLOG_CRITICAL("cannot add kevent with id: {}", timer_id);
     std::terminate();
   }
 
@@ -75,23 +70,32 @@ int TimerService::AddTimer(NotNull<Object*> object, const std::chrono::milliseco
 void TimerService::RemoveTimer(int id) {
   std::scoped_lock _{mutex_};
 
+  struct kevent evt{};
+  EV_SET(&evt, id, EVFILT_TIMER, EV_DELETE, 0, 0, nullptr);
 
+  if (kevent(kq_, &evt, 1, nullptr, 0, nullptr)) {
+    SPDLOG_CRITICAL("cannot remove kevent with id: {}", id);
+    std::terminate();
+  }
 }
 
-int TimerService::NextTimerId() const noexcept {
+int TimerService::NextTimerId() noexcept {
   static int timer_id = 0;
   return timer_id++;
 }
 
 void TimerService::Run() {
-  std::vector<struct kevent> events{kevents_.size()};
+  std::vector<struct kevent> events{events_count_};
 
   for (; !managing_thread_->IsInterruptionRequested();) {
-    if (kevents_.size() != events.size()) {
-      events.resize(kevents_.size());
+    if (events_count_ != events.size()) {
+      events.resize(events_count_);
     }
 
-    int n = kevent(kq_, nullptr, 0, events.data(), events.size(), nullptr);
+    timespec timeout{};
+    timeout.tv_sec = 1;
+
+    int n = kevent(kq_, nullptr, 0, events.data(), events.size(), &timeout);
 
     if (n <= 0) {
       continue;
@@ -99,17 +103,8 @@ void TimerService::Run() {
 
     for (int i = 0; i < n; ++i) {
       if (events[i].filter == EVFILT_TIMER) {
-        const auto it = timer_contexts_.find(events[i].ident);
-
-        if (it == timer_contexts_.end()) {
-          SPDLOG_CRITICAL("occurred event for unknown timer id {}", events[i].ident);
-          std::terminate();
-        }
-
-        const auto& [id, context] = *it;
-
-        SPDLOG_TRACE("dispatching timer tick for timer id: {}", id);
-        Dispatcher::Dispatch(std::make_shared<TimerMessage>(id, nullptr, context.object));
+        SPDLOG_TRACE("dispatching timer tick for timer id: {}", events[i].ident);
+        Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].ident, nullptr, (Object*)events[i].udata));
       }
     }
   }

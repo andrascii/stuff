@@ -236,6 +236,7 @@ void Thread::StopImpl() {
   }
 
   const auto tid = ToString(data_->id);
+  RequestInterruption();
   data_->queue.Exit();
 
   while (future_.wait_for(1s) == std::future_status::timeout) {
