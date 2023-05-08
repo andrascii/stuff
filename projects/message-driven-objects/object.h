@@ -3,12 +3,13 @@
 #include "imessage.h"
 #include "message_queue.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 class Thread;
 class TextMessage;
 class LoopStarted;
 class InvokeSlotMessage;
+class TimerMessage;
 
 /*!
 
@@ -73,15 +74,15 @@ class Object {
   //!
   //! Returns the pointer to the thread where this object "lives".
   //!
-  [[nodiscard]] message_driven_objects::Thread* Thread() const noexcept;
+  [[nodiscard]] mdo::Thread* Thread() const noexcept;
 
   //!
   //! \param thread sets the thread where this object will "live".
   //!
-  void MoveToThread(message_driven_objects::Thread* thread) noexcept;
+  void MoveToThread(mdo::Thread* thread) noexcept;
 
  protected:
-  Object(message_driven_objects::Thread* thread, Object* parent);
+  Object(mdo::Thread* thread, Object* parent);
 
   virtual void AddChild(Object* child) noexcept;
   virtual void RemoveChild(Object* child) noexcept;
@@ -89,10 +90,11 @@ class Object {
   virtual bool OnTextMessage(TextMessage& message);
   virtual bool OnLoopStarted(LoopStarted& message);
   virtual bool OnInvokeSlotMessage(InvokeSlotMessage& message);
+  virtual bool OnTimerMessage(TimerMessage& message);
 
  private:
   Object* parent_;
-  std::atomic<message_driven_objects::Thread*> thread_;
+  std::atomic<mdo::Thread*> thread_;
   std::set<Object*> children_;
 };
 

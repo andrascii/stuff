@@ -1,6 +1,6 @@
 #pragma once
 
-namespace message_driven_objects {
+namespace mdo {
 
 template <typename T>
 inline T LoadRelaxed(const std::atomic<T>& a) noexcept {

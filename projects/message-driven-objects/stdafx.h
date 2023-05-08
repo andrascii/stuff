@@ -33,6 +33,9 @@
 //
 #include <cppkafka/cppkafka.h>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/event.h>
 
 template <typename T>
 std::string ToString(const T& data) {

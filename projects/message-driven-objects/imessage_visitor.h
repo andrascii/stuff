@@ -1,10 +1,11 @@
 #pragma once
 
-namespace message_driven_objects {
+namespace mdo {
 
 class TextMessage;
 class LoopStarted;
 class InvokeSlotMessage;
+class TimerMessage;
 
 class IMessageVisitor {
  public:
@@ -13,6 +14,7 @@ class IMessageVisitor {
   virtual bool Visit(TextMessage& message) = 0;
   virtual bool Visit(LoopStarted& message) = 0;
   virtual bool Visit(InvokeSlotMessage& message) = 0;
+  virtual bool Visit(TimerMessage& message) = 0;
 };
 
 }

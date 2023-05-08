@@ -2,7 +2,7 @@
 
 #include "abstract_message.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 class LoopStarted : public AbstractMessage {
  public:

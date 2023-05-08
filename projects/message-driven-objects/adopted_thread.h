@@ -2,7 +2,7 @@
 
 #include "thread.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 class AdoptedThread : public Thread {
  public:

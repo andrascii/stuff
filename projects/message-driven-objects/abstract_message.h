@@ -2,7 +2,7 @@
 
 #include "imessage.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 class AbstractMessage : public IMessage {
  public:

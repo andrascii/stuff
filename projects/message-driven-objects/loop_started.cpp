@@ -1,7 +1,7 @@
 #include "loop_started.h"
 #include "message_visitor.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 LoopStarted::LoopStarted(Object* sender, Object* receiver)
     : AbstractMessage{kLoopStarted, sender, receiver} {}

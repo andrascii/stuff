@@ -1,6 +1,6 @@
 #pragma once
 
-namespace message_driven_objects {
+namespace mdo {
 
 class Object;
 class IMessageVisitor;
@@ -11,6 +11,7 @@ class IMessage {
     kTextMessage,
     kLoopStarted,
     kInvokeSlotMessage,
+    kTimerMessage,
   };
 
   virtual ~IMessage() = default;

@@ -2,7 +2,7 @@
 
 #include "imessage_visitor.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 TextMessage::TextMessage(const std::string& message, Object* sender, Object* receiver)
     : AbstractMessage{kTextMessage, sender, receiver},

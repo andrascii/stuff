@@ -1,6 +1,6 @@
 #pragma once
 
-namespace message_driven_objects {
+namespace mdo {
 
 class Object;
 

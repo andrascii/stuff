@@ -2,7 +2,7 @@
 
 #include "message_queue.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 class Thread;
 

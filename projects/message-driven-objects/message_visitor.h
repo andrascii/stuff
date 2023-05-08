@@ -2,7 +2,7 @@
 
 #include "imessage_visitor.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 class Object;
 
@@ -13,6 +13,7 @@ class MessageVisitor : public IMessageVisitor {
   bool Visit(TextMessage& message) override;
   bool Visit(LoopStarted& message) override;
   bool Visit(InvokeSlotMessage& message) override;
+  bool Visit(TimerMessage& message) override;
 
  private:
   Object* object_;

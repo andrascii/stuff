@@ -42,7 +42,7 @@ void DeleteAdoptedMainThread();
 
 }
 
-namespace message_driven_objects {
+namespace mdo {
 
 std::atomic<Thread*> the_main_thread = nullptr;
 
@@ -205,10 +205,12 @@ void Thread::Run() {
       SPDLOG_TRACE("the thread '{}' got a message", tid);
     }
 
-    if (message->Receiver()->Thread() == LoadRelaxed(current_thread_data->thread)) {
+    const auto receiver_thread = message->Receiver()->Thread();
+
+    if (this_thread == receiver_thread) {
       message->Receiver()->OnMessage(message);
     } else {
-      GetThreadData(message->Receiver()->Thread())->queue.Push(message);
+      GetThreadData(receiver_thread)->queue.Push(message);
     }
   }
 
@@ -271,7 +273,7 @@ Thread::Thread(std::function<void()> alternative_entry_point, ThreadDataPtr data
 namespace {
 
 void DeleteAdoptedMainThread() {
-  using namespace message_driven_objects;
+  using namespace mdo;
   delete LoadRelaxed(the_main_thread);
 }
 

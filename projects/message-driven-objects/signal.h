@@ -5,7 +5,7 @@
 #include "dispatcher.h"
 #include "invoke_slot_message.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 template <typename ... Args>
 class Signal final {

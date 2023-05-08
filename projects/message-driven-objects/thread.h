@@ -5,7 +5,7 @@
 #include "thread_data.h"
 #include "signal.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 static thread_local ThreadDataPtr current_thread_data = nullptr;
 extern std::atomic<Thread*> the_main_thread;
@@ -55,8 +55,8 @@ class Thread : public Object {
   //!
   //! Returns the newly created Thread instance.
   //!
-  template <typename ... Args>
-  static Thread* Create(NotNull<void(*)(Thread*, Args...)> f, Args&&... args) {
+  template <typename Function, typename ... Args>
+  static Thread* Create(Function&& f, Args&&... args) {
     const auto adopted_invoke = [=] {
       f(std::forward<Args>(args)...);
     };

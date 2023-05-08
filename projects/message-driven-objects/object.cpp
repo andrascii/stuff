@@ -4,7 +4,7 @@
 #include "thread.h"
 #include "invoke_slot_message.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 Object::Object(Object* parent)
     : Object{Thread::Current(), parent} {
@@ -73,18 +73,18 @@ bool Object::OnMessage(const std::shared_ptr<IMessage>& message) {
   return false;
 }
 
-message_driven_objects::Thread* Object::Thread() const noexcept {
+mdo::Thread* Object::Thread() const noexcept {
   return LoadRelaxed(thread_);
 }
 
-void Object::MoveToThread(message_driven_objects::Thread* thread) noexcept {
+void Object::MoveToThread(mdo::Thread* thread) noexcept {
   //
   // TODO: here we must wait until all messages will be received to us from queue in previous thread
   //
   StoreRelaxed(thread_, thread);
 }
 
-Object::Object(message_driven_objects::Thread* thread, Object* parent)
+Object::Object(mdo::Thread* thread, Object* parent)
     : parent_{nullptr},
       thread_{thread} {
   SetParent(parent);
@@ -111,6 +111,10 @@ bool Object::OnLoopStarted(LoopStarted&) {
 bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
   message.Invoke();
   return true;
+}
+
+bool Object::OnTimerMessage(TimerMessage&) {
+  return false;
 }
 
 }

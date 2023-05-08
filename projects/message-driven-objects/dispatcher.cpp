@@ -1,8 +1,7 @@
 #include "dispatcher.h"
 #include "thread.h"
-#include "atomic_helpers.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 Dispatcher& Dispatcher::Instance() {
   static std::unique_ptr<Dispatcher> app = nullptr;
@@ -20,11 +19,11 @@ std::error_code Dispatcher::Exec() {
 }
 
 void Dispatcher::Quit() {
-  LoadRelaxed(the_main_thread)->Stop();
+  Instance().Thread()->Stop();
 }
 
 void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {
-  ThreadDataPtr data = GetThreadData(Dispatcher::Instance().Thread());
+  ThreadDataPtr data = GetThreadData(Instance().Thread());
   data->queue.Push(std::move(message));
 }
 

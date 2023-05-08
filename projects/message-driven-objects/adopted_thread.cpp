@@ -1,6 +1,6 @@
 #include "adopted_thread.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 AdoptedThread::AdoptedThread(const ThreadDataPtr& data) : Thread{data} {}
 

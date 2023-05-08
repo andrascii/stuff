@@ -2,7 +2,7 @@
 #include "thread.h"
 #include "atomic_helpers.h"
 
-namespace message_driven_objects {
+namespace mdo {
 
 ThreadData::ThreadData()
     : id{std::this_thread::get_id()},

@@ -7,7 +7,7 @@
 // 1. the thread where we create Dispatch object is the main thread
 //
 
-namespace message_driven_objects {
+namespace mdo {
 
 class Dispatcher : public Object {
  public:
