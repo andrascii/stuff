@@ -37,6 +37,20 @@ class Object {
   virtual ~Object();
 
   //!
+  //! Starts a timer and returns a timer identifier.
+  //! A timer message will occur every interval milliseconds until KillTimer() is called.
+  //! The virtual OnTimerMessage() function is called with the TimerMessage message parameter class when a timer message occurs.
+  //! Reimplement this function to get timer messages.
+  //!
+  int StartTimer(const std::chrono::milliseconds& ms) const noexcept;
+
+  //!
+  //! Kills the timer with timer identifier, id.
+  //! The timer identifier is returned by StartTimer() when a timer message is started.
+  //!
+  void KillTimer(int id) const noexcept;
+
+  //!
   //! Returns a pointer to the parent object of this object. Function is reentrant.
   //!
   [[nodiscard]] Object* Parent() const noexcept;

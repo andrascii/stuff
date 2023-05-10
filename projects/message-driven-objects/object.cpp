@@ -3,6 +3,7 @@
 #include "atomic_helpers.h"
 #include "thread.h"
 #include "invoke_slot_message.h"
+#include "timer_service.h"
 
 namespace mdo {
 
@@ -25,6 +26,14 @@ Object::~Object() {
   for (const auto* child : children) {
     delete child;
   }
+}
+
+int Object::StartTimer(const std::chrono::milliseconds& ms) const noexcept {
+  return TimerService::Instance()->AddTimer(const_cast<Object*>(this), ms);
+}
+
+void Object::KillTimer(int id) const noexcept {
+  TimerService::Instance()->RemoveTimer(id);
 }
 
 Object* Object::Parent() const noexcept {

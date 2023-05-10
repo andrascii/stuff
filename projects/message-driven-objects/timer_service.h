@@ -10,14 +10,15 @@ class Object;
 
 class TimerService {
  public:
-  TimerService();
-  ~TimerService();
+  static TimerService* Instance();
 
-  void Start();
-  void Stop();
+  ~TimerService();
 
   int AddTimer(NotNull<Object*> object, const milliseconds& ms, bool single_shot = false);
   void RemoveTimer(int id);
+
+ private:
+  TimerService();
 
  private:
   class Impl;

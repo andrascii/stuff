@@ -33,8 +33,8 @@ class Signal final {
       if (owner_->Thread() == object->Thread()) {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
-        Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([&, object, slot] {
-          std::invoke(slot, object, std::forward<Args>(args)...);
+        Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
+          std::invoke(slot, object, args...);
         }, owner_, object));
       }
     };

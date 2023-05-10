@@ -307,16 +307,25 @@ class TimerService::Impl {
   }
 
   void Start() {
+    if (f_.valid()) {
+      return;
+    }
+
+    request_interruption_.store(false, std::memory_order_relaxed);
+
     f_ = std::async(std::launch::async, [this]{
       TimerThread();
     });
   }
 
   void Stop() {
-  }
+    if (!f_.valid()) {
+      return;
+    }
 
-  void Wait() {
-    f_.wait();
+    request_interruption_.store(true, std::memory_order_relaxed);
+
+    f_.get();
   }
 
   int AddTimer(Object* object, const std::chrono::milliseconds& ms, bool single_shot) {
@@ -380,7 +389,7 @@ class TimerService::Impl {
   void TimerThread() {
     std::vector<struct epoll_event> events;
 
-    for (;;) {
+    for (; !request_interruption_.load(std::memory_order_relaxed);) {
       {
         std::scoped_lock _{mutex_};
         if (events.size() != timer_fds_.size()) {
@@ -427,21 +436,27 @@ class TimerService::Impl {
   std::future<void> f_;
   mutable std::mutex mutex_;
   std::map<int, TimerContext> timer_fds_;
+  std::atomic_bool request_interruption_;
 };
 
 #endif
 
+TimerService* TimerService::Instance() {
+  struct NewOpEnabler : TimerService {
+    NewOpEnabler() : TimerService() {}
+  };
 
-TimerService::TimerService() : impl_{std::make_unique<Impl>()} {}
+  static std::unique_ptr<NewOpEnabler> instance = nullptr;
 
-TimerService::~TimerService() = default;
+  if (!instance) {
+    instance = std::make_unique<NewOpEnabler>();
+  }
 
-void TimerService::Start() {
-  return impl_->Start();
+  return instance.get();
 }
 
-void TimerService::Stop() {
-  return impl_->Stop();
+TimerService::~TimerService() {
+  impl_->Stop();
 }
 
 int TimerService::AddTimer(NotNull<Object*> object, const milliseconds& ms, bool single_shot) {
@@ -450,6 +465,10 @@ int TimerService::AddTimer(NotNull<Object*> object, const milliseconds& ms, bool
 
 void TimerService::RemoveTimer(int id) {
   return impl_->RemoveTimer(id);
+}
+
+TimerService::TimerService() : impl_{std::make_unique<Impl>()} {
+  impl_->Start();
 }
 
 }

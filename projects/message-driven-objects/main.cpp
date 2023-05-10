@@ -25,13 +25,12 @@ using namespace mdo;
 
 class Application : public Object {
  public:
-  Application(TimerService* service)
+  Application()
       : Object{Dispatcher::Instance().Thread()},
         MySignal{this},
-        counter_{},
-        service_{service} {
+        counter_{} {
     std::signal(SIGINT, SigIntHandler);
-    MySignal.Connect(this, &Application::MySlot);
+    //MySignal.Connect(this, &Application::MySlot);
     start_ = system_clock::now();
   }
 
@@ -71,8 +70,7 @@ class Application : public Object {
   }
 
   bool OnLoopStarted(LoopStarted&) override {
-    service_->AddTimer(this, 1s);
-    service_->AddTimer(this, 500ms);
+    StartTimer(500ms);
 
     SPDLOG_INFO("OnLoopStarted called for Application");
     MySignal(42);
@@ -87,7 +85,6 @@ class Application : public Object {
  private:
   time_point<system_clock, microseconds> start_;
   uint64_t counter_;
-  TimerService* service_;
 };
 
 class Producer : public Object {
@@ -108,13 +105,12 @@ class Producer : public Object {
   bool OnTextMessage(TextMessage& message) override {
     SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
     //SendMessage();
-    std::this_thread::sleep_for(1s);
     return true;
   }
 
   bool OnLoopStarted(LoopStarted&) override {
     SPDLOG_INFO("OnLoopStarted called for Producer");
-    //SendMessage();
+    SendMessage();
     return true;
   }
 
@@ -128,9 +124,6 @@ class Producer : public Object {
 };
 
 int main() {
-  TimerService service;
-  service.Start();
-
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 
@@ -138,17 +131,13 @@ int main() {
 
   const auto thread = std::make_shared<Thread>();
   thread->SetName("BackgroundThread");
+  thread->Start();
 
-  auto* app = new Application(&service);
-  app->Thread()->SetName("MainThread");
+  auto* app = new Application;
 
   auto* producer = new Producer{app, thread.get()};
-
-  thread->Started.Connect(app, &Application::OnThreadStarted);
-  thread->Started.Connect(producer, &Producer::OnThreadStarted);
   app->MySignal.Connect(producer, &Producer::MySlot);
 
-  thread->Start();
   const auto error = Application::Exec();
 
   if (error) {

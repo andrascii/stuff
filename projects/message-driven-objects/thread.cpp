@@ -102,6 +102,10 @@ const std::string& Thread::Name() const noexcept {
 
 void Thread::SetName(const std::string& name) {
   name_ = name;
+
+  if (data_->is_adopted) {
+    SetCurrentThreadName(name_);
+  }
 }
 
 void Thread::Start() {
