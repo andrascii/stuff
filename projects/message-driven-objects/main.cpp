@@ -81,7 +81,6 @@ class Application : public Object {
 
   bool OnTimerMessage(TimerMessage& message) override {
     SPDLOG_INFO("{}: timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
-    service_->RemoveTimer(message.Id());
     return true;
   }
 

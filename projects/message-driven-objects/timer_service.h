@@ -1,9 +1,12 @@
 #pragma once
 
-#include "thread.h"
 #include "not_null.h"
 
 namespace mdo {
+
+using namespace std::chrono;
+
+class Object;
 
 class TimerService {
  public:
@@ -13,19 +16,12 @@ class TimerService {
   void Start();
   void Stop();
 
-  int AddTimer(NotNull<Object*> object, const std::chrono::milliseconds& ms);
+  int AddTimer(NotNull<Object*> object, const milliseconds& ms, bool single_shot = false);
   void RemoveTimer(int id);
 
  private:
-  static int NextTimerId() noexcept;
-
-  void Run();
-
- private:
-  int kq_;
-  mutable std::mutex mutex_;
-  std::shared_ptr<Thread> managing_thread_;
-  uint64_t events_count_;
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }
