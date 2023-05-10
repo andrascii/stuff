@@ -107,6 +107,11 @@ void Object::RemoveChild(Object* child) noexcept {
   children_.erase(child);
 }
 
+bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
+  message.Invoke();
+  return true;
+}
+
 bool Object::OnTextMessage(TextMessage&) {
   // do nothing here
   return false;
@@ -115,11 +120,6 @@ bool Object::OnTextMessage(TextMessage&) {
 bool Object::OnLoopStarted(LoopStarted&) {
   // do nothing here
   return false;
-}
-
-bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
-  message.Invoke();
-  return true;
 }
 
 bool Object::OnTimerMessage(TimerMessage&) {

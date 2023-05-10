@@ -2,7 +2,6 @@
 #include "logger.h"
 #include "text_message.h"
 #include "thread.h"
-#include "timer_service.h"
 #include "timer_message.h"
 #include "signal.h"
 
@@ -30,7 +29,7 @@ class Application : public Object {
         MySignal{this},
         counter_{} {
     std::signal(SIGINT, SigIntHandler);
-    //MySignal.Connect(this, &Application::MySlot);
+    MySignal.Connect(this, &Application::MySlot);
     start_ = system_clock::now();
   }
 

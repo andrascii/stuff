@@ -101,9 +101,13 @@ class Object {
   virtual void AddChild(Object* child) noexcept;
   virtual void RemoveChild(Object* child) noexcept;
 
+  //
+  // This function does not intended to be a virtual function
+  //
+  bool OnInvokeSlotMessage(InvokeSlotMessage& message);
+
   virtual bool OnTextMessage(TextMessage& message);
   virtual bool OnLoopStarted(LoopStarted& message);
-  virtual bool OnInvokeSlotMessage(InvokeSlotMessage& message);
   virtual bool OnTimerMessage(TimerMessage& message);
 
  private:
