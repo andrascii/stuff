@@ -172,7 +172,7 @@ void Thread::Run() {
   const auto tid = ToString(LoadRelaxed(current_thread_data->id));
 
   //
-  // Sends LoopStarted message to all objects which "lives" in this thread.
+  // Sends LoopStartedMessage message to all objects which "lives" in this thread.
   // So the objects have an ability to find out when the loop is started and can initiate their job.
   //
 
@@ -188,7 +188,7 @@ void Thread::Run() {
       continue;
     }
 
-    object->OnMessage(std::make_shared<LoopStarted>(this_thread, object));
+    object->OnMessage(std::make_shared<LoopStartedMessage>(this_thread, object));
   }
 
   for (; !LoadRelaxed(current_thread_data->interruption_requested);) {
@@ -256,7 +256,7 @@ void Thread::AddChild(Object* child) noexcept {
   Object::AddChild(child);
 
   if (IsRunning()) {
-    current_thread_data->queue.Push(std::make_shared<LoopStarted>(nullptr, child));
+    current_thread_data->queue.Push(std::make_shared<LoopStartedMessage>(nullptr, child));
   }
 }
 

@@ -3,6 +3,7 @@
 #include "text_message.h"
 #include "thread.h"
 #include "timer_message.h"
+#include "timer_service.h"
 #include "signal.h"
 
 /*
@@ -68,10 +69,10 @@ class Application : public Object {
     return true;
   }
 
-  bool OnLoopStarted(LoopStarted&) override {
+  bool OnLoopStartedMessage(LoopStartedMessage&) override {
     StartTimer(500ms);
 
-    SPDLOG_INFO("OnLoopStarted called for Application");
+    SPDLOG_INFO("OnLoopStartedMessage called for Application");
     MySignal(42);
     return true;
   }
@@ -107,8 +108,8 @@ class Producer : public Object {
     return true;
   }
 
-  bool OnLoopStarted(LoopStarted&) override {
-    SPDLOG_INFO("OnLoopStarted called for Producer");
+  bool OnLoopStartedMessage(LoopStartedMessage&) override {
+    SPDLOG_INFO("OnLoopStartedMessage called for Producer");
     SendMessage();
     return true;
   }
@@ -124,7 +125,7 @@ class Producer : public Object {
 
 int main() {
   EnableConsoleLogging();
-  Logger()->set_level(spdlog::level::info);
+  Logger()->set_level(spdlog::level::trace);
 
   SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 

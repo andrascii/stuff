@@ -117,7 +117,7 @@ bool Object::OnTextMessage(TextMessage&) {
   return false;
 }
 
-bool Object::OnLoopStarted(LoopStarted&) {
+bool Object::OnLoopStartedMessage(LoopStartedMessage& message) {
   // do nothing here
   return false;
 }

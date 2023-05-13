@@ -10,8 +10,8 @@ bool MessageVisitor::Visit(TextMessage& message) {
   return object_->OnTextMessage(message);
 }
 
-bool MessageVisitor::Visit(LoopStarted& message) {
-  return object_->OnLoopStarted(message);
+bool MessageVisitor::Visit(LoopStartedMessage& message) {
+  return object_->OnLoopStartedMessage(message);
 }
 
 bool MessageVisitor::Visit(InvokeSlotMessage& message) {

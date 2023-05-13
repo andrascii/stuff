@@ -3,7 +3,7 @@
 namespace mdo {
 
 class TextMessage;
-class LoopStarted;
+class LoopStartedMessage;
 class InvokeSlotMessage;
 class TimerMessage;
 
@@ -12,7 +12,7 @@ class IMessageVisitor {
   virtual ~IMessageVisitor() = default;
 
   virtual bool Visit(TextMessage& message) = 0;
-  virtual bool Visit(LoopStarted& message) = 0;
+  virtual bool Visit(LoopStartedMessage& message) = 0;
   virtual bool Visit(InvokeSlotMessage& message) = 0;
   virtual bool Visit(TimerMessage& message) = 0;
 };

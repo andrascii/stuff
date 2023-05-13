@@ -7,7 +7,7 @@ namespace mdo {
 
 class Thread;
 class TextMessage;
-class LoopStarted;
+class LoopStartedMessage;
 class InvokeSlotMessage;
 class TimerMessage;
 
@@ -107,7 +107,7 @@ class Object {
   bool OnInvokeSlotMessage(InvokeSlotMessage& message);
 
   virtual bool OnTextMessage(TextMessage& message);
-  virtual bool OnLoopStarted(LoopStarted& message);
+  virtual bool OnLoopStartedMessage(LoopStartedMessage& message);
   virtual bool OnTimerMessage(TimerMessage& message);
 
  private:

@@ -3,10 +3,10 @@
 
 namespace mdo {
 
-LoopStarted::LoopStarted(Object* sender, Object* receiver)
+LoopStartedMessage::LoopStartedMessage(Object* sender, Object* receiver)
     : AbstractMessage{kLoopStarted, sender, receiver} {}
 
-bool LoopStarted::Accept(IMessageVisitor& visitor) noexcept {
+bool LoopStartedMessage::Accept(IMessageVisitor& visitor) noexcept {
   return visitor.Visit(*this);
 }
 

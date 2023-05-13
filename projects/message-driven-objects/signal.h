@@ -4,6 +4,7 @@
 #include "not_null.h"
 #include "dispatcher.h"
 #include "invoke_slot_message.h"
+#include "utils.h"
 
 namespace mdo {
 
@@ -30,7 +31,7 @@ class Signal final {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
     Slot wrapper = [=](Args&&... args) {
-      if (owner_->Thread() == object->Thread()) {
+      if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
@@ -74,7 +75,7 @@ class Signal<void> {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
     Slot wrapper = [=]() {
-      if (owner_->Thread() == object->Thread()) {
+      if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object);
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
