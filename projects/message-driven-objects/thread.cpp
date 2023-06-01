@@ -1,10 +1,8 @@
 #include "thread.h"
-
-#include <utility>
 #include "adopted_thread.h"
 #include "object.h"
-#include "loop_started.h"
 #include "atomic_helpers.h"
+#include "objects_registry.h"
 
 #if defined(USE_WINDOWS_SET_THREAD_NAME_HACK)
 
@@ -52,12 +50,13 @@ ThreadDataPtr GetThreadData(Thread* thread) noexcept {
 
 Thread* Thread::Current() {
   if (current_thread_data) {
-    return current_thread_data->thread;
+    return *current_thread_data->thread;
   }
 
   current_thread_data = std::make_shared<ThreadData>();
+  current_thread_data->id = std::this_thread::get_id();
   current_thread_data->is_adopted = true;
-  StoreRelaxed(current_thread_data->id, std::this_thread::get_id());
+
   Thread* adopted_thread = new AdoptedThread{current_thread_data};
   current_thread_data->thread = adopted_thread;
 
@@ -73,10 +72,10 @@ Thread* Thread::Current() {
     std::atexit(DeleteAdoptedMainThread);
   }
 
-  return current_thread_data->thread;
+  return *current_thread_data->thread;
 }
 
-void Thread::YieldCurrentThread() {
+void Thread::Yield() {
   std::this_thread::yield();
 }
 
@@ -84,7 +83,7 @@ void Thread::Sleep(const std::chrono::milliseconds& ms) {
   std::this_thread::sleep_for(ms);
 }
 
-Thread::Thread(ThreadDataPtr data, Object* parent) : Thread{{}, std::move(data), parent} {}
+Thread::Thread(ThreadDataPtr data) : Thread{{}, std::move(data)} {}
 
 Thread::~Thread() {
   StopImpl();
@@ -96,6 +95,14 @@ Thread::~Thread() {
   data_->thread = nullptr;
 }
 
+void Thread::Attach(NotNull<Object*> object) {
+  attached_->insert(object);
+}
+
+void Thread::Detach(NotNull<Object*> object) {
+  attached_->erase(object);
+}
+
 const std::string& Thread::Name() const noexcept {
   return name_;
 }
@@ -103,7 +110,7 @@ const std::string& Thread::Name() const noexcept {
 void Thread::SetName(const std::string& name) {
   name_ = name;
 
-  if (data_->is_adopted) {
+  if (*data_->is_adopted) {
     SetCurrentThreadName(name_);
   }
 }
@@ -161,37 +168,31 @@ bool Thread::IsRunning() const noexcept {
 }
 
 void Thread::RequestInterruption() const noexcept {
-  StoreRelaxed(data_->interruption_requested, true);
+  data_->interruption_requested = true;
 }
 
 bool Thread::IsInterruptionRequested() const noexcept {
-  return LoadRelaxed(data_->interruption_requested);
+  return *data_->interruption_requested;
 }
 
 void Thread::Run() {
-  const auto tid = ToString(LoadRelaxed(current_thread_data->id));
+  current_thread_data->interruption_requested = false;
+  current_thread_data->queue.SetInterruptFlag(false);
+
+  const auto tid = ToString(*current_thread_data->id);
 
   //
   // Sends LoopStartedMessage message to all objects which "lives" in this thread.
   // So the objects have an ability to find out when the loop is started and can initiate their job.
   //
-
-  Thread* this_thread = LoadRelaxed(current_thread_data->thread);
+  Thread* this_thread = *current_thread_data->thread;
 
   //
   // emit 'Started' signal
   //
   this_thread->Started();
 
-  for (Object* object : this_thread->Children()) {
-    if (object->Thread() != this_thread) {
-      continue;
-    }
-
-    object->OnMessage(std::make_shared<LoopStartedMessage>(this_thread, object));
-  }
-
-  for (; !LoadRelaxed(current_thread_data->interruption_requested);) {
+  for (; !*current_thread_data->interruption_requested;) {
     std::shared_ptr<IMessage> message;
     const auto error = current_thread_data->queue.Poll(message, 1s);
 
@@ -207,6 +208,22 @@ void Thread::Run() {
 
     if (message) {
       SPDLOG_TRACE("the thread '{}' got a message", tid);
+    }
+
+    //
+    // block ability to destroy an Object class objects
+    // to be sure that we can safely call message->Receiver()->OnMessage(message);
+    //
+    std::scoped_lock _{ObjectsRegistry::Instance()};
+
+    if (!ObjectsRegistry::Instance().HasObject(message->Receiver())) {
+      SPDLOG_INFO(
+        "the object {} that lived in thread {} is dead so the message to it is skipped",
+        static_cast<void*>(message->Receiver()),
+        ToString(*current_thread_data->id)
+      );
+
+      continue;
     }
 
     const auto receiver_thread = message->Receiver()->Thread();
@@ -239,9 +256,14 @@ void Thread::StopImpl() {
     return;
   }
 
-  const auto tid = ToString(data_->id);
+  auto tid = ToString(*data_->id);
+
+  if (!name_.empty()) {
+    tid = name_ + "/" + tid;
+  }
+
   RequestInterruption();
-  data_->queue.Exit();
+  data_->queue.SetInterruptFlag(true);
 
   while (future_.wait_for(1s) == std::future_status::timeout) {
     SPDLOG_INFO("waiting for '{}' thread to stop", tid);
@@ -252,16 +274,8 @@ void Thread::StopImpl() {
   SPDLOG_INFO("thread '{}' has stopped", tid);
 }
 
-void Thread::AddChild(Object* child) noexcept {
-  Object::AddChild(child);
-
-  if (IsRunning()) {
-    current_thread_data->queue.Push(std::make_shared<LoopStartedMessage>(nullptr, child));
-  }
-}
-
-Thread::Thread(std::function<void()> alternative_entry_point, ThreadDataPtr data, Object* parent)
-    : Object{this, parent},
+Thread::Thread(std::function<void()> alternative_entry_point, ThreadDataPtr data)
+    : Object{this},
       Finished{this},
       Started{this},
       data_{std::move(data)},

@@ -9,7 +9,7 @@ void AdoptedThread::Start() {
 }
 
 void AdoptedThread::Stop() {
-  GetThreadData(this)->queue.Exit();
+  GetThreadData(this)->queue.SetInterruptFlag(true);
 }
 
 }

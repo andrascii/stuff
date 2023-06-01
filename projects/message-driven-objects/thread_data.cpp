@@ -13,11 +13,11 @@ ThreadData::ThreadData()
 }
 
 ThreadData::~ThreadData() {
-  if (is_adopted) {
-    delete LoadRelaxed(thread);
+  if (*is_adopted) {
+    delete *thread;
   }
 
-  SPDLOG_TRACE("thread data for thread {} destroyed", ToString(LoadRelaxed(id)));
+  SPDLOG_TRACE("thread data for thread {} destroyed", ToString(*id));
 }
 
 }

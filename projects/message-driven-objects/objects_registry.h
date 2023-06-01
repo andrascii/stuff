@@ -1,5 +1,7 @@
 #pragma once
 
+#include "not_null.h"
+
 namespace mdo {
 
 class Object;
@@ -21,25 +23,26 @@ class ObjectsRegistry final {
 
   ~ObjectsRegistry() {
     if (!objects_.empty()) {
-      std::cerr << "ObjectsRegistry destroys but some AbstractObjects is still alive" << std::endl;
+      SPDLOG_ERROR("ObjectsRegistry destroys but some Objects is still alive");
     }
   }
 
   const std::set<Object*>& Objects() const noexcept {
+    std::scoped_lock _{*this};
     return objects_;
   }
 
-  void RegisterObject(Object* object) {
+  void RegisterObject(NotNull<Object*> object) {
     std::scoped_lock _{*this};
     objects_.insert(object);
   }
 
-  void UnregisterObject(Object* object) {
+  void UnregisterObject(NotNull<Object*> object) {
     std::scoped_lock _{*this};
     objects_.erase(object);
   }
 
-  bool HasObject(Object* object) {
+  bool HasObject(NotNull<Object*> object) {
     std::scoped_lock _{*this};
     return objects_.contains(object);
   }
@@ -56,7 +59,7 @@ class ObjectsRegistry final {
   ObjectsRegistry() = default;
 
  private:
-  mutable std::mutex mutex_;
+  mutable std::recursive_mutex mutex_;
   std::set<Object*> objects_;
 };
 

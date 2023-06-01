@@ -35,7 +35,7 @@ class Signal final {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
-          std::invoke(slot, object, args...);
+          std::invoke(slot, object, args...); // std::forward<Args>(args)...
         }, owner_, object));
       }
     };

@@ -36,10 +36,17 @@ std::error_code MessageQueue::Poll(
   return {};
 }
 
-void MessageQueue::Exit() noexcept {
+void MessageQueue::SetInterruptFlag(bool value) noexcept {
   std::lock_guard _{mutex_};
-  interrupt_ = true;
-  condition_.notify_all();
+  interrupt_ = value;
+
+  if (interrupt_) {
+    condition_.notify_all();
+  } else {
+    while(!messages_.empty()) {
+      messages_.pop();
+    }
+  }
 }
 
 }

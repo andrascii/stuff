@@ -8,8 +8,6 @@ class IMessageVisitor;
 class IMessage {
  public:
   enum MessageType {
-    kTextMessage,
-    kLoopStarted,
     kInvokeSlotMessage,
     kTimerMessage,
   };

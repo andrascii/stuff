@@ -1,9 +1,7 @@
 #include "dispatcher.h"
 #include "logger.h"
-#include "text_message.h"
 #include "thread.h"
 #include "timer_message.h"
-#include "timer_service.h"
 #include "signal.h"
 
 /*
@@ -26,25 +24,11 @@ using namespace mdo;
 class Application : public Object {
  public:
   Application()
-      : Object{Dispatcher::Instance().Thread()},
-        MySignal{this},
-        counter_{} {
+      : MySignal{this} {
     std::signal(SIGINT, SigIntHandler);
+
     MySignal.Connect(this, &Application::MySlot);
-    start_ = system_clock::now();
-  }
-
-  ~Application() {
-    auto end = system_clock::now();
-
-    SPDLOG_INFO(
-      "received {} messages, elapsed time: {} milliseconds",
-      counter_,
-      duration_cast<milliseconds>(end - start_).count());
-  }
-
-  static std::error_code Exec() {
-    return Dispatcher::Instance().Exec();
+    Thread()->Started.Connect(this, &Application::OnThreadStarted);
   }
 
   void MySlot(int v) {
@@ -53,45 +37,25 @@ class Application : public Object {
 
   void OnThreadStarted() {
     SPDLOG_INFO("{}: Application called OnThreadStarted", ToString(std::this_thread::get_id()));
+    StartTimer(3s);
+    MySignal(42);
   }
 
   Signal<int> MySignal;
 
- private:
-  bool OnTextMessage(TextMessage& message) override {
-    SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
-
-    if (message.Sender()) {
-      Dispatcher::Dispatch(std::make_shared<TextMessage>("Hello from Application object", this, message.Sender()));
-    }
-
-    ++counter_;
-    return true;
-  }
-
-  bool OnLoopStartedMessage(LoopStartedMessage&) override {
-    StartTimer(500ms);
-
-    SPDLOG_INFO("OnLoopStartedMessage called for Application");
-    MySignal(42);
-    return true;
-  }
-
+ protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
+    SPDLOG_INFO("{}: Application timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
     return true;
   }
-
- private:
-  time_point<system_clock, microseconds> start_;
-  uint64_t counter_;
 };
 
 class Producer : public Object {
  public:
-  explicit Producer(Object* observer, Object* parent = nullptr)
-      : Object{parent},
-        observer_{observer} {}
+  explicit Producer(mdo::Thread* thread)
+      : Object{thread} {
+    Thread()->Started.Connect(this, &Producer::OnThreadStarted);
+  }
 
   void MySlot(int v) {
     SPDLOG_INFO("{}: Producer called MySlot for value {}", ToString(std::this_thread::get_id()), v);
@@ -99,46 +63,45 @@ class Producer : public Object {
 
   void OnThreadStarted() {
     SPDLOG_INFO("{}: Producer called OnThreadStarted", ToString(std::this_thread::get_id()));
+    StartTimer(2s);
   }
 
  protected:
-  bool OnTextMessage(TextMessage& message) override {
-    SPDLOG_INFO("{}: received message: {}", ToString(std::this_thread::get_id()), message.Message());
-    //SendMessage();
+  bool OnTimerMessage(TimerMessage& message) override {
+    SPDLOG_INFO("{}: Producer timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
     return true;
   }
+};
 
-  bool OnLoopStartedMessage(LoopStartedMessage&) override {
-    SPDLOG_INFO("OnLoopStartedMessage called for Producer");
-    SendMessage();
+class TimerTest : public Object {
+ public:
+  TimerTest(mdo::Thread* thread) : Object{thread} {
+    StartTimer(1s);
+  }
+
+ protected:
+  bool OnTimerMessage(TimerMessage& message) override {
+    SPDLOG_INFO("{}: TimerTest timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
     return true;
   }
-
- private:
-  void SendMessage() {
-    Dispatcher::Dispatch(std::make_shared<TextMessage>("Hello from Producer", this, observer_));
-  }
-
- private:
-  Object* observer_;
 };
 
 int main() {
   EnableConsoleLogging();
-  Logger()->set_level(spdlog::level::trace);
+  Logger()->set_level(spdlog::level::info);
 
   SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 
   const auto thread = std::make_shared<Thread>();
   thread->SetName("BackgroundThread");
+
+  const auto app = std::make_shared<Application>();
+  const auto producer = std::make_shared<Producer>(thread.get());
+
+  app->MySignal.Connect(producer.get(), &Producer::MySlot);
   thread->Start();
 
-  auto* app = new Application;
-
-  auto* producer = new Producer{app, thread.get()};
-  app->MySignal.Connect(producer, &Producer::MySlot);
-
-  const auto error = Application::Exec();
+  const auto error = Dispatcher::Instance().Exec();
 
   if (error) {
     SPDLOG_ERROR(error.message());

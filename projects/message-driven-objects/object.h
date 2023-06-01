@@ -2,23 +2,15 @@
 
 #include "imessage.h"
 #include "message_queue.h"
+#include "locked.h"
 
 namespace mdo {
 
 class Thread;
-class TextMessage;
-class LoopStartedMessage;
 class InvokeSlotMessage;
 class TimerMessage;
 
 /*!
-
- Objects of this class form a tree: parent => child1, parent => child2 and so on.
- The most parent object of this class takes ownership of all his children.
- It means that when we delete the most parent object (the object that has children and has no parent)
- it automatically deletes all his children objects.
- It means that when you create a child object, you must do it allocating a memory on the heap.
- Consequently, if your Object has a parent you must not to delete it manually.
 
  Each object has thread affinity.
  "Object O lives in thread T" - means that messages to O would be delivered (called function handler for this message) in the thread T.
@@ -33,7 +25,9 @@ class Object {
  public:
   friend class MessageVisitor;
 
-  explicit Object(Object* parent = nullptr);
+  Object();
+  Object(mdo::Thread* thread);
+
   virtual ~Object();
 
   //!
@@ -42,36 +36,13 @@ class Object {
   //! The virtual OnTimerMessage() function is called with the TimerMessage message parameter class when a timer message occurs.
   //! Reimplement this function to get timer messages.
   //!
-  int StartTimer(const std::chrono::milliseconds& ms) const noexcept;
+  int StartTimer(const std::chrono::milliseconds& ms) noexcept;
 
   //!
   //! Kills the timer with timer identifier, id.
   //! The timer identifier is returned by StartTimer() when a timer message is started.
   //!
-  void KillTimer(int id) const noexcept;
-
-  //!
-  //! Returns a pointer to the parent object of this object. Function is reentrant.
-  //!
-  [[nodiscard]] Object* Parent() const noexcept;
-
-  //!
-  //! Sets the parent of this object. Function is reentrant.
-  //!
-  void SetParent(Object* parent);
-
-  //!
-  //! Returns a set of children of this object. Function is reentrant.
-  //!
-  const std::set<Object*>& Children() const noexcept;
-
-  //!
-  //! \param message is a message that will be broadcasted.
-  //!
-  //! It calls Object::OnMessage function for the most parent object.
-  //! This lead to sending a message for all children tree including caller object.
-  //!
-  void BroadcastMessage(const std::shared_ptr<IMessage>& message);
+  void KillTimer(int id) noexcept;
 
   //!
   //! \param message is a message that must be handled by this object
@@ -96,24 +67,15 @@ class Object {
   void MoveToThread(mdo::Thread* thread) noexcept;
 
  protected:
-  Object(mdo::Thread* thread, Object* parent);
-
-  virtual void AddChild(Object* child) noexcept;
-  virtual void RemoveChild(Object* child) noexcept;
-
   //
   // This function does not intended to be a virtual function
   //
   bool OnInvokeSlotMessage(InvokeSlotMessage& message);
-
-  virtual bool OnTextMessage(TextMessage& message);
-  virtual bool OnLoopStartedMessage(LoopStartedMessage& message);
   virtual bool OnTimerMessage(TimerMessage& message);
 
  private:
-  Object* parent_;
-  std::atomic<mdo::Thread*> thread_;
-  std::set<Object*> children_;
+  Locked<mdo::Thread*> thread_;
+  Locked<std::set<int>> timers_;
 };
 
 }

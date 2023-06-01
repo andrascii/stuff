@@ -15,7 +15,7 @@ class MessageQueue {
     const std::chrono::seconds& timeout = 0s
   ) noexcept;
 
-  void Exit() noexcept;
+  void SetInterruptFlag(bool value) noexcept;
 
  private:
   mutable std::mutex mutex_;

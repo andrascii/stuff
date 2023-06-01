@@ -35,7 +35,7 @@ class Thread : public Object {
   //! Yields execution of the current thread to another runnable thread, if any.
   //! Note that the operating system decides to which thread to switch.
   //!
-  static void YieldCurrentThread();
+  static void Yield();
 
   //!
   //! Forces the current thread to sleep for ms milliseconds.
@@ -64,9 +64,12 @@ class Thread : public Object {
     return new Thread{adopted_invoke};
   }
 
-  explicit Thread(ThreadDataPtr data = nullptr, Object* parent = nullptr);
+  explicit Thread(ThreadDataPtr data = nullptr);
 
   ~Thread() override;
+
+  void Attach(NotNull<Object*> object);
+  void Detach(NotNull<Object*> object);
 
   //!
   //! Returns a name assigned to the thread assigned with Thread object.
@@ -138,12 +141,9 @@ class Thread : public Object {
  private:
   void StopImpl();
 
-  void AddChild(Object* child) noexcept override;
-
   explicit Thread(
     std::function<void()> alternative_entry_point,
-    ThreadDataPtr data = nullptr,
-    Object* parent = nullptr
+    ThreadDataPtr data = nullptr
   );
 
  private:
@@ -151,6 +151,7 @@ class Thread : public Object {
   std::future<void> future_;
   std::string name_;
   std::function<void()> alternative_entry_point_;
+  Locked<std::set<Object*>> attached_;
 };
 
 }

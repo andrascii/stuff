@@ -10,8 +10,6 @@ class MessageVisitor : public IMessageVisitor {
  public:
   explicit MessageVisitor(Object* object);
 
-  bool Visit(TextMessage& message) override;
-  bool Visit(LoopStartedMessage& message) override;
   bool Visit(InvokeSlotMessage& message) override;
   bool Visit(TimerMessage& message) override;
 
