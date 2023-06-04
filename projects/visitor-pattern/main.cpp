@@ -19,9 +19,9 @@ class IWidgetVisitor {
 class WidgetVisitor : public IWidgetVisitor {
  public:
   // by default we do nothing
-  void Visit(RadioButton* widget) override {}
-  void Visit(CheckBox* widget) override {}
-  void Visit(ComboBox* widget) override {}
+  void Visit(RadioButton*) override {}
+  void Visit(CheckBox*) override {}
+  void Visit(ComboBox*) override {}
 };
 
 template <typename T>
