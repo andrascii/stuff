@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 SOURCE_DIR=$1
 BUILD_DIR=$2
 
@@ -9,4 +11,12 @@ then
   exit 1
 fi
 
-conan install $SOURCE_DIR --install-folder $BUILD_DIR --build missing
+VERSION=$( conan --version )
+IFS=. read -r VERSION <<< $VERSION
+MAJOR=$( echo $VERSION | awk '{print $3}' )
+
+if [ $MAJOR -gt 1  ]; then
+  conan install $SOURCE_DIR --output-folder $BUILD_DIR
+else
+  conan install $SOURCE_DIR --install-folder $BUILD_DIR --build missing
+fi
