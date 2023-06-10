@@ -120,8 +120,8 @@ class TimerService::Impl {
 
  private:
   static int NextTimerId() noexcept {
-    static int timer_id = 0;
-    return timer_id++;
+    static std::atomic<int> timer_id = 0;
+    return timer_id.fetch_add(1, std::memory_order_relaxed);
   }
 
   void AddTimerImpl(int id, Object* object, const std::chrono::milliseconds& ms, bool single_shot) {
@@ -540,11 +540,7 @@ TimerService* TimerService::Instance() {
     NewOpEnabler() : TimerService() {}
   };
 
-  static std::unique_ptr<NewOpEnabler> instance = nullptr;
-
-  if (!instance) {
-    instance = std::make_unique<NewOpEnabler>();
-  }
+  static std::unique_ptr<NewOpEnabler> instance = std::make_unique<NewOpEnabler>();
 
   return instance.get();
 }

@@ -6,15 +6,25 @@ set(THIS_TARGET_NAME visitor-pattern)
 project(${THIS_TARGET_NAME})
 
 #
+# deps include directories
+#
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+
+#
 # deps
 #
-list(APPEND DEPS ${CONAN_LIBS})
+list(APPEND DEPS ${Boost_LIBRARIES})
 
 #
 # collecting sources and headers
 #
 file(GLOB_RECURSE SOURCES_LIST "*.cpp")
 file(GLOB_RECURSE HEADERS_LIST "*.h")
+
+#
+# adding include directories to created target
+#
+include_directories(${ADDITIONAL_INCLUDE_DIRECTORIES})
 
 #
 # creating target

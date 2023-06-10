@@ -11,7 +11,7 @@ void* operator new(std::size_t count) {
   }
 
   if (void* ptr = std::malloc(count)) {
-    std::printf("Allocated %ld bytes started at %p\n", count, ptr);
+    std::printf("Allocated %lud bytes started at %p\n", (unsigned long)count, ptr);
     return ptr;
   }
 
