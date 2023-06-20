@@ -6,7 +6,7 @@ namespace mdo {
 
 class InvokeSlotMessage : public AbstractMessage {
  public:
-  InvokeSlotMessage(const std::function<void()>& f, Object* sender, Object* receiver);
+  InvokeSlotMessage(const std::function<void()>& f, Object* sender, Object* receiver, PriorityType priority = kNormalPriority);
 
   bool Accept(IMessageVisitor& visitor) noexcept override;
   void Invoke() const;

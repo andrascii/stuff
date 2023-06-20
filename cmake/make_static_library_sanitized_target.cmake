@@ -14,7 +14,14 @@ function(make_static_library_sanitized_target)
     message(STATUS "make_static_library_sanitized_target: DEPS - ${ARG_DEPS}")
     message(STATUS "make_static_library_sanitized_target: PRECOMPILED_HEADER - ${ARG_PRECOMPILED_HEADER}")
 
-    add_library(${ARG_TARGET_NAME} STATIC ${ARG_SOURCES} ${ARG_HEADERS})
+    add_library(${ARG_TARGET_NAME}-asan STATIC ${ARG_SOURCES} ${ARG_HEADERS})
+    target_precompile_headers(${ARG_TARGET_NAME}-asan PRIVATE ${ARG_PRECOMPILED_HEADER})
+
+    add_library(${ARG_TARGET_NAME}-ubsan STATIC ${ARG_SOURCES} ${ARG_HEADERS})
+    target_precompile_headers(${ARG_TARGET_NAME}-ubsan PRIVATE ${ARG_PRECOMPILED_HEADER})
+
+    add_library(${ARG_TARGET_NAME}-tsan STATIC ${ARG_SOURCES} ${ARG_HEADERS})
+    target_precompile_headers(${ARG_TARGET_NAME}-tsan PRIVATE ${ARG_PRECOMPILED_HEADER})
 
     make_sanitized_target(
       TARGET_NAME ${ARG_TARGET_NAME}

@@ -21,70 +21,66 @@ void SigIntHandler(int signal) {
 using namespace std::chrono;
 using namespace mdo;
 
-class Application : public Object {
+class Client1 : public Object {
  public:
-  Application()
-      : MySignal{this} {
+  Client1()
+      : SendMessageSignal{this} {
     std::signal(SIGINT, SigIntHandler);
 
-    MySignal.Connect(this, &Application::MySlot);
-    Thread()->Started.Connect(this, &Application::OnThreadStarted);
+    SendMessageSignal.Connect(this, &Client1::OnMessage);
+    Thread()->Started.Connect(this, &Client1::OnThreadStarted);
   }
 
-  void MySlot(int v) {
-    SPDLOG_INFO("{}: Application called MySlot for value {}", ToString(std::this_thread::get_id()), v);
+  void OnMessage(const std::string& message) {
+    SPDLOG_INFO("{}: Client1 called OnMessage for value '{}'", ToString(std::this_thread::get_id()), message);
   }
 
   void OnThreadStarted() {
-    SPDLOG_INFO("{}: Application called OnThreadStarted", ToString(std::this_thread::get_id()));
+    SPDLOG_INFO("{}: Client1 called OnThreadStarted", ToString(std::this_thread::get_id()));
     StartTimer(3s);
-    MySignal(42);
+    SendMessageSignal("Hello, World!");
   }
 
-  Signal<int> MySignal;
+  Signal<const std::string&> SendMessageSignal;
 
  protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: Application timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
+    SPDLOG_INFO("{}: Client1 timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
     return true;
   }
 };
 
-class Producer : public Object {
+class Client2 : public Object {
  public:
-  explicit Producer(mdo::Thread* thread)
+  explicit Client2(mdo::Thread* thread)
       : Object{thread} {
-    Thread()->Started.Connect(this, &Producer::OnThreadStarted);
+    Thread()->Started.Connect(this, &Client2::OnThreadStarted);
   }
 
-  void MySlot(int v) {
-    SPDLOG_INFO("{}: Producer called MySlot for value {}", ToString(std::this_thread::get_id()), v);
+  void OnMessage(const std::string& message) {
+    SPDLOG_INFO("{}: Client2 called OnMessage for value {}", ToString(std::this_thread::get_id()), message);
   }
 
   void OnThreadStarted() {
-    SPDLOG_INFO("{}: Producer called OnThreadStarted", ToString(std::this_thread::get_id()));
+    SPDLOG_INFO("{}: Client2 called OnThreadStarted", ToString(std::this_thread::get_id()));
+    StartTimer(2s);
+    StartTimer(2s);
+    StartTimer(2s);
     StartTimer(2s);
   }
 
  protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: Producer timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
+    SPDLOG_INFO("{}: Client2 timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
     return true;
   }
 };
 
-class TimerTest : public Object {
- public:
-  TimerTest(mdo::Thread* thread) : Object{thread} {
-    StartTimer(1s);
-  }
-
- protected:
-  bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: TimerTest timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
-    return true;
-  }
-};
+std::shared_ptr<Thread> CreateThread(const std::string& name = "") {
+  const auto thread = std::make_shared<Thread>();
+  thread->SetName(name);
+  return thread;
+}
 
 int main() {
   EnableConsoleLogging();
@@ -92,14 +88,14 @@ int main() {
 
   SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 
-  const auto thread = std::make_shared<Thread>();
-  thread->SetName("BackgroundThread");
+  const auto thread = CreateThread("BackgroundThread");
 
-  const auto app = std::make_shared<Application>();
-  const auto producer = std::make_shared<Producer>(thread.get());
+  const auto client1 = std::make_shared<Client1>();
+  const auto client2 = std::make_shared<Client2>(thread.get());
 
-  app->MySignal.Connect(producer.get(), &Producer::MySlot);
   thread->Start();
+
+  client1->SendMessageSignal.Connect(client2.get(), &Client2::OnMessage);
 
   const auto error = Dispatcher::Instance().Exec();
 

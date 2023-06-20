@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-include(make_static_library_sanitized_target)
+include(make_executable_sanitized_target)
 
 set(THIS_TARGET_NAME tuple)
 project(${THIS_TARGET_NAME})
@@ -42,7 +42,7 @@ target_link_libraries(${THIS_TARGET_NAME} PUBLIC ${DEPS})
 #
 # creating sanitized version of this target to check UB
 #
-make_static_library_sanitized_target(
+make_executable_sanitized_target(
   TARGET_NAME ${THIS_TARGET_NAME}-sanitized
   SOURCES ${SOURCES_LIST}
   HEADERS ${HEADERS_LIST}

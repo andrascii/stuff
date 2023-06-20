@@ -1,7 +1,6 @@
 #include "thread.h"
 #include "adopted_thread.h"
 #include "object.h"
-#include "atomic_helpers.h"
 #include "objects_registry.h"
 
 #if defined(USE_WINDOWS_SET_THREAD_NAME_HACK)
@@ -293,7 +292,12 @@ namespace {
 
 void DeleteAdoptedMainThread() {
   using namespace mdo;
-  delete LoadRelaxed(the_main_thread);
+
+  Thread* prev = the_main_thread.exchange(nullptr, std::memory_order_relaxed);
+
+  if (prev) {
+    delete prev;
+  }
 }
 
 }

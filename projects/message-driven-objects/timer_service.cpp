@@ -254,7 +254,6 @@ class TimerService::Impl {
     }
 
     managing_thread_->Start();
-    return;
   }
 
   void Stop() {
@@ -265,15 +264,18 @@ class TimerService::Impl {
     int timer_id = NextTimerId();
 
     SetTimer(timer_id, object, ms, single_shot);
-    ++events_count_;
 
-    std::scoped_lock _{ mutex_ };
+    {
+      std::scoped_lock _{mutex_};
 
-    contexts_[timer_id] = TimerContext{
-      object,
-      ms,
-      single_shot
-    };
+      contexts_[timer_id] = TimerContext{
+        object,
+        ms,
+        single_shot
+      };
+    }
+
+    events_count_.fetch_add(1, std::memory_order_relaxed);
 
     return timer_id;
   }
@@ -287,7 +289,7 @@ class TimerService::Impl {
       std::terminate();
     }
 
-    --events_count_;
+    events_count_.fetch_sub(1, std::memory_order_relaxed);
 
     std::scoped_lock _{ mutex_ };
     contexts_.erase(id);
@@ -309,11 +311,11 @@ class TimerService::Impl {
 
  private:
   static int NextTimerId() noexcept {
-    static std::atomic<int> timer_id = 0;
+    static std::atomic<int> timer_id = 1;
     return timer_id.fetch_add(1, std::memory_order_relaxed);
   }
 
-  void SetTimer(int id, Object* object, const std::chrono::milliseconds& ms, bool single_shot) {
+  void SetTimer(int id, Object* object, const std::chrono::milliseconds& ms, bool single_shot) const {
     uint16_t flags = EV_ADD | EV_ENABLE;
 
     if (single_shot) {
@@ -330,11 +332,11 @@ class TimerService::Impl {
   }
 
   void Run() {
-    std::vector<struct kevent> events{ events_count_ };
+    std::vector<struct kevent> events{ LoadRelaxed(events_count_) };
 
     for (; !managing_thread_->IsInterruptionRequested();) {
-      if (events_count_ != events.size()) {
-        events.resize(events_count_);
+      if (LoadRelaxed(events_count_) != events.size()) {
+        events.resize(LoadRelaxed(events_count_));
       }
 
       timespec timeout{};
@@ -364,7 +366,7 @@ class TimerService::Impl {
 
   int kq_;
   std::shared_ptr<Thread> managing_thread_;
-  uint64_t events_count_;
+  std::atomic<uint64_t> events_count_;
 
   mutable std::mutex mutex_;
   std::map<int, TimerContext> contexts_;
@@ -497,21 +499,33 @@ class TimerService::Impl {
         read(events[i].data.fd, &val, 8);
 
         if (events[i].events & (EPOLLIN | EPOLLERR)) {
-          std::scoped_lock _{mutex_};
+          const auto extract_context = [this](const auto timer_id) -> std::optional<TimerContext> {
+            std::scoped_lock _{mutex_};
 
-          const auto it = timer_fds_.find(events[i].data.fd);
+            const auto it = timer_fds_.find(timer_id);
 
-          if (it == timer_fds_.end()) {
+            if (it == timer_fds_.end()) {
+              return std::nullopt;
+            }
+
+            TimerContext ctx = it->second;
+
+            if (it->second.single_shot) {
+              timer_fds_.erase(it);
+            }
+
+            return ctx;
+          };
+
+          const auto optional_context = extract_context(events[i].data.fd);
+
+          if (!optional_context.has_value()) {
             SPDLOG_WARN("occurred timer tick for unknown timer id '{}', possibly it was deleted", events[i].data.fd);
             continue;
           }
 
           SPDLOG_TRACE("dispatching timer tick for timer id: {}", events[i].data.fd);
           Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].data.fd, nullptr, it->second.object));
-
-          if (it->second.single_shot) {
-            timer_fds_.erase(it);
-          }
         }
       }
 
@@ -540,11 +554,7 @@ TimerService* TimerService::Instance() {
     NewOpEnabler() : TimerService() {}
   };
 
-  static std::unique_ptr<NewOpEnabler> instance = nullptr;
-
-  if (!instance) {
-    instance = std::make_unique<NewOpEnabler>();
-  }
+  static std::unique_ptr<NewOpEnabler> instance = std::make_unique<NewOpEnabler>();
 
   return instance.get();
 }

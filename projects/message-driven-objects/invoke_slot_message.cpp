@@ -3,8 +3,8 @@
 
 namespace mdo {
 
-InvokeSlotMessage::InvokeSlotMessage(const std::function<void()>& f, Object* sender, Object* receiver)
-    : AbstractMessage{kInvokeSlotMessage, sender, receiver},
+InvokeSlotMessage::InvokeSlotMessage(const std::function<void()>& f, Object* sender, Object* receiver, PriorityType priority)
+    : AbstractMessage{kInvokeSlotMessage, priority, sender, receiver},
       f_{f} {}
 
 bool InvokeSlotMessage::Accept(IMessageVisitor& visitor) noexcept {

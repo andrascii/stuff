@@ -4,11 +4,11 @@
 namespace mdo {
 
 Dispatcher& Dispatcher::Instance() {
-  static std::unique_ptr<Dispatcher> app = nullptr;
+  struct NewOpEnabler : Dispatcher {
+    NewOpEnabler() : Dispatcher() {}
+  };
 
-  if (!app) {
-    app.reset(new Dispatcher);
-  }
+  static std::unique_ptr<Dispatcher> app = std::make_unique<NewOpEnabler>();
 
   return *app;
 }
@@ -19,7 +19,11 @@ std::error_code Dispatcher::Exec() {
 }
 
 void Dispatcher::Quit() {
-  Instance().Thread()->Stop();
+  const auto thread = Instance().Thread();
+
+  if (thread) {
+    thread->Stop();
+  }
 }
 
 void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {

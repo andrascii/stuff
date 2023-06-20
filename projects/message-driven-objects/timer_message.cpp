@@ -3,8 +3,8 @@
 
 namespace mdo {
 
-TimerMessage::TimerMessage(int id, Object* sender, Object* receiver)
-    : AbstractMessage{kTimerMessage, sender, receiver},
+TimerMessage::TimerMessage(int id, Object* sender, Object* receiver, PriorityType priority)
+    : AbstractMessage{kTimerMessage, priority, sender, receiver},
       id_{id} {}
 
 bool TimerMessage::Accept(IMessageVisitor& visitor) noexcept {

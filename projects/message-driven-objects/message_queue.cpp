@@ -4,10 +4,11 @@
 
 namespace mdo {
 
-MessageQueue::MessageQueue() : interrupt_{} {}
+MessageQueue::MessageQueue()
+    : interrupt_{} {}
 
 void MessageQueue::Push(std::shared_ptr<IMessage> message) {
-  std::lock_guard _{mutex_};
+  std::unique_lock _{mutex_};
   messages_.push(std::move(message));
   condition_.notify_all();
 }
@@ -32,6 +33,8 @@ std::error_code MessageQueue::Poll(
 
   message = std::move_if_noexcept(messages_.front());
   messages_.pop();
+
+  condition_.notify_all();
 
   return {};
 }

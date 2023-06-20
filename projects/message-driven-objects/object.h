@@ -26,7 +26,7 @@ class Object {
   friend class MessageVisitor;
 
   Object();
-  Object(mdo::Thread* thread);
+  explicit Object(mdo::Thread* thread);
 
   virtual ~Object();
 
