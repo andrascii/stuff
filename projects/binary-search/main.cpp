@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iterator>
 #include <vector>
+#include <algorithm>
 
 template <typename C>
 void print(const C& container) {

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
 template <typename T, typename V>
 auto Search(T first, T last, const V& value) noexcept -> T {

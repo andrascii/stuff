@@ -35,7 +35,7 @@ class Thread : public Object {
   //! Yields execution of the current thread to another runnable thread, if any.
   //! Note that the operating system decides to which thread to switch.
   //!
-  static void Yield();
+  static void YieldThread();
 
   //!
   //! Forces the current thread to sleep for ms milliseconds.

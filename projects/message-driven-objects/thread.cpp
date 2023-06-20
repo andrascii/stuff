@@ -74,7 +74,7 @@ Thread* Thread::Current() {
   return *current_thread_data->thread;
 }
 
-void Thread::Yield() {
+void Thread::YieldThread() {
   std::this_thread::yield();
 }
 

@@ -3,6 +3,8 @@
 #include <mutex>
 #include <thread>
 #include <list>
+#include <utility>
+#include <functional>
 
 using namespace std::chrono;
 

@@ -20,22 +20,28 @@
 //
 // Spdlog
 //
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#include <spdlog/fmt/ostr.h>
-#include <spdlog/logger.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/daily_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 
-//
-// CppKafka
-//
-#include <cppkafka/cppkafka.h>
+#pragma warning(push)
+#pragma warning(disable: 4005)
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/event.h>
+  #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+  #include <spdlog/fmt/ostr.h>
+  #include <spdlog/logger.h>
+  #include <spdlog/sinks/basic_file_sink.h>
+  #include <spdlog/sinks/daily_file_sink.h>
+  #include <spdlog/sinks/stdout_color_sinks.h>
+  #include <spdlog/spdlog.h>
+
+#pragma warning(pop)
+
+#if !defined(_WIN32)
+  #include <unistd.h>
+  #include <sys/types.h>
+  #include <sys/event.h>
+#else
+  #define USE_WINDOWS_SET_THREAD_NAME_HACK
+  #include <windows.h>
+#endif
 
 template <typename T>
 std::string ToString(const T& data) {
