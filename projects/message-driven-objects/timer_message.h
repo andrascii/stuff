@@ -16,4 +16,4 @@ class TimerMessage : public AbstractMessage {
   int id_;
 };
 
-}
+}// namespace mdo

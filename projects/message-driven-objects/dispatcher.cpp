@@ -1,4 +1,5 @@
 #include "dispatcher.h"
+
 #include "thread.h"
 
 namespace mdo {
@@ -27,8 +28,8 @@ void Dispatcher::Quit() {
 }
 
 void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {
-  ThreadDataPtr data = GetThreadData(Instance().Thread());
+  const auto data = GetThreadData(Instance().Thread());
   data->queue.Push(std::move(message));
 }
 
-}
+}// namespace mdo

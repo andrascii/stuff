@@ -2,17 +2,17 @@
 
 #include "message_queue.h"
 #include "object.h"
-#include "thread_data.h"
 #include "signal.h"
+#include "thread_data.h"
 
 namespace mdo {
 
-static thread_local ThreadDataPtr current_thread_data = nullptr;
+static thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
 extern std::atomic<Thread*> the_main_thread;
 
 class Thread : public Object {
  public:
-  friend ThreadDataPtr GetThreadData(Thread* thread) noexcept;
+  friend std::shared_ptr<ThreadData> GetThreadData(Thread* thread) noexcept;
 
   //!
   //! This signal is emitted from the associated thread right before it finishes executing.
@@ -55,7 +55,7 @@ class Thread : public Object {
   //!
   //! Returns the newly created Thread instance.
   //!
-  template <typename Function, typename ... Args>
+  template <typename Function, typename... Args>
   static Thread* Create(Function&& f, Args&&... args) {
     const auto adopted_invoke = [=] {
       f(std::forward<Args>(args)...);
@@ -64,7 +64,7 @@ class Thread : public Object {
     return new Thread{adopted_invoke};
   }
 
-  explicit Thread(ThreadDataPtr data = nullptr);
+  explicit Thread(std::shared_ptr<ThreadData> data = nullptr);
 
   ~Thread() override;
 
@@ -135,6 +135,11 @@ class Thread : public Object {
   //!
   bool IsInterruptionRequested() const noexcept;
 
+  //!
+  //! Returns current thread ID
+  //!
+  static std::string Tid();
+
  protected:
   static void Run();
 
@@ -143,15 +148,14 @@ class Thread : public Object {
 
   explicit Thread(
     std::function<void()> alternative_entry_point,
-    ThreadDataPtr data = nullptr
-  );
+    std::shared_ptr<ThreadData> data = nullptr);
 
  private:
-  ThreadDataPtr data_;
+  std::shared_ptr<ThreadData> data_;
   std::future<void> future_;
   std::string name_;
   std::function<void()> alternative_entry_point_;
   Locked<std::set<Object*>> attached_;
 };
 
-}
+}// namespace mdo

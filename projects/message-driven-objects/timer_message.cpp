@@ -1,4 +1,5 @@
 #include "timer_message.h"
+
 #include "imessage_visitor.h"
 
 namespace mdo {
@@ -15,4 +16,4 @@ int TimerMessage::Id() const noexcept {
   return id_;
 }
 
-}
+}// namespace mdo

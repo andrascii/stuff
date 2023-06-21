@@ -1,8 +1,8 @@
+#include <algorithm>
 #include <functional>
 #include <iostream>
-#include <vector>
 #include <unordered_map>
-#include <algorithm>
+#include <vector>
 
 template <typename T, typename V>
 auto Search(T first, T last, const V& value) noexcept -> T {
@@ -100,7 +100,7 @@ void PrintPairs(const std::vector<int>& v, const std::vector<IndexPair>& pairs, 
 }
 
 int main() {
-  const auto v = std::vector{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+  const auto v = std::vector{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
   int sum = 0;
 

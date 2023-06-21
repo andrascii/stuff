@@ -15,8 +15,7 @@ void MessageQueue::Push(std::shared_ptr<IMessage> message) {
 
 std::error_code MessageQueue::Poll(
   std::shared_ptr<IMessage>& message,
-  const std::chrono::seconds& timeout
-) noexcept {
+  const std::chrono::seconds& timeout) noexcept {
   std::unique_lock _{mutex_};
 
   const auto has_event_or_interrupted = [this] {
@@ -46,10 +45,10 @@ void MessageQueue::SetInterruptFlag(bool value) noexcept {
   if (interrupt_) {
     condition_.notify_all();
   } else {
-    while(!messages_.empty()) {
+    while (!messages_.empty()) {
       messages_.pop();
     }
   }
 }
 
-}
+}// namespace mdo

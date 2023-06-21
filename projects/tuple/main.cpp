@@ -1,7 +1,7 @@
+#include <chrono>
 #include <iostream>
 #include <type_traits>
 #include <variant>
-#include <chrono>
 
 #include "tuple.h"
 
@@ -84,7 +84,8 @@ int main(int argc, char* argv[]) {
     } else if constexpr (std::is_same_v<DataSet5, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
       std::cout << "Data set value: " << data.value << std::endl;
     }
-  }, data_set);
+  },
+             data_set);
 
   std::cout << "Handle variant value by CallbacksPackage:" << std::endl;
 

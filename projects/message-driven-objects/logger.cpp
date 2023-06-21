@@ -76,4 +76,4 @@ std::error_code DisableConsoleLogging() noexcept {
   return std::error_code{};
 }
 
-}
+}// namespace mdo

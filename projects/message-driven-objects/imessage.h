@@ -34,4 +34,4 @@ class IMessage {
   }
 };
 
-}
+}// namespace mdo

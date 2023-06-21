@@ -32,8 +32,6 @@ inline T LoadSeqCst(const std::atomic<T>& atomic) noexcept {
   return atomic.load(std::memory_order_seq_cst);
 }
 
-
-
 template <typename T>
 inline void StoreRelaxed(std::atomic<T>& a, const T& v) noexcept {
   return a.store(v, std::memory_order_relaxed);
@@ -64,4 +62,4 @@ inline void StoreSeqCst(std::atomic<T>& atomic, const T& v) noexcept {
   return atomic.store(v, std::memory_order_seq_cst);
 }
 
-}
+}// namespace mdo

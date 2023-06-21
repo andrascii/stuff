@@ -1,7 +1,7 @@
 #pragma once
 
-#include "message_queue.h"
 #include "locked.h"
+#include "message_queue.h"
 
 namespace mdo {
 
@@ -18,6 +18,4 @@ struct ThreadData {
   Locked<bool> is_adopted;
 };
 
-using ThreadDataPtr = std::shared_ptr<ThreadData>;
-
-}
+}// namespace mdo

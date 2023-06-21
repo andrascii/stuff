@@ -1,12 +1,13 @@
 #include "timer_service.h"
-#include "timer_message.h"
-#include "dispatcher.h"
+
 #include "atomic_helpers.h"
+#include "dispatcher.h"
 #include "thread.h"
+#include "timer_message.h"
 
 namespace mdo {
 
-#if defined (_WIN32) || defined (_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 
 class TimerService::Impl {
  public:
@@ -14,12 +15,12 @@ class TimerService::Impl {
 
   struct TimerContext {
     TimerContext(Object* object, TimerService::Impl* impl, const std::chrono::milliseconds& ms, int id, bool single_shot)
-        : object{ object },
-          timer_handle{ CreateWaitableTimer(NULL, 0, NULL) },
-          impl{ impl },
-          ms{ ms },
-          id{ id },
-          single_shot{ single_shot } {}
+        : object{object},
+          timer_handle{CreateWaitableTimer(NULL, 0, NULL)},
+          impl{impl},
+          ms{ms},
+          id{id},
+          single_shot{single_shot} {}
 
     Object* object;
     HANDLE timer_handle;
@@ -30,8 +31,8 @@ class TimerService::Impl {
   };
 
   Impl()
-      : kq_{ CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0) },
-        evt_{ CreateEvent(NULL, 0, 0, NULL) } {
+      : kq_{CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)},
+        evt_{CreateEvent(NULL, 0, 0, NULL)} {
     if (!kq_ || !evt_) {
       SPDLOG_CRITICAL("can't initialize I/O completion port");
       std::terminate();
@@ -84,7 +85,7 @@ class TimerService::Impl {
   }
 
   void RemoveTimer(int id) {
-    std::scoped_lock _{ mutex_ };
+    std::scoped_lock _{mutex_};
 
     const auto it = contexts_.find(id);
 
@@ -98,7 +99,7 @@ class TimerService::Impl {
   }
 
   void ResetTimer(int id) {
-    std::scoped_lock _{ mutex_ };
+    std::scoped_lock _{mutex_};
 
     const auto it = contexts_.find(id);
 
@@ -114,8 +115,7 @@ class TimerService::Impl {
       context.id,
       context.object,
       context.ms,
-      context.single_shot
-    );
+      context.single_shot);
   }
 
  private:
@@ -127,7 +127,7 @@ class TimerService::Impl {
   void AddTimerImpl(int id, Object* object, const std::chrono::milliseconds& ms, bool single_shot) {
     auto context = std::make_unique<TimerContext>(object, this, ms, id, single_shot);
 
-    std::scoped_lock _{ mutex_ };
+    std::scoped_lock _{mutex_};
     to_add_.push_back(context.get());
     contexts_[id] = std::move(context);
   }
@@ -136,7 +136,7 @@ class TimerService::Impl {
     UNREFERENCED_PARAMETER(dwTimerLowValue);
     UNREFERENCED_PARAMETER(dwTimerHighValue);
 
-    if (!PostQueuedCompletionStatus(LoadRelaxed(this_ptr)->kq_, 0, (ULONG_PTR)arg, NULL)) {
+    if (!PostQueuedCompletionStatus(LoadRelaxed(this_ptr)->kq_, 0, (ULONG_PTR) arg, NULL)) {
       std::terminate();
     }
   }
@@ -154,7 +154,7 @@ class TimerService::Impl {
 
       int timer_id = static_cast<int>(events[0].lpCompletionKey);
 
-      std::scoped_lock _{ mutex_ };
+      std::scoped_lock _{mutex_};
       const auto it = contexts_.find(timer_id);
 
       if (it == contexts_.end()) {
@@ -165,8 +165,7 @@ class TimerService::Impl {
       const auto& context = it->second;
 
       Dispatcher::Dispatch(
-        std::make_shared<TimerMessage>(context->id, nullptr, context->object)
-      );
+        std::make_shared<TimerMessage>(context->id, nullptr, context->object));
 
       if (context->single_shot) {
         RemoveTimer(context->id);
@@ -175,24 +174,23 @@ class TimerService::Impl {
   }
 
 #pragma warning(push)
-#pragma warning(disable: 4312)
+#pragma warning(disable : 4312)
 
   void TimerThread() {
     for (; !Thread::Current()->IsInterruptionRequested();) {
       {
-        std::scoped_lock _{ mutex_ };
+        std::scoped_lock _{mutex_};
 
         for (const auto& context : to_add_) {
           long long due_ns100 = context->ms.count() * 1000 * -10;
 
           bool success = SetWaitableTimer(
             context->timer_handle,
-            (LARGE_INTEGER*)&due_ns100,
-            (LONG)context->ms.count(),
+            (LARGE_INTEGER*) &due_ns100,
+            (LONG) context->ms.count(),
             TimerFunc,
             reinterpret_cast<void*>(context->id),
-            1
-          );
+            1);
 
           if (!success) {
             std::terminate();
@@ -226,12 +224,12 @@ class TimerService::Impl {
 
 std::atomic<TimerService::Impl*> TimerService::Impl::this_ptr;
 
-#elif defined (__APPLE__)
+#elif defined(__APPLE__)
 
 class TimerService::Impl {
  public:
   Impl()
-      : kq_{ kqueue() },
+      : kq_{kqueue()},
         events_count_{} {
     if (kq_ == -1) {
       SPDLOG_CRITICAL("error initializing kqueue");
@@ -271,8 +269,7 @@ class TimerService::Impl {
       contexts_[timer_id] = TimerContext{
         object,
         ms,
-        single_shot
-      };
+        single_shot};
     }
 
     events_count_.fetch_add(1, std::memory_order_relaxed);
@@ -291,12 +288,12 @@ class TimerService::Impl {
 
     events_count_.fetch_sub(1, std::memory_order_relaxed);
 
-    std::scoped_lock _{ mutex_ };
+    std::scoped_lock _{mutex_};
     contexts_.erase(id);
   }
 
   void ResetTimer(int id) {
-    std::scoped_lock _{ mutex_ };
+    std::scoped_lock _{mutex_};
     const auto it = contexts_.find(id);
 
     if (it == contexts_.end()) {
@@ -332,7 +329,7 @@ class TimerService::Impl {
   }
 
   void Run() {
-    std::vector<struct kevent> events{ LoadRelaxed(events_count_) };
+    std::vector<struct kevent> events{LoadRelaxed(events_count_)};
 
     for (; !managing_thread_->IsInterruptionRequested();) {
       if (LoadRelaxed(events_count_) != events.size()) {
@@ -351,7 +348,7 @@ class TimerService::Impl {
       for (int i = 0; i < n; ++i) {
         if (events[i].filter == EVFILT_TIMER) {
           SPDLOG_TRACE("dispatching timer tick for timer id: {}", events[i].ident);
-          Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].ident, nullptr, (Object*)events[i].udata));
+          Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].ident, nullptr, (Object*) events[i].udata));
         }
       }
     }
@@ -376,7 +373,7 @@ class TimerService::Impl {
 
 class TimerService::Impl {
  public:
-  Impl() : kq_{ epoll_create(1) } {
+  Impl() : kq_{epoll_create(1)} {
     if (kq_ == -1) {
       SPDLOG_CRITICAL(strerror(errno));
       std::terminate();
@@ -394,7 +391,7 @@ class TimerService::Impl {
 
     request_interruption_.store(false, std::memory_order_relaxed);
 
-    f_ = std::async(std::launch::async, [this]{
+    f_ = std::async(std::launch::async, [this] {
       TimerThread();
     });
   }
@@ -431,7 +428,7 @@ class TimerService::Impl {
     SetTimer(timer_fd, ms, single_shot);
 
     std::scoped_lock _{mutex_};
-    timer_fds_.emplace(timer_fd, TimerContext{ ms, single_shot, object });
+    timer_fds_.emplace(timer_fd, TimerContext{ms, single_shot, object});
 
     return timer_fd;
   }
@@ -449,7 +446,7 @@ class TimerService::Impl {
   }
 
   void ResetTimer(int id) {
-    std::scoped_lock _{ mutex_ };
+    std::scoped_lock _{mutex_};
     const auto it = timer_fds_.find(id);
 
     if (it == end(timer_fds_)) {
@@ -467,7 +464,7 @@ class TimerService::Impl {
     const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(ms);
     const auto remaining_nanoseconds = nanoseconds - seconds;
 
-    struct itimerspec its{};
+    struct itimerspec its {};
     its.it_value.tv_sec = seconds.count();
     its.it_value.tv_nsec = remaining_nanoseconds.count();
 
@@ -579,4 +576,4 @@ TimerService::TimerService() : impl_{std::make_unique<Impl>()} {
   impl_->Start();
 }
 
-}
+}// namespace mdo

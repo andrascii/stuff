@@ -1,9 +1,10 @@
 #include "object.h"
-#include "message_visitor.h"
-#include "thread.h"
+
 #include "invoke_slot_message.h"
-#include "timer_service.h"
+#include "message_visitor.h"
 #include "objects_registry.h"
+#include "thread.h"
+#include "timer_service.h"
 
 namespace mdo {
 
@@ -18,7 +19,7 @@ Object::Object(mdo::Thread* thread)
 Object::~Object() {
   auto timers_access = *timers_;
 
-  for (auto it{timers_access->begin() }; it != timers_access->end(); ++it) {
+  for (auto it{timers_access->begin()}; it != timers_access->end(); ++it) {
     TimerService::Instance()->RemoveTimer(*it);
   }
 
@@ -63,4 +64,4 @@ bool Object::OnTimerMessage(TimerMessage&) {
   return false;
 }
 
-}
+}// namespace mdo

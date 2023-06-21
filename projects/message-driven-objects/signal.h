@@ -1,20 +1,20 @@
 #pragma once
 
-#include "object.h"
-#include "not_null.h"
 #include "dispatcher.h"
 #include "invoke_slot_message.h"
+#include "not_null.h"
+#include "object.h"
 #include "utils.h"
 
 namespace mdo {
 
-template <typename ... Args>
+template <typename... Args>
 class Signal final {
  public:
-  using FunctionSlot = void(*)(Args...);
+  using FunctionSlot = void (*)(Args...);
 
   template <typename ObjectType>
-  using MethodSlot = void(ObjectType::*)(Args...);
+  using MethodSlot = void (ObjectType::*)(Args...);
 
   using Slot = std::function<void(Args...)>;
 
@@ -35,8 +35,10 @@ class Signal final {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
-          std::invoke(slot, object, args...); // std::forward<Args>(args)...
-        }, owner_, object));
+          std::invoke(slot, object, args...);// std::forward<Args>(args)...
+        },
+                                                                 owner_,
+                                                                 object));
       }
     };
 
@@ -55,10 +57,10 @@ class Signal final {
 template <>
 class Signal<void> {
  public:
-  using FunctionSlot = void(*)();
+  using FunctionSlot = void (*)();
 
   template <typename ObjectType>
-  using MethodSlot = void(ObjectType::*)();
+  using MethodSlot = void (ObjectType::*)();
 
   using Slot = std::function<void()>;
 
@@ -80,7 +82,9 @@ class Signal<void> {
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
           std::invoke(slot, object);
-        }, owner_, object));
+        },
+                                                                 owner_,
+                                                                 object));
       }
     };
 
@@ -96,4 +100,4 @@ class Signal<void> {
   std::vector<Slot> slots_;
 };
 
-}
+}// namespace mdo

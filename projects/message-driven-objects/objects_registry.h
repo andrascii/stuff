@@ -63,4 +63,4 @@ class ObjectsRegistry final {
   std::set<Object*> objects_;
 };
 
-}
+}// namespace mdo

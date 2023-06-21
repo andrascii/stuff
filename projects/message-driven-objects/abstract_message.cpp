@@ -24,4 +24,4 @@ Object* AbstractMessage::Receiver() const noexcept {
   return receiver_;
 }
 
-}
+}// namespace mdo

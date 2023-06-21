@@ -22,4 +22,4 @@ class Dispatcher : public Object {
   Dispatcher() = default;
 };
 
-}
+}// namespace mdo

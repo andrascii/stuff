@@ -1,6 +1,7 @@
 #include "thread_data.h"
-#include "thread.h"
+
 #include "atomic_helpers.h"
+#include "thread.h"
 
 namespace mdo {
 
@@ -20,4 +21,4 @@ ThreadData::~ThreadData() {
   SPDLOG_TRACE("thread data for thread {} destroyed", ToString(*id));
 }
 
-}
+}// namespace mdo

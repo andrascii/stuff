@@ -1,4 +1,5 @@
 #include "invoke_slot_message.h"
+
 #include "imessage_visitor.h"
 
 namespace mdo {
@@ -15,4 +16,4 @@ void InvokeSlotMessage::Invoke() const {
   f_();
 }
 
-}
+}// namespace mdo

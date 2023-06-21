@@ -20,4 +20,4 @@ class AbstractMessage : public IMessage {
   Object* receiver_;
 };
 
-}
+}// namespace mdo

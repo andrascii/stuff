@@ -1,8 +1,8 @@
 #include "dispatcher.h"
 #include "logger.h"
+#include "signal.h"
 #include "thread.h"
 #include "timer_message.h"
-#include "signal.h"
 
 /*
  * do I need to implement building a tree using Objects? For what?
@@ -16,7 +16,7 @@ void SigIntHandler(int signal) {
   }
 }
 
-}
+}// namespace
 
 using namespace std::chrono;
 using namespace mdo;
@@ -32,11 +32,11 @@ class Client1 : public Object {
   }
 
   void OnMessage(const std::string& message) {
-    SPDLOG_INFO("{}: Client1 called OnMessage for value '{}'", ToString(std::this_thread::get_id()), message);
+    SPDLOG_INFO("{}: Client1 called OnMessage for value '{}'", Thread::Tid(), message);
   }
 
   void OnThreadStarted() {
-    SPDLOG_INFO("{}: Client1 called OnThreadStarted", ToString(std::this_thread::get_id()));
+    SPDLOG_INFO("{}: Client1 called OnThreadStarted", Thread::Tid());
     StartTimer(3s);
     SendMessageSignal("Hello, World!");
   }
@@ -45,7 +45,7 @@ class Client1 : public Object {
 
  protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: Client1 timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
+    SPDLOG_INFO("{}: Client1 timer ticked, timer id: {}", Thread::Tid(), message.Id());
     return true;
   }
 };
@@ -58,20 +58,17 @@ class Client2 : public Object {
   }
 
   void OnMessage(const std::string& message) {
-    SPDLOG_INFO("{}: Client2 called OnMessage for value {}", ToString(std::this_thread::get_id()), message);
+    SPDLOG_INFO("{}: Client2 called OnMessage for value {}", Thread::Tid(), message);
   }
 
   void OnThreadStarted() {
-    SPDLOG_INFO("{}: Client2 called OnThreadStarted", ToString(std::this_thread::get_id()));
-    StartTimer(2s);
-    StartTimer(2s);
-    StartTimer(2s);
+    SPDLOG_INFO("{}: Client2 called OnThreadStarted", Thread::Tid());
     StartTimer(2s);
   }
 
  protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: Client2 timer ticked, timer id: {}", ToString(std::this_thread::get_id()), message.Id());
+    SPDLOG_INFO("{}: Client2 timer ticked, timer id: {}", Thread::Tid(), message.Id());
     return true;
   }
 };
@@ -87,6 +84,7 @@ int main() {
   Logger()->set_level(spdlog::level::info);
 
   SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
+  Dispatcher::Instance().Thread()->SetName("MainThread");
 
   const auto thread = CreateThread("BackgroundThread");
 

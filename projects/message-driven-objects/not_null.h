@@ -160,4 +160,4 @@ NotNull<T> operator+(const NotNull<T>&, std::ptrdiff_t) = delete;
 template <class T>
 NotNull<T> operator+(std::ptrdiff_t, const NotNull<T>&) = delete;
 
-}// namespace common
+}// namespace mdo

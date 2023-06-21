@@ -13,4 +13,4 @@ class IMessageVisitor {
   virtual bool Visit(TimerMessage& message) = 0;
 };
 
-}
+}// namespace mdo

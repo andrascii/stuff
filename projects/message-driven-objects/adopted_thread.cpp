@@ -2,7 +2,7 @@
 
 namespace mdo {
 
-AdoptedThread::AdoptedThread(const ThreadDataPtr& data) : Thread{data} {}
+AdoptedThread::AdoptedThread(const std::shared_ptr<ThreadData>& data) : Thread{data} {}
 
 void AdoptedThread::Start() {
   Run();
@@ -12,4 +12,4 @@ void AdoptedThread::Stop() {
   GetThreadData(this)->queue.SetInterruptFlag(true);
 }
 
-}
+}// namespace mdo

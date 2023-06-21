@@ -1,8 +1,8 @@
 #pragma once
 
 #include "imessage.h"
-#include "message_queue.h"
 #include "locked.h"
+#include "message_queue.h"
 
 namespace mdo {
 
@@ -78,4 +78,4 @@ class Object {
   Locked<std::set<int>> timers_;
 };
 
-}
+}// namespace mdo

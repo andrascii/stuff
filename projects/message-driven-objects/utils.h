@@ -16,4 +16,4 @@ class Utils final {
   static Thread* CurrentThread();
 };
 
-}
+}// namespace mdo

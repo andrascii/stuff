@@ -17,4 +17,4 @@ class MessageVisitor : public IMessageVisitor {
   Object* object_;
 };
 
-}
+}// namespace mdo

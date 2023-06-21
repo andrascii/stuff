@@ -1,4 +1,5 @@
 #include "message_visitor.h"
+
 #include "object.h"
 
 namespace mdo {
@@ -14,4 +15,4 @@ bool MessageVisitor::Visit(TimerMessage& message) {
   return object_->OnTimerMessage(message);
 }
 
-}
+}// namespace mdo

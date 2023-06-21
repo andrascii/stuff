@@ -11,7 +11,8 @@ class Locked {
   template <typename F>
   class Access {
    public:
-    Access(F&& data, M& mutex) : data_{data}, locker_{mutex} {}
+    Access(F&& data, M& mutex) : data_{data},
+                                 locker_{mutex} {}
 
     T* operator->() noexcept {
       return &data_;
@@ -19,6 +20,14 @@ class Locked {
 
     const T* operator->() const noexcept {
       return &data_;
+    }
+
+    T& operator*() noexcept {
+      return data_;
+    }
+
+    const T& operator*() const noexcept {
+      return data_;
     }
 
     operator F&() noexcept {
@@ -68,4 +77,4 @@ class Locked {
   mutable M mutex_;
 };
 
-}
+}// namespace mdo

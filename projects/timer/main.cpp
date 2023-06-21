@@ -1,10 +1,10 @@
-#include <iostream>
 #include <chrono>
+#include <functional>
+#include <iostream>
+#include <list>
 #include <mutex>
 #include <thread>
-#include <list>
 #include <utility>
-#include <functional>
 
 using namespace std::chrono;
 
@@ -124,34 +124,29 @@ int main() {
   Log() << "adding timer for call Foo()...\n";
   timer_service.AddTimer(Timeout{
     3s,
-    [now = Clock::now()]{ Foo(time_point_cast<Milliseconds>(now)); }}
-  );
+    [now = Clock::now()] { Foo(time_point_cast<Milliseconds>(now)); }});
 
   Log() << "adding timer for call Bar()...\n";
   timer_service.AddTimer(Timeout{
     4s,
-    [now = Clock::now()]{ Bar(time_point_cast<Milliseconds>(now)); }}
-  );
+    [now = Clock::now()] { Bar(time_point_cast<Milliseconds>(now)); }});
 
   Log() << "adding timer for call Foo()...\n";
   timer_service.AddTimer(Timeout{
     5s,
-    [now = Clock::now()]{ Foo(time_point_cast<Milliseconds>(now)); }}
-  );
+    [now = Clock::now()] { Foo(time_point_cast<Milliseconds>(now)); }});
 
   for (uint32_t i = 0; i < 100; ++i) {
     Log() << "adding timer for call Bar()...\n";
     timer_service.AddTimer(Timeout{
       5s,
-      [now = Clock::now()]{ Bar(time_point_cast<Milliseconds>(now)); }}
-    );
+      [now = Clock::now()] { Bar(time_point_cast<Milliseconds>(now)); }});
   }
 
   Log() << "adding timer for call Foo()...\n";
   timer_service.AddTimer(Timeout{
     6s,
-    [now = Clock::now()]{ Foo(time_point_cast<Milliseconds>(now)); }}
-  );
+    [now = Clock::now()] { Foo(time_point_cast<Milliseconds>(now)); }});
 
   std::this_thread::sleep_for(10s);
 }

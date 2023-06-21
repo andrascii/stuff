@@ -12,8 +12,7 @@ class MessageQueue {
 
   std::error_code Poll(
     std::shared_ptr<IMessage>& message,
-    const std::chrono::seconds& timeout = 0s
-  ) noexcept;
+    const std::chrono::seconds& timeout = 0s) noexcept;
 
   void SetInterruptFlag(bool value) noexcept;
 
@@ -24,4 +23,4 @@ class MessageQueue {
   bool interrupt_;
 };
 
-}
+}// namespace mdo

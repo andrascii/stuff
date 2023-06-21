@@ -15,4 +15,4 @@ class InvokeSlotMessage : public AbstractMessage {
   std::function<void()> f_;
 };
 
-}
+}// namespace mdo
