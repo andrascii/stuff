@@ -15,4 +15,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
   add_compile_options("-pedantic")
   add_compile_options("-Wunknown-pragmas")
   add_compile_options("-Wunused-command-line-argument")
+  add_compile_options("-g")
+
+  if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_compile_options("-O0")
+  endif()
 endif()

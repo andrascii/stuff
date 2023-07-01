@@ -61,11 +61,6 @@ class Object {
   //!
   [[nodiscard]] mdo::Thread* Thread() const noexcept;
 
-  //!
-  //! \param thread sets the thread where this object will "live".
-  //!
-  void MoveToThread(mdo::Thread* thread) noexcept;
-
  protected:
   //
   // This function does not intended to be a virtual function
@@ -74,8 +69,9 @@ class Object {
   virtual bool OnTimerMessage(TimerMessage& message);
 
  private:
-  Locked<mdo::Thread*> thread_;
-  Locked<std::set<int>> timers_;
+  mutable std::mutex mutex_;
+  mdo::Thread* thread_;
+  std::set<int> timers_;
 };
 
 }// namespace mdo

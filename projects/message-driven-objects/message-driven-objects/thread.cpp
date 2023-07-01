@@ -1,5 +1,4 @@
 #include "thread.h"
-
 #include "adopted_thread.h"
 #include "object.h"
 #include "objects_registry.h"
@@ -34,15 +33,7 @@ void SetThreadName(DWORD thread_id, const std::string& thread_name) {
 
 #endif
 
-namespace {
-
-void DeleteAdoptedMainThread();
-
-}
-
 namespace mdo {
-
-std::atomic<Thread*> the_main_thread = nullptr;
 
 std::shared_ptr<ThreadData> GetThreadData(Thread* thread) noexcept {
   return thread->data_;
@@ -50,30 +41,15 @@ std::shared_ptr<ThreadData> GetThreadData(Thread* thread) noexcept {
 
 Thread* Thread::Current() {
   if (current_thread_data) {
-    return *current_thread_data->thread;
+    return current_thread_data->Thread();
   }
 
   current_thread_data = std::make_shared<ThreadData>();
-  current_thread_data->id = std::this_thread::get_id();
-  current_thread_data->is_adopted = true;
+  current_thread_data->SetId(std::this_thread::get_id());
+  current_thread_data->SetIsAdopted(true);
+  current_thread_data->SetThread(new AdoptedThread{current_thread_data});
 
-  Thread* adopted_thread = new AdoptedThread{current_thread_data};
-  current_thread_data->thread = adopted_thread;
-
-  Thread* previous = the_main_thread.exchange(adopted_thread, std::memory_order_relaxed);
-
-  if (previous) {
-    while (!the_main_thread.compare_exchange_weak(
-      adopted_thread,
-      previous,
-      std::memory_order_relaxed,
-      std::memory_order_relaxed))
-      ;
-  } else {
-    std::atexit(DeleteAdoptedMainThread);
-  }
-
-  return *current_thread_data->thread;
+  return current_thread_data->Thread();
 }
 
 void Thread::YieldThread() {
@@ -93,7 +69,7 @@ Thread::~Thread() {
 
   SPDLOG_TRACE("thread {} destroyed", thread_name);
 
-  data_->thread = nullptr;
+  data_->SetThread(nullptr);
 }
 
 void Thread::Attach(NotNull<Object*> object) {
@@ -111,7 +87,7 @@ const std::string& Thread::Name() const noexcept {
 void Thread::SetName(const std::string& name) {
   name_ = name;
 
-  if (*data_->is_adopted) {
+  if (data_->IsAdopted()) {
     SetCurrentThreadName(name_);
   }
 }
@@ -121,10 +97,12 @@ void Thread::Start() {
     return;
   }
 
+  SPDLOG_INFO("starting '{}' thread", Tid());
+
   future_ = std::async(std::launch::async, [this] {
     SetCurrentThreadName(name_);
     current_thread_data = data_;
-    current_thread_data->id = std::this_thread::get_id();
+    current_thread_data->SetId(std::this_thread::get_id());
 
     if (alternative_entry_point_) {
       alternative_entry_point_();
@@ -169,29 +147,27 @@ bool Thread::IsRunning() const noexcept {
 }
 
 void Thread::RequestInterruption() const noexcept {
-  data_->interruption_requested = true;
+  data_->SetInterruptionRequest();
 }
 
 bool Thread::IsInterruptionRequested() const noexcept {
-  return *data_->interruption_requested;
+  return data_->InterruptionRequested();
 }
 
 std::string Thread::Tid() {
-  const auto id = ToString(*current_thread_data->id);
-
-  const auto this_thread_access = *current_thread_data->thread;
-  const auto thread_name = (*this_thread_access)->Name();
+  const auto id = ToString(current_thread_data->Id());
+  auto thread_name = current_thread_data->Thread()->Name();
 
   if (thread_name.empty()) {
-    return ToString(*(*this_thread_access)->data_->id);
+    return ToString(id);
   }
 
   return thread_name;
 }
 
 void Thread::Run() {
-  current_thread_data->interruption_requested = false;
-  current_thread_data->queue.SetInterruptFlag(false);
+  current_thread_data->SetInterruptionRequest(false);
+  current_thread_data->Queue().SetInterruptFlag(false);
 
   const auto tid = Thread::Tid();
 
@@ -199,29 +175,31 @@ void Thread::Run() {
   // Sends LoopStartedMessage message to all objects which "lives" in this thread.
   // So the objects have an ability to find out when the loop is started and can initiate their job.
   //
-  Thread* this_thread = *current_thread_data->thread;
+  Thread* this_thread = current_thread_data->Thread();
 
   //
   // emit 'Started' signal
   //
   this_thread->Started();
 
-  for (; !*current_thread_data->interruption_requested;) {
+  SPDLOG_INFO("the '{}' thread started", tid);
+
+  for (; !current_thread_data->InterruptionRequested();) {
     std::shared_ptr<IMessage> message;
-    const auto error = current_thread_data->queue.Poll(message, 1s);
+    const auto error = current_thread_data->Queue().Poll(message, 1s);
 
     if (error == std::errc::interrupted) {
-      SPDLOG_TRACE("the thread '{}' is interrupted", tid);
+      SPDLOG_TRACE("the '{}' thread is interrupted", tid);
       break;
     }
 
     if (error == std::errc::timed_out) {
-      SPDLOG_TRACE("the thread '{}' has no messages", tid);
+      SPDLOG_TRACE("the '{}' thread has no messages", tid);
       continue;
     }
 
     if (message) {
-      SPDLOG_TRACE("the thread '{}' got a message", tid);
+      SPDLOG_TRACE("the '{}' thread got a message", tid);
     }
 
     //
@@ -234,7 +212,7 @@ void Thread::Run() {
       SPDLOG_INFO(
         "the object {} that lived in thread {} is dead so the message to it is skipped",
         static_cast<void*>(message->Receiver()),
-        ToString(*current_thread_data->id));
+        ToString(current_thread_data->Id()));
 
       continue;
     }
@@ -244,7 +222,7 @@ void Thread::Run() {
     if (this_thread == receiver_thread) {
       message->Receiver()->OnMessage(message);
     } else {
-      GetThreadData(receiver_thread)->queue.Push(message);
+      GetThreadData(receiver_thread)->Queue().Push(message);
     }
   }
 
@@ -252,6 +230,8 @@ void Thread::Run() {
   // emit 'Finished' signal
   //
   this_thread->Finished();
+
+  SPDLOG_INFO("the '{}' thread finished", tid);
 }
 
 void Thread::SetCurrentThreadName(const std::string& name) noexcept {
@@ -269,14 +249,14 @@ void Thread::StopImpl() {
     return;
   }
 
-  auto tid = ToString(*data_->id);
+  auto tid = ToString(data_->Id());
 
   if (!name_.empty()) {
     tid = name_ + "/" + tid;
   }
 
   RequestInterruption();
-  data_->queue.SetInterruptFlag(true);
+  data_->Queue().SetInterruptFlag(true);
 
   while (future_.wait_for(1s) == std::future_status::timeout) {
     SPDLOG_INFO("waiting for '{}' thread to stop", tid);
@@ -284,7 +264,7 @@ void Thread::StopImpl() {
 
   future_.get();
 
-  SPDLOG_INFO("thread '{}' has stopped", tid);
+  SPDLOG_INFO("the '{}' thread has stopped", tid);
 }
 
 Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<ThreadData> data)
@@ -297,21 +277,7 @@ Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<Th
     data_ = std::make_shared<ThreadData>();
   }
 
-  data_->thread = this;
+  data_->SetThread(this);
 }
 
 }// namespace mdo
-
-namespace {
-
-void DeleteAdoptedMainThread() {
-  using namespace mdo;
-
-  Thread* prev = the_main_thread.exchange(nullptr, std::memory_order_relaxed);
-
-  if (prev) {
-    delete prev;
-  }
-}
-
-}// namespace

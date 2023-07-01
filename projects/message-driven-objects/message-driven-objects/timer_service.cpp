@@ -237,6 +237,7 @@ class TimerService::Impl {
     }
 
     managing_thread_.reset(Thread::Create([this] {
+      Thread::SetCurrentThreadName("TimerService");
       Run();
     }));
   }

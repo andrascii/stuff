@@ -1,6 +1,6 @@
 #include "dispatcher.h"
 #include "logger.h"
-#include "signal.h"
+#include "signal_impl.h"
 #include "thread.h"
 #include "timer_message.h"
 

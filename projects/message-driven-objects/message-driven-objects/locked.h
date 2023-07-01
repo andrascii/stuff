@@ -11,8 +11,7 @@ class Locked {
   template <typename F>
   class Access {
    public:
-    Access(F&& data, M& mutex) : data_{data},
-                                 locker_{mutex} {}
+    Access(F&& data, M& mutex) : data_{data}, locker_{mutex} {}
 
     T* operator->() noexcept {
       return &data_;

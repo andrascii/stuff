@@ -9,7 +9,7 @@ void AdoptedThread::Start() {
 }
 
 void AdoptedThread::Stop() {
-  GetThreadData(this)->queue.SetInterruptFlag(true);
+  GetThreadData(this)->Queue().SetInterruptFlag(true);
 }
 
 }// namespace mdo

@@ -36,9 +36,7 @@ class Signal final {
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
           std::invoke(slot, object, args...);// std::forward<Args>(args)...
-        },
-                                                                 owner_,
-                                                                 object));
+        }, owner_, object));
       }
     };
 
@@ -49,6 +47,10 @@ class Signal final {
     slots_.emplace_back(slot);
   }
 
+  void DisconnectAll() noexcept {
+    slots_.clear();
+  }
+
  private:
   Object* owner_;
   std::vector<Slot> slots_;
@@ -57,8 +59,6 @@ class Signal final {
 template <>
 class Signal<void> {
  public:
-  using FunctionSlot = void (*)();
-
   template <typename ObjectType>
   using MethodSlot = void (ObjectType::*)();
 
@@ -82,17 +82,19 @@ class Signal<void> {
       } else {
         Dispatcher::Dispatch(std::make_shared<InvokeSlotMessage>([=] {
           std::invoke(slot, object);
-        },
-                                                                 owner_,
-                                                                 object));
+        }, owner_, object));
       }
     };
 
     slots_.push_back(wrapper);
   }
 
-  void Connect(FunctionSlot slot) {
+  void Connect(Slot slot) {
     slots_.emplace_back(slot);
+  }
+
+  void DisconnectAll() noexcept {
+    slots_.clear();
   }
 
  private:

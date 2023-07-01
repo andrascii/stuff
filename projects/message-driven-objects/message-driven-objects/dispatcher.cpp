@@ -1,5 +1,4 @@
 #include "dispatcher.h"
-
 #include "thread.h"
 
 namespace mdo {
@@ -15,21 +14,26 @@ Dispatcher& Dispatcher::Instance() {
 }
 
 std::error_code Dispatcher::Exec() {
+  Thread()->SetName("dispatcher");
   Thread()->Start();
   return {};
 }
 
 void Dispatcher::Quit() {
   const auto thread = Instance().Thread();
+  const auto thread_data = GetThreadData(thread);
 
-  if (thread) {
-    thread->Stop();
-  }
+  thread->Stop();
+
+  //
+  // WARN: mandatory call to ensure running tests
+  //
+  thread->Started.DisconnectAll();
 }
 
 void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {
   const auto data = GetThreadData(Instance().Thread());
-  data->queue.Push(std::move(message));
+  data->Queue().Push(std::move(message));
 }
 
 }// namespace mdo

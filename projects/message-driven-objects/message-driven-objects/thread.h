@@ -2,13 +2,12 @@
 
 #include "message_queue.h"
 #include "object.h"
-#include "signal.h"
+#include "signal_impl.h"
 #include "thread_data.h"
 
 namespace mdo {
 
 static thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
-extern std::atomic<Thread*> the_main_thread;
 
 class Thread : public Object {
  public:
