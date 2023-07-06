@@ -7,4 +7,5 @@ project(${THIS_TARGET_NAME})
 # adding targets
 #
 add_subdirectory(message-driven-objects)
+add_subdirectory(benchmarks)
 add_subdirectory(tests)

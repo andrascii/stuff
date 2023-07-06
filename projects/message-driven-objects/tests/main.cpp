@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv) {
   for (int i = 0; i < argc; ++i) {
-    if (std::strcmp(argv[i], "-l") != 0) {
+    if (std::strcmp(argv[i], "-l") != 0 && std::strcmp(argv[i], "--logging") != 0) {
       continue;
     }
 

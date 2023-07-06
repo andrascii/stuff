@@ -9,6 +9,8 @@ namespace mdo {
 class Thread;
 class InvokeSlotMessage;
 class TimerMessage;
+class BenchmarkMessage;
+class TestMessage;
 
 /*!
 
@@ -66,7 +68,10 @@ class Object {
   // This function does not intended to be a virtual function
   //
   bool OnInvokeSlotMessage(InvokeSlotMessage& message);
+
   virtual bool OnTimerMessage(TimerMessage& message);
+  virtual bool OnBenchmarkMessage(BenchmarkMessage& message);
+  virtual bool OnTestMessage(TestMessage& message);
 
  private:
   mutable std::mutex mutex_;

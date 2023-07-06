@@ -67,7 +67,7 @@ Thread::~Thread() {
 
   const auto thread_name = name_.empty() ? ToString(std::this_thread::get_id()) : name_;
 
-  SPDLOG_TRACE("thread {} destroyed", thread_name);
+  LOG_TRACE("thread {} destroyed", thread_name);
 
   data_->SetThread(nullptr);
 }
@@ -97,7 +97,7 @@ void Thread::Start() {
     return;
   }
 
-  SPDLOG_INFO("starting '{}' thread", Tid());
+  LOG_INFO("starting '{}' thread", Tid());
 
   future_ = std::async(std::launch::async, [this] {
     SetCurrentThreadName(name_);
@@ -127,7 +127,7 @@ bool Thread::WaitFor(const std::chrono::milliseconds& ms) const noexcept {
   const auto await_result = future_.wait_for(ms);
 
   if (await_result == std::future_status::deferred) {
-    SPDLOG_CRITICAL("the thread function must not be in a deferred state");
+    LOG_CRITICAL("the thread function must not be in a deferred state");
     std::terminate();
   }
 
@@ -182,24 +182,24 @@ void Thread::Run() {
   //
   this_thread->Started();
 
-  SPDLOG_INFO("the '{}' thread started", tid);
+  LOG_INFO("the '{}' thread started", tid);
 
   for (; !current_thread_data->InterruptionRequested();) {
     std::shared_ptr<IMessage> message;
     const auto error = current_thread_data->Queue().Poll(message, 1s);
 
     if (error == std::errc::interrupted) {
-      SPDLOG_TRACE("the '{}' thread is interrupted", tid);
+      LOG_TRACE("the '{}' thread is interrupted", tid);
       break;
     }
 
     if (error == std::errc::timed_out) {
-      SPDLOG_TRACE("the '{}' thread has no messages", tid);
+      LOG_TRACE("the '{}' thread has no messages", tid);
       continue;
     }
 
     if (message) {
-      SPDLOG_TRACE("the '{}' thread got a message", tid);
+      LOG_TRACE("the '{}' thread got a message", tid);
     }
 
     //
@@ -209,7 +209,7 @@ void Thread::Run() {
     std::scoped_lock _{ObjectsRegistry::Instance()};
 
     if (!ObjectsRegistry::Instance().HasObject(message->Receiver())) {
-      SPDLOG_INFO(
+      LOG_INFO(
         "the object {} that lived in thread {} is dead so the message to it is skipped",
         static_cast<void*>(message->Receiver()),
         ToString(current_thread_data->Id()));
@@ -231,7 +231,7 @@ void Thread::Run() {
   //
   this_thread->Finished();
 
-  SPDLOG_INFO("the '{}' thread finished", tid);
+  LOG_INFO("the '{}' thread finished", tid);
 }
 
 void Thread::SetCurrentThreadName(const std::string& name) noexcept {
@@ -259,12 +259,12 @@ void Thread::StopImpl() {
   data_->Queue().SetInterruptFlag(true);
 
   while (future_.wait_for(1s) == std::future_status::timeout) {
-    SPDLOG_INFO("waiting for '{}' thread to stop", tid);
+    LOG_INFO("waiting for '{}' thread to stop", tid);
   }
 
   future_.get();
 
-  SPDLOG_INFO("the '{}' thread has stopped", tid);
+  LOG_INFO("the '{}' thread has stopped", tid);
 }
 
 Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<ThreadData> data)

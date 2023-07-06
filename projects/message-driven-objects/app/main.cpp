@@ -32,11 +32,11 @@ class Client1 : public Object {
   }
 
   void OnMessage(const std::string& message) {
-    SPDLOG_INFO("{}: Client1 called OnMessage for value '{}'", Thread::Tid(), message);
+    LOG_INFO("{}: Client1 called OnMessage for value '{}'", Thread::Tid(), message);
   }
 
   void OnThreadStarted() {
-    SPDLOG_INFO("{}: Client1 called OnThreadStarted", Thread::Tid());
+    LOG_INFO("{}: Client1 called OnThreadStarted", Thread::Tid());
     StartTimer(3s);
     SendMessageSignal("Hello, World!");
   }
@@ -45,7 +45,7 @@ class Client1 : public Object {
 
  protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: Client1 timer ticked, timer id: {}", Thread::Tid(), message.Id());
+    LOG_INFO("{}: Client1 timer ticked, timer id: {}", Thread::Tid(), message.Id());
     return true;
   }
 };
@@ -58,17 +58,17 @@ class Client2 : public Object {
   }
 
   void OnMessage(const std::string& message) {
-    SPDLOG_INFO("{}: Client2 called OnMessage for value {}", Thread::Tid(), message);
+    LOG_INFO("{}: Client2 called OnMessage for value {}", Thread::Tid(), message);
   }
 
   void OnThreadStarted() {
-    SPDLOG_INFO("{}: Client2 called OnThreadStarted", Thread::Tid());
+    LOG_INFO("{}: Client2 called OnThreadStarted", Thread::Tid());
     StartTimer(2s);
   }
 
  protected:
   bool OnTimerMessage(TimerMessage& message) override {
-    SPDLOG_INFO("{}: Client2 timer ticked, timer id: {}", Thread::Tid(), message.Id());
+    LOG_INFO("{}: Client2 timer ticked, timer id: {}", Thread::Tid(), message.Id());
     return true;
   }
 };
@@ -83,7 +83,7 @@ int main() {
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 
-  SPDLOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
+  LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
   Dispatcher::Instance().Thread()->SetName("MainThread");
 
   const auto thread = CreateThread("BackgroundThread");
@@ -98,7 +98,7 @@ int main() {
   const auto error = Dispatcher::Instance().Exec();
 
   if (error) {
-    SPDLOG_ERROR(error.message());
+    LOG_ERROR(error.message());
     return EXIT_FAILURE;
   }
 

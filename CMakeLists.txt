@@ -54,6 +54,7 @@ find_package(spdlog REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(tl-expected CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(benchmark CONFIG REQUIRED)
 
 #
 # C++ compiler settings

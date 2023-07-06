@@ -2,18 +2,13 @@
 
 namespace mdo {
 
-AbstractMessage::AbstractMessage(MessageType type, PriorityType priority, Object* sender, Object* receiver)
+AbstractMessage::AbstractMessage(MessageType type, Object* sender, Object* receiver)
     : type_{type},
-      priority_{priority},
       sender_{sender},
       receiver_{receiver} {}
 
 IMessage::MessageType AbstractMessage::Type() const noexcept {
   return type_;
-}
-
-IMessage::PriorityType AbstractMessage::Priority() const noexcept {
-  return priority_;
 }
 
 Object* AbstractMessage::Sender() const noexcept {

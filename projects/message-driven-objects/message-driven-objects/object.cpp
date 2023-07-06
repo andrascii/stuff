@@ -63,7 +63,15 @@ bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
   return true;
 }
 
+bool Object::OnBenchmarkMessage(BenchmarkMessage&) {
+  return true;
+}
+
 bool Object::OnTimerMessage(TimerMessage&) {
+  return false;
+}
+
+bool Object::OnTestMessage(TestMessage&) {
   return false;
 }
 

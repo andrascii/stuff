@@ -6,7 +6,7 @@ namespace mdo {
 
 class TimerMessage : public AbstractMessage {
  public:
-  TimerMessage(int id, Object* sender, Object* receiver, PriorityType priority = kTimeCriticalPriority);
+  TimerMessage(int id, Object* sender, Object* receiver);
 
   bool Accept(IMessageVisitor& visitor) noexcept override;
 

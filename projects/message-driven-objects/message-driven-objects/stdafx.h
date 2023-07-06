@@ -49,4 +49,6 @@ std::string ToString(const T& data) {
   return ss.str();
 }
 
+#include "logger.h"
+
 using namespace std::chrono_literals;

@@ -34,7 +34,7 @@ class TimerService::Impl {
       : kq_{CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)},
         evt_{CreateEvent(NULL, 0, 0, NULL)} {
     if (!kq_ || !evt_) {
-      SPDLOG_CRITICAL("can't initialize I/O completion port");
+      LOG_CRITICAL("can't initialize I/O completion port");
       std::terminate();
     }
 
@@ -63,12 +63,12 @@ class TimerService::Impl {
   void Start() {
     if (!iocp_thread_->IsRunning()) {
       iocp_thread_->Start();
-      SPDLOG_TRACE("started IOCP thread");
+      LOG_TRACE("started IOCP thread");
     }
 
     if (!timer_thread_->IsRunning()) {
       timer_thread_->Start();
-      SPDLOG_TRACE("started timer thread");
+      LOG_TRACE("started timer thread");
     }
   }
 
@@ -158,7 +158,7 @@ class TimerService::Impl {
       const auto it = contexts_.find(timer_id);
 
       if (it == contexts_.end()) {
-        SPDLOG_WARN("occurred timer tick for unknown timer id '{}', possibly it was deleted", timer_id);
+        LOG_WARNING("occurred timer tick for unknown timer id '{}', possibly it was deleted", timer_id);
         continue;
       }
 
@@ -232,7 +232,7 @@ class TimerService::Impl {
       : kq_{kqueue()},
         events_count_{} {
     if (kq_ == -1) {
-      SPDLOG_CRITICAL("error initializing kqueue");
+      LOG_CRITICAL("error initializing kqueue");
       std::terminate();
     }
 
@@ -283,7 +283,7 @@ class TimerService::Impl {
     EV_SET(&evt, id, EVFILT_TIMER, EV_DELETE, 0, 0, nullptr);
 
     if (kevent(kq_, &evt, 1, nullptr, 0, nullptr)) {
-      SPDLOG_CRITICAL("cannot remove kevent with id: {}", id);
+      LOG_CRITICAL("cannot remove kevent with id: {}", id);
       std::terminate();
     }
 
@@ -298,7 +298,7 @@ class TimerService::Impl {
     const auto it = contexts_.find(id);
 
     if (it == contexts_.end()) {
-      SPDLOG_WARN("resetting unknown timer id '{}'", id);
+      LOG_WARNING("resetting unknown timer id '{}'", id);
       return;
     }
 
@@ -324,7 +324,7 @@ class TimerService::Impl {
     EV_SET(&evt, id, EVFILT_TIMER, flags, 0, ms.count(), object);
 
     if (kevent(kq_, &evt, 1, nullptr, 0, nullptr)) {
-      SPDLOG_CRITICAL("cannot add kevent with id: {}", id);
+      LOG_CRITICAL("cannot add kevent with id: {}", id);
       std::terminate();
     }
   }
@@ -348,7 +348,7 @@ class TimerService::Impl {
 
       for (int i = 0; i < n; ++i) {
         if (events[i].filter == EVFILT_TIMER) {
-          SPDLOG_TRACE("dispatching timer tick for timer id: {}", events[i].ident);
+          LOG_TRACE("dispatching timer tick for timer id: {}", events[i].ident);
           Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].ident, nullptr, (Object*) events[i].udata));
         }
       }
@@ -376,7 +376,7 @@ class TimerService::Impl {
  public:
   Impl() : kq_{epoll_create(1)} {
     if (kq_ == -1) {
-      SPDLOG_CRITICAL(strerror(errno));
+      LOG_CRITICAL(strerror(errno));
       std::terminate();
     }
   }
@@ -411,7 +411,7 @@ class TimerService::Impl {
     int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
 
     if (timer_fd == -1) {
-      SPDLOG_CRITICAL("timer register error: {}", strerror(errno));
+      LOG_CRITICAL("timer register error: {}", strerror(errno));
     }
 
     assert(timer_fd != -1);
@@ -422,7 +422,7 @@ class TimerService::Impl {
     event.data.fd = timer_fd;
 
     if (epoll_ctl(kq_, EPOLL_CTL_ADD, timer_fd, &event)) {
-      SPDLOG_CRITICAL("cannot add epoll event: {}", strerror(errno));
+      LOG_CRITICAL("cannot add epoll event: {}", strerror(errno));
       std::terminate();
     }
 
@@ -474,7 +474,7 @@ class TimerService::Impl {
     }
 
     if (timerfd_settime(id, 0, &its, NULL)) {
-      SPDLOG_CRITICAL("set timer error: {}", strerror(errno));
+      LOG_CRITICAL("set timer error: {}", strerror(errno));
       std::terminate();
     }
   }
@@ -518,11 +518,11 @@ class TimerService::Impl {
           const auto optional_context = extract_context(events[i].data.fd);
 
           if (!optional_context.has_value()) {
-            SPDLOG_WARN("occurred timer tick for unknown timer id '{}', possibly it was deleted", events[i].data.fd);
+            LOG_WARNING("occurred timer tick for unknown timer id '{}', possibly it was deleted", events[i].data.fd);
             continue;
           }
 
-          SPDLOG_TRACE("dispatching timer tick for timer id: {}", events[i].data.fd);
+          LOG_TRACE("dispatching timer tick for timer id: {}", events[i].data.fd);
           Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].data.fd, nullptr, it->second.object));
         }
       }

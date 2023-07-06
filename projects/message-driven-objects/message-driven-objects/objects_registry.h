@@ -23,7 +23,7 @@ class ObjectsRegistry final {
 
   ~ObjectsRegistry() {
     if (!objects_.empty()) {
-      SPDLOG_ERROR("ObjectsRegistry destroys but some Objects is still alive");
+      //Logger()->error("ObjectsRegistry destroys but some Objects is still alive");
     }
   }
 

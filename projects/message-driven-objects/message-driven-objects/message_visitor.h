@@ -12,6 +12,8 @@ class MessageVisitor : public IMessageVisitor {
 
   bool Visit(InvokeSlotMessage& message) override;
   bool Visit(TimerMessage& message) override;
+  bool Visit(BenchmarkMessage& message) override;
+  bool Visit(TestMessage& message) override;
 
  private:
   Object* object_;
