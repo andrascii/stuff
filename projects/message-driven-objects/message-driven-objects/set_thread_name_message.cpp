@@ -10,6 +10,9 @@ const std::string& SetThreadNameMessage::Name() const noexcept {
   return name_;
 }
 
+#pragma warning(push)
+#pragma warning(disable: 4702)
+
 Object* SetThreadNameMessage::Sender() const noexcept {
   LOG_CRITICAL("this method must never be called");
   std::abort();
@@ -27,5 +30,7 @@ bool SetThreadNameMessage::Accept(IMessageVisitor&) noexcept {
   std::abort();
   return false;
 }
+
+#pragma warning(pop)
 
 }

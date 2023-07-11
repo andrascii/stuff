@@ -38,15 +38,15 @@ class TimerService::Impl {
       std::terminate();
     }
 
-    iocp_thread_.reset(Thread::Create([this] {
-      Thread::SetCurrentThreadName("IOCP");
+    iocp_thread_ = Thread::Create([this] {
+      Thread::SetCurrentThreadName("iocp");
       IocpThread();
-    }));
+    });
 
-    timer_thread_.reset(Thread::Create([this] {
-      Thread::SetCurrentThreadName("TimerThread");
+    timer_thread_ = Thread::Create([this] {
+      Thread::SetCurrentThreadName("timer_thread");
       TimerThread();
-    }));
+    });
 
     StoreRelaxed(this_ptr, this);
   }
@@ -214,8 +214,8 @@ class TimerService::Impl {
   HANDLE kq_;
   HANDLE evt_;
 
-  std::unique_ptr<Thread> iocp_thread_;
-  std::unique_ptr<Thread> timer_thread_;
+  std::shared_ptr<Thread> iocp_thread_;
+  std::shared_ptr<Thread> timer_thread_;
 
   std::recursive_mutex mutex_;
   std::deque<TimerContext*> to_add_;
