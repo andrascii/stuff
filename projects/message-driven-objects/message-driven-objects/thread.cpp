@@ -174,10 +174,8 @@ bool Thread::IsInterruptionRequested() const noexcept {
 }
 
 void Thread::Run() {
-  auto ctd = current_thread_data;
-
-  ctd->SetInterruptionRequest(false);
-  ctd->Queue().SetInterruptFlag(false);
+  current_thread_data->SetInterruptionRequest(false);
+  current_thread_data->Queue().SetInterruptFlag(false);
 
   const auto tid = Thread::CurrentThreadId();
 
@@ -185,7 +183,7 @@ void Thread::Run() {
   // Sends LoopStartedMessage message to all objects which "lives" in this thread.
   // So the objects have an ability to find out when the loop is started and can initiate their job.
   //
-  const std::shared_ptr<Thread>& this_thread = ctd->Thread();
+  const std::shared_ptr<Thread>& this_thread = current_thread_data->Thread();
 
   //
   // emit 'Started' signal
@@ -195,14 +193,14 @@ void Thread::Run() {
   LOG_TRACE(
     "the '{}' thread started, current queue '{}' contains '{}' pending messages",
     tid,
-    (void*)&ctd->Queue(),
-    ctd->Queue().Size());
+    (void*)&current_thread_data->Queue(),
+    current_thread_data->Queue().Size());
 
-  for (; !ctd->InterruptionRequested();) {
+  for (; !current_thread_data->InterruptionRequested();) {
     std::shared_ptr<IMessage> message;
-    const auto error = ctd->Queue().Poll(message, 1s);
+    const auto error = current_thread_data->Queue().Poll(message, 1s);
 
-    LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*)&ctd->Queue());
+    LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*)&current_thread_data->Queue());
 
     if (error == std::errc::interrupted) {
       LOG_TRACE("the '{}' thread is interrupted", tid);
@@ -228,7 +226,7 @@ void Thread::Run() {
       LOG_INFO(
         "the object {} that lived in thread {} is dead so the message to it is skipped",
         static_cast<void*>(message->Receiver()),
-        ToString(ctd->Id()));
+        ToString(current_thread_data->Id()));
 
       continue;
     }
@@ -243,16 +241,16 @@ void Thread::Run() {
   }
 
   //
-  // what if some object still lives and sends to us a messages?
+  // TODO: what if some object still lives and sends to us a messages?
   // we need here block incoming messages but should continue handle that already received
   //
-  ctd->Queue().SetInterruptFlag(false);
+  current_thread_data->Queue().SetInterruptFlag(false);
 
   std::shared_ptr<IMessage> message;
   std::error_code ec;
 
   do {
-    ec = ctd->Queue().Poll(message, 1s);
+    ec = current_thread_data->Queue().Poll(message, 1s);
   } while (ec != std::errc::timed_out);
 
   //

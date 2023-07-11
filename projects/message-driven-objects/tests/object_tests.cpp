@@ -48,9 +48,6 @@ TEST(ObjectTests, ReceiveTimerMessage) {
     bool ticked_;
   };
 
-  /*const auto thread = Thread::Create("zalupa");
-  thread->Start();*/
-
   std::shared_ptr<A> a = std::make_shared<A>();
 
   auto future = std::async(std::launch::async, [] {
@@ -96,6 +93,8 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
     }
 
     void OnThreadStarted() {
+      EXPECT_EQ(Thread(), Thread::Current());
+
       LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       TestSignal();
     }
@@ -108,6 +107,8 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
     B() : slot_was_called_{} {}
 
     void Slot() noexcept {
+      EXPECT_EQ(Thread(), Thread::Current());
+
       LOG_TRACE("[tid: {}] slot was called", Thread()->Name());
       slot_was_called_ = true;
     }
@@ -145,6 +146,8 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
     }
 
     void OnThreadStarted() {
+      EXPECT_EQ(Thread(), Thread::Current());
+
       LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       TestSignal();
     }
@@ -159,6 +162,8 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
           slot_was_called_{} {}
 
     void Slot() noexcept {
+      EXPECT_EQ(Thread(), Thread::Current());
+
       LOG_TRACE("[tid: {}] slot was called", Thread()->Name());
       slot_was_called_ = true;
     }
@@ -198,6 +203,8 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
     }
 
     void OnThreadStarted() {
+      EXPECT_EQ(Thread(), Thread::Current());
+
       LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
 
       TestSignal("Hello, ");
@@ -215,6 +222,8 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
   class B : public Object {
    public:
     void Slot(const std::string& s) {
+      EXPECT_EQ(Thread(), Thread::Current());
+
       LOG_TRACE("[tid: {}] slot was called", Thread()->Name());
       cumulative_ += s;
     }
@@ -253,6 +262,7 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
     }
 
     void OnThreadStarted() {
+      EXPECT_EQ(Thread(), Thread::Current());
       LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       Dispatcher::Dispatch(std::make_shared<TestMessage>("Hello, ", this, receiver_));
       Dispatcher::Dispatch(std::make_shared<TestMessage>("World! ", this, receiver_));
@@ -275,6 +285,7 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
 
    protected:
     bool OnTestMessage(TestMessage& message) override {
+      EXPECT_EQ(Thread(), Thread::Current());
       LOG_TRACE("[tid: {}] OnTestMessage was called", Thread()->Name());
       cumulative_ += message.Data();
       return true;

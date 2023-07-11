@@ -3,6 +3,7 @@
 #include "signal_impl.h"
 #include "thread.h"
 #include "timer_message.h"
+#include "test_message.h"
 
 /*
  * do I need to implement building a tree using Objects? For what?
@@ -21,79 +22,92 @@ void SigIntHandler(int signal) {
 using namespace std::chrono;
 using namespace mdo;
 
-class Client1 : public Object {
+constexpr size_t kGenMsgsCount = 100000000;
+
+class Receiver : public Object {
  public:
-  Client1()
-      : SendMessageSignal{this} {
-    std::signal(SIGINT, SigIntHandler);
-
-    SendMessageSignal.Connect(this, &Client1::OnMessage);
-    Thread()->Started.Connect(this, &Client1::OnThreadStarted);
-  }
-
-  void OnMessage(const std::string& message) {
-    LOG_INFO("{}: Client1 called OnMessage for value '{}'", Thread::Tid(), message);
+   Receiver() : ctr_{} {
+    Thread()->Started.Connect(this, &Receiver::OnThreadStarted);
   }
 
   void OnThreadStarted() {
-    LOG_INFO("{}: Client1 called OnThreadStarted", Thread::Tid());
-    StartTimer(3s);
-    SendMessageSignal("Hello, World!");
+    LOG_INFO("Receiver object started in the thread '{}'", Thread()->Name());
   }
 
-  Signal<const std::string&> SendMessageSignal;
+  size_t Counter() const noexcept {
+    return ctr_;
+  }
 
  protected:
-  bool OnTimerMessage(TimerMessage& message) override {
-    LOG_INFO("{}: Client1 timer ticked, timer id: {}", Thread::Tid(), message.Id());
+  bool OnTestMessage(TestMessage&) override {
+    static const auto start = high_resolution_clock::now();
+
+    ++ctr_;
+
+    if (ctr_ == kGenMsgsCount - 1) {
+      const auto delta = high_resolution_clock::now() - start;
+      const auto msgs_per_sec = (ctr_ + 1) / duration_cast<milliseconds>(delta).count();
+
+      LOG_INFO(
+        "Receiver done, current value is '{}', delta is '{}', messages per millisecond is '{}'",
+        ctr_ + 1,
+        duration_cast<milliseconds>(delta),
+        msgs_per_sec
+      );
+    }
+
     return true;
   }
+
+private:
+  size_t ctr_;
 };
 
-class Client2 : public Object {
+class Sender : public Object {
  public:
-  explicit Client2(mdo::Thread* thread)
-      : Object{thread} {
-    Thread()->Started.Connect(this, &Client2::OnThreadStarted);
-  }
-
-  void OnMessage(const std::string& message) {
-    LOG_INFO("{}: Client2 called OnMessage for value {}", Thread::Tid(), message);
+  explicit Sender(const std::shared_ptr<mdo::Thread>& thread, size_t gen_msg_count, Object* receiver)
+    : Object{ thread },
+      gen_msg_count_{ gen_msg_count },
+      receiver_{ receiver } {
+    Thread()->Started.Connect(this, &Sender::OnThreadStarted);
   }
 
   void OnThreadStarted() {
-    LOG_INFO("{}: Client2 called OnThreadStarted", Thread::Tid());
-    StartTimer(2s);
+    LOG_INFO("Sender object started in the thread '{}', generating messages...", Thread()->Name());
+
+    static const auto start = high_resolution_clock::now();
+
+    for (size_t i = 0; i < gen_msg_count_; ++i) {
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("Hello!", this, receiver_));
+    }
+
+    const auto delta = high_resolution_clock::now() - start;
+    const auto msgs_per_sec = gen_msg_count_ / duration_cast<milliseconds>(delta).count();
+
+    LOG_INFO(
+      "Sender done, delta is '{}', messages per millisecond is '{}'",
+      duration_cast<milliseconds>(delta),
+      msgs_per_sec
+    );
   }
 
- protected:
-  bool OnTimerMessage(TimerMessage& message) override {
-    LOG_INFO("{}: Client2 timer ticked, timer id: {}", Thread::Tid(), message.Id());
-    return true;
-  }
+private:
+  size_t gen_msg_count_;
+  Object* receiver_;
 };
-
-std::shared_ptr<Thread> CreateThread(const std::string& name = "") {
-  const auto thread = std::make_shared<Thread>();
-  thread->SetName(name);
-  return thread;
-}
 
 int main() {
+  std::signal(SIGINT, SigIntHandler);
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 
   LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
-  Dispatcher::Instance().Thread()->SetName("MainThread");
 
-  const auto thread = CreateThread("BackgroundThread");
-
-  const auto client1 = std::make_shared<Client1>();
-  const auto client2 = std::make_shared<Client2>(thread.get());
-
+  const auto thread = Thread::Create("sender_thread");
   thread->Start();
 
-  client1->SendMessageSignal.Connect(client2.get(), &Client2::OnMessage);
+  const auto receiver = std::make_shared<Receiver>();
+  const auto sender = std::make_shared<Sender>(thread, kGenMsgsCount, receiver.get());
 
   const auto error = Dispatcher::Instance().Exec();
 

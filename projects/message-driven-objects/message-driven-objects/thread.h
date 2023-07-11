@@ -7,6 +7,11 @@
 
 namespace mdo {
 
+//!
+//! WARN: do not use current_thread_data it's for internal use only!
+//! Using this variable is very easy to make a mistake in your code!
+//! Instead of it use a call GetThreadData(Thread::Current()) or GetThreadData(thread).
+//!
 static thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
 
 class Thread : public std::enable_shared_from_this<Thread>, public Object {

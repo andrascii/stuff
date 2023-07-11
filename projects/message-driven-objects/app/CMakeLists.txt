@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME message-driven-objects)
+set(THIS_TARGET_NAME mdo-app)
 project(${THIS_TARGET_NAME})
 
 #
@@ -14,7 +14,7 @@ set(PRECOMPILED_HEADER "stdafx.h")
 # deps include directories
 #
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
-list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "message-driven-objects")
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../message-driven-objects")
 
 #
 # deps
@@ -35,12 +35,6 @@ file(GLOB_RECURSE HEADERS_LIST "*.h")
 # adding include directories to created target
 #
 include_directories(${ADDITIONAL_INCLUDE_DIRECTORIES})
-
-#
-# adding targets
-#
-add_subdirectory(message-driven-objects)
-add_subdirectory(tests)
 
 #
 # creating target
