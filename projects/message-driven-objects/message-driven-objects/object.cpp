@@ -13,6 +13,10 @@ Object::Object()
 
 Object::Object(std::shared_ptr<mdo::Thread> thread)
     : thread_{std::move(thread)} {
+  if (!thread_) {
+    thread_ = Thread::Current();
+  }
+
   ObjectsRegistry::Instance().RegisterObject(this);
 }
 

@@ -9,7 +9,7 @@ using namespace mdo;
 TEST(ObjectTests, ReceiveTimerMessage) {
   class A : public Object {
    public:
-    A() : timer_id_{-1}, ticked_{} {
+    A(std::shared_ptr<mdo::Thread> thread = nullptr) : Object{std::move(thread)}, timer_id_{-1}, ticked_{} {
       Thread()->Started.Connect(this, &A::OnThreadStarted);
     }
 
@@ -24,7 +24,7 @@ TEST(ObjectTests, ReceiveTimerMessage) {
 
    protected:
     bool OnTimerMessage(TimerMessage& msg) override {
-      EXPECT_EQ(Thread(), current_thread_data->Thread());
+      EXPECT_EQ(Thread(), Thread::Current());
 
       if (timer_id_ == msg.Id()) {
         LOG_TRACE("[tid: {}] achieved timer tick", Thread()->Name());
@@ -47,6 +47,9 @@ TEST(ObjectTests, ReceiveTimerMessage) {
     int timer_id_;
     bool ticked_;
   };
+
+  /*const auto thread = Thread::Create("zalupa");
+  thread->Start();*/
 
   std::shared_ptr<A> a = std::make_shared<A>();
 
