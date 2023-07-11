@@ -14,7 +14,7 @@ TEST(ObjectTests, ReceiveTimerMessage) {
     }
 
     void OnThreadStarted() {
-      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread()->Name());
+      LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       timer_id_ = StartTimer(1s);
     }
 
@@ -24,8 +24,10 @@ TEST(ObjectTests, ReceiveTimerMessage) {
 
    protected:
     bool OnTimerMessage(TimerMessage& msg) override {
+      EXPECT_EQ(Thread(), current_thread_data->Thread());
+
       if (timer_id_ == msg.Id()) {
-        LOG_INFO("[tid: {}] achieved timer tick", Thread()->Name());
+        LOG_TRACE("[tid: {}] achieved timer tick", Thread()->Name());
 
         KillTimer(msg.Id());
 
@@ -64,7 +66,7 @@ TEST(ObjectTests, SignalToFunctionSlot) {
   bool slot_was_called = false;
 
   const auto slot = [&slot_was_called] {
-    LOG_INFO("slot was called");
+    LOG_TRACE("slot was called");
     slot_was_called = true;
   };
 
@@ -91,7 +93,7 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
     }
 
     void OnThreadStarted() {
-      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread()->Name());
+      LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       TestSignal();
     }
 
@@ -103,7 +105,7 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
     B() : slot_was_called_{} {}
 
     void Slot() noexcept {
-      LOG_INFO("[tid: {}] slot was called", Thread()->Name());
+      LOG_TRACE("[tid: {}] slot was called", Thread()->Name());
       slot_was_called_ = true;
     }
 
@@ -121,7 +123,7 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
   a->TestSignal.Connect(b.get(), &B::Slot);
 
   auto future = std::async(std::launch::async, [] {
-    Thread::Sleep(3s);
+    Thread::Sleep(100ms);
     Dispatcher::Quit();
   });
 
@@ -140,7 +142,7 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
     }
 
     void OnThreadStarted() {
-      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread()->Name());
+      LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       TestSignal();
     }
 
@@ -154,7 +156,7 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
           slot_was_called_{} {}
 
     void Slot() noexcept {
-      LOG_INFO("[tid: {}] slot was called", Thread()->Name());
+      LOG_TRACE("[tid: {}] slot was called", Thread()->Name());
       slot_was_called_ = true;
     }
 
@@ -173,7 +175,7 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
   a->TestSignal.Connect(b.get(), &B::Slot);
 
   auto future = std::async(std::launch::async, [] {
-    Thread::Sleep(300ms);
+    Thread::Sleep(100ms);
     Dispatcher::Quit();
   });
 
@@ -193,10 +195,15 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
     }
 
     void OnThreadStarted() {
-      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread()->Name());
+      LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
 
       TestSignal("Hello, ");
-      TestSignal("World!");
+      TestSignal("World! ");
+      TestSignal("One, ");
+      TestSignal("Two, ");
+      TestSignal("Three, ");
+      TestSignal("Four, ");
+      TestSignal("Five.");
     }
 
     Signal<const std::string&> TestSignal;
@@ -205,7 +212,7 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
   class B : public Object {
    public:
     void Slot(const std::string& s) {
-      LOG_INFO("[tid: {}] slot was called", Thread()->Name());
+      LOG_TRACE("[tid: {}] slot was called", Thread()->Name());
       cumulative_ += s;
     }
 
@@ -223,7 +230,7 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
   a->TestSignal.Connect(b.get(), &B::Slot);
 
   auto future = std::async(std::launch::async, [] {
-    Thread::Sleep(3s);
+    Thread::Sleep(100ms);
     Dispatcher::Quit();
   });
 
@@ -231,7 +238,7 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
 
   future.get();
 
-  EXPECT_EQ(b->Cumulative(), "Hello, World!");
+  EXPECT_EQ(b->Cumulative(), "Hello, World! One, Two, Three, Four, Five.");
 }
 
 TEST(ObjectTests, ReceiveMessagesSequence) {
@@ -243,9 +250,14 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
     }
 
     void OnThreadStarted() {
-      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread()->Name());
+      LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
       Dispatcher::Dispatch(std::make_shared<TestMessage>("Hello, ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("World!", this, receiver_));
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("World! ", this, receiver_));
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("One, ", this, receiver_));
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("Two, ", this, receiver_));
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("Three, ", this, receiver_));
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("Four, ", this, receiver_));
+      Dispatcher::Dispatch(std::make_shared<TestMessage>("Five.", this, receiver_));
     }
 
    private:
@@ -260,7 +272,7 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
 
    protected:
     bool OnTestMessage(TestMessage& message) override {
-      LOG_INFO("[tid: {}] OnTestMessage was called", Thread()->Name());
+      LOG_TRACE("[tid: {}] OnTestMessage was called", Thread()->Name());
       cumulative_ += message.Data();
       return true;
     }
@@ -273,7 +285,7 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
   const auto a = std::make_shared<A>(b.get());
 
   auto future = std::async(std::launch::async, [] {
-    Thread::Sleep(3s);
+    Thread::Sleep(100ms);
     Dispatcher::Quit();
   });
 
@@ -281,5 +293,5 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
 
   future.get();
 
-  EXPECT_EQ(b->Cumulative(), "Hello, World!");
+  EXPECT_EQ(b->Cumulative(), "Hello, World! One, Two, Three, Four, Five.");
 }

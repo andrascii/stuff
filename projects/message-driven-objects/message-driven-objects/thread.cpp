@@ -265,11 +265,11 @@ void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
   const auto this_thread = current_thread_data->Thread();
   const auto receiver_thread = message->Receiver()->Thread();
 
-  LOG_TRACE("sending message from thread {:s} to thread {:s}", this_thread->Name(), receiver_thread->Name());
-
   if (this_thread == receiver_thread) {
+    LOG_TRACE("the thread '{}' received and handling a message", this_thread->Name());
     message->Receiver()->OnMessage(message);
   } else {
+    LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
     GetThreadData(receiver_thread)->Queue().Push(message);
   }
 }
