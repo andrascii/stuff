@@ -24,7 +24,9 @@ class MessageQueue {
 
   void SetInterruptFlag(bool value) noexcept;
 
-  void Reset() noexcept;
+  void Clear() noexcept;
+
+  size_t Size() const noexcept;
 
  private:
   mutable std::mutex mutex_;

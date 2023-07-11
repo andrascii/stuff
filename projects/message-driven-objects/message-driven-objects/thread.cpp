@@ -36,11 +36,11 @@ void SetThreadName(DWORD thread_id, const std::string& thread_name) {
 
 namespace mdo {
 
-std::shared_ptr<ThreadData> GetThreadData(Thread* thread) noexcept {
+const std::shared_ptr<ThreadData>& GetThreadData(const std::shared_ptr<Thread>& thread) noexcept {
   return thread->data_;
 }
 
-Thread* Thread::Current() {
+std::shared_ptr<Thread> Thread::Current() {
   if (current_thread_data) {
     return current_thread_data->Thread();
   }
@@ -48,7 +48,7 @@ Thread* Thread::Current() {
   current_thread_data = std::make_shared<ThreadData>();
   current_thread_data->SetId(std::this_thread::get_id());
   current_thread_data->SetIsAdopted(true);
-  current_thread_data->SetThread(new AdoptedThread{current_thread_data});
+  current_thread_data->SetThread(std::make_shared<AdoptedThread>(current_thread_data));
 
   return current_thread_data->Thread();
 }
@@ -61,24 +61,39 @@ void Thread::Sleep(const std::chrono::milliseconds& ms) {
   std::this_thread::sleep_for(ms);
 }
 
-Thread::Thread(std::shared_ptr<ThreadData> data) : Thread{{}, std::move(data)} {}
+void Thread::SetCurrentThreadName(const std::string& name) noexcept {
+#ifdef USE_WINDOWS_SET_THREAD_NAME_HACK
+  SetThreadName(static_cast<DWORD>(-1), name);
+#elif defined(__APPLE__)
+  pthread_setname_np(name.data());
+#else
+  prctl(PR_SET_NAME, name.data(), 0, 0, 0);
+#endif
+}
+
+std::shared_ptr<Thread> Thread::Create(const char* name) {
+  struct NewEnabler : Thread {
+    explicit NewEnabler(std::function<void()> alternative_entry_point)
+        : Thread(std::move(alternative_entry_point)) {}
+  };
+
+  auto thread = std::make_shared<NewEnabler>(std::function<void()>{});
+
+  thread->SetName(name);
+
+  Initialize(thread);
+
+  return thread;
+}
 
 Thread::~Thread() {
   StopImpl();
 
   const auto thread_name = name_.empty() ? ToString(std::this_thread::get_id()) : name_;
 
-  LOG_TRACE("thread {} destroyed", thread_name);
+  LOG_TRACE("thread '{}' destroyed", thread_name);
 
   data_->SetThread(nullptr);
-}
-
-void Thread::Attach(NotNull<Object*> object) {
-  attached_->insert(object);
-}
-
-void Thread::Detach(NotNull<Object*> object) {
-  attached_->erase(object);
 }
 
 const std::string& Thread::Name() const noexcept {
@@ -100,12 +115,12 @@ void Thread::Start() {
     return;
   }
 
-  LOG_INFO("starting '{}' thread", CurrentThreadId());
-
   future_ = std::async(std::launch::async, [this] {
     SetCurrentThreadName(name_);
     current_thread_data = data_;
     current_thread_data->SetId(std::this_thread::get_id());
+
+    LOG_TRACE("starting '{}' thread", CurrentThreadId());
 
     if (alternative_entry_point_) {
       alternative_entry_point_();
@@ -160,7 +175,6 @@ bool Thread::IsInterruptionRequested() const noexcept {
 
 void Thread::Run() {
   current_thread_data->SetInterruptionRequest(false);
-  current_thread_data->Queue().Reset();
   current_thread_data->Queue().SetInterruptFlag(false);
 
   const auto tid = Thread::CurrentThreadId();
@@ -169,14 +183,18 @@ void Thread::Run() {
   // Sends LoopStartedMessage message to all objects which "lives" in this thread.
   // So the objects have an ability to find out when the loop is started and can initiate their job.
   //
-  Thread* this_thread = current_thread_data->Thread();
+  const std::shared_ptr<Thread>& this_thread = current_thread_data->Thread();
 
   //
   // emit 'Started' signal
   //
   this_thread->Started();
 
-  LOG_INFO("the '{}' thread started", tid);
+  LOG_TRACE(
+    "the '{}' thread started, current queue '{}' contains '{}' pending messages",
+    tid,
+    (void*)&current_thread_data->Queue(),
+    current_thread_data->Queue().Size());
 
   for (; !current_thread_data->InterruptionRequested();) {
     std::shared_ptr<IMessage> message;
@@ -223,8 +241,8 @@ void Thread::Run() {
   }
 
   //
-  // Unwind queue (поможет ли дочитка очереди при завершении потока избавиться от падения теста?)
-  // доделать SetInterruptFlag
+  // what if some object still lives and sends to us a messages?
+  // we need here block incoming messages but should continue handle that already received
   //
   current_thread_data->Queue().SetInterruptFlag(false);
 
@@ -240,7 +258,7 @@ void Thread::Run() {
   //
   this_thread->Finished();
 
-  LOG_INFO("the '{}' thread finished", tid);
+  LOG_TRACE("the '{}' thread finished", tid);
 }
 
 void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
@@ -256,15 +274,22 @@ void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
   }
 }
 
-void Thread::SetCurrentThreadName(const std::string& name) noexcept {
-#ifdef USE_WINDOWS_SET_THREAD_NAME_HACK
-  SetThreadName(static_cast<DWORD>(-1), name);
-#elif defined(__APPLE__)
-  pthread_setname_np(name.data());
-#else
-  prctl(PR_SET_NAME, name.data(), 0, 0, 0);
-#endif
+std::string Thread::CurrentThreadId() {
+  //
+  // 1. const auto id = ToString(current_thread_data->Id()); - invalid line, because we can start thread in the any other thread
+  // 2. each evaluation of current_thread_data should compare its value with nullptr
+  //
+  const auto id = ToString(current_thread_data->Id());
+  const auto& thread_name = current_thread_data->Thread()->Name();
+
+  if (thread_name.empty()) {
+    return ToString(id);
+  }
+
+  return thread_name;
 }
+
+Thread::Thread(std::shared_ptr<ThreadData> data) : Thread{{}, std::move(data)} {}
 
 void Thread::StopImpl() {
   if (!future_.valid()) {
@@ -281,36 +306,27 @@ void Thread::StopImpl() {
   data_->Queue().SetInterruptFlag(true);
 
   while (future_.wait_for(1s) == std::future_status::timeout) {
-    LOG_INFO("waiting for '{}' thread to stop", tid);
+    LOG_TRACE("waiting for '{}' thread to stop", tid);
   }
 
   future_.get();
 
-  LOG_INFO("the '{}' thread has stopped", tid);
-}
-
-std::string Thread::CurrentThreadId() {
-  const auto id = ToString(current_thread_data->Id());
-  const auto& thread_name = current_thread_data->Thread()->Name();
-
-  if (thread_name.empty()) {
-    return ToString(id);
-  }
-
-  return thread_name;
+  LOG_TRACE("the '{}' thread has stopped", tid);
 }
 
 Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<ThreadData> data)
-    : Object{this},
-      Finished{this},
+    : Finished{this},
       Started{this},
       data_{std::move(data)},
       alternative_entry_point_{std::move(alternative_entry_point)} {
   if (!data_) {
     data_ = std::make_shared<ThreadData>();
   }
+}
 
-  data_->SetThread(this);
+void Thread::Initialize(const std::shared_ptr<Thread>& thread) {
+  thread->SetThread(thread->shared_from_this());
+  thread->data_->SetThread(thread->shared_from_this());
 }
 
 }// namespace mdo

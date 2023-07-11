@@ -4,7 +4,7 @@
 
 namespace mdo {
 
-Thread* Utils::CurrentThread() {
+std::shared_ptr<Thread> Utils::CurrentThread() {
   return Thread::Current();
 }
 

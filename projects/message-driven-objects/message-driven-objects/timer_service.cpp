@@ -236,10 +236,10 @@ class TimerService::Impl {
       std::terminate();
     }
 
-    managing_thread_.reset(Thread::Create([this] {
-      Thread::SetCurrentThreadName("TimerService");
+    managing_thread_ = Thread::Create([this] {
+      Thread::SetCurrentThreadName("timer_service");
       Run();
-    }));
+    });
   }
 
   ~Impl() {

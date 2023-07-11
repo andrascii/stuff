@@ -10,7 +10,6 @@ class Thread;
 class ThreadData {
  public:
   ThreadData();
-  ~ThreadData();
 
   void lock() const;
   void unlock() const;
@@ -21,8 +20,8 @@ class ThreadData {
   const std::thread::id& Id() const noexcept;
   void SetId(const std::thread::id& id);
 
-  mdo::Thread* Thread() const noexcept;
-  void SetThread(mdo::Thread* thread) noexcept;
+  const std::shared_ptr<mdo::Thread>& Thread() const noexcept;
+  void SetThread(std::shared_ptr<mdo::Thread> thread) noexcept;
 
   bool InterruptionRequested() const noexcept;
   void SetInterruptionRequest(bool value = true) noexcept;
@@ -34,7 +33,7 @@ class ThreadData {
   MessageQueue queue_;
   mutable std::recursive_mutex mutex_;
   std::thread::id id_;
-  mdo::Thread* thread_;
+  std::shared_ptr<mdo::Thread> thread_;
   bool interruption_requested_;
   bool is_adopted_;
 };

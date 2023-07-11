@@ -28,7 +28,7 @@ class Object {
   friend class MessageVisitor;
 
   Object();
-  explicit Object(mdo::Thread* thread);
+  explicit Object(std::shared_ptr<Thread> thread);
 
   virtual ~Object();
 
@@ -61,11 +61,13 @@ class Object {
   //!
   //! Returns the pointer to the thread where this object "lives".
   //!
-  [[nodiscard]] mdo::Thread* Thread() const noexcept;
+  [[nodiscard]] const std::shared_ptr<Thread>& Thread() const noexcept;
 
  protected:
+  void SetThread(std::shared_ptr<mdo::Thread> thread);
+
   //
-  // This function does not intended to be a virtual function
+  // This function do not intended to be a virtual function
   //
   bool OnInvokeSlotMessage(InvokeSlotMessage& message);
 
@@ -75,7 +77,7 @@ class Object {
 
  private:
   mutable std::mutex mutex_;
-  mdo::Thread* thread_;
+  std::shared_ptr<mdo::Thread> thread_;
   std::set<int> timers_;
 };
 

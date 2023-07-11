@@ -11,8 +11,8 @@ namespace mdo {
 Object::Object()
     : Object{Thread::Current()} {}
 
-Object::Object(mdo::Thread* thread)
-    : thread_{thread} {
+Object::Object(std::shared_ptr<mdo::Thread> thread)
+    : thread_{std::move(thread)} {
   ObjectsRegistry::Instance().RegisterObject(this);
 }
 
@@ -53,9 +53,14 @@ bool Object::OnMessage(const std::shared_ptr<IMessage>& message) {
   return message->Accept(visitor);
 }
 
-mdo::Thread* Object::Thread() const noexcept {
+const std::shared_ptr<Thread>& Object::Thread() const noexcept {
   std::scoped_lock _{mutex_};
   return thread_;
+}
+
+void Object::SetThread(std::shared_ptr<mdo::Thread> thread) {
+  std::scoped_lock _{mutex_};
+  thread_ = std::move(thread);
 }
 
 bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {

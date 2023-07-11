@@ -8,9 +8,10 @@ MessageQueue::MessageQueue()
 
 void MessageQueue::Push(std::shared_ptr<IMessage> message) {
   std::unique_lock _{mutex_};
-  LOG_TRACE("pushed message to queue {}", (void*)this);
   messages_.push(std::move(message));
   condition_.notify_all();
+
+  LOG_TRACE("pushed message to queue '{}', queue size '{}'", (void*)this, messages_.size());
 }
 
 std::error_code MessageQueue::Poll(
@@ -39,15 +40,25 @@ std::error_code MessageQueue::Poll(
 }
 
 void MessageQueue::SetInterruptFlag(bool value) noexcept {
+  LOG_TRACE("set interrupt flag for queue '{}' to '{}'", (void*)this, value);
+
   std::lock_guard _{mutex_};
   interrupt_ = value;
   condition_.notify_all();
 }
 
-void MessageQueue::Reset() noexcept {
+void MessageQueue::Clear() noexcept {
+  LOG_TRACE("clearing queue '{}'", (void*)this);
+
+  std::lock_guard _{mutex_};
   while (!messages_.empty()) {
     messages_.pop();
   }
+}
+
+size_t MessageQueue::Size() const noexcept {
+  std::lock_guard _{mutex_};
+  return messages_.size();
 }
 
 }// namespace mdo

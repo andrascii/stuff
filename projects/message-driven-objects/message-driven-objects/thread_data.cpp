@@ -11,14 +11,6 @@ ThreadData::ThreadData()
       interruption_requested_{false},
       is_adopted_{false} {}
 
-ThreadData::~ThreadData() {
-  std::scoped_lock _{*this};
-
-  if (is_adopted_) {
-    delete thread_;
-  }
-}
-
 void ThreadData::lock() const {
   mutex_.lock();
 }
@@ -45,14 +37,14 @@ void ThreadData::SetId(const std::thread::id& id) {
   id_ = id;
 }
 
-mdo::Thread* ThreadData::Thread() const noexcept {
+const std::shared_ptr<mdo::Thread>& ThreadData::Thread() const noexcept {
   std::scoped_lock _{*this};
   return thread_;
 }
 
-void ThreadData::SetThread(mdo::Thread* thread) noexcept {
+void ThreadData::SetThread(std::shared_ptr<mdo::Thread> thread) noexcept {
   std::scoped_lock _{*this};
-  thread_ = thread;
+  thread_ = std::move(thread);
 }
 
 bool ThreadData::InterruptionRequested() const noexcept {

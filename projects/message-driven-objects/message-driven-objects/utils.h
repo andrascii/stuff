@@ -13,7 +13,7 @@ class Utils final {
   // This redirection is needed because thread.h uses header with Signal<T> implementation
   // and the signal itself requires including thread.h that leads to recursive include.
   //
-  static Thread* CurrentThread();
+  static std::shared_ptr<Thread> CurrentThread();
 };
 
 }// namespace mdo

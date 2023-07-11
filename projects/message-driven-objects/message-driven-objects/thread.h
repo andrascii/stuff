@@ -9,9 +9,9 @@ namespace mdo {
 
 static thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
 
-class Thread : public Object {
+class Thread : public std::enable_shared_from_this<Thread>, public Object {
  public:
-  friend std::shared_ptr<ThreadData> GetThreadData(Thread* thread) noexcept;
+  friend const std::shared_ptr<ThreadData>& GetThreadData(const std::shared_ptr<Thread>& thread) noexcept;
 
   //!
   //! This signal is emitted from the associated thread right before it finishes executing.
@@ -28,7 +28,7 @@ class Thread : public Object {
   //!
   //! Returns a pointer to a Thread which manages the currently executing thread.
   //!
-  static Thread* Current();
+  static std::shared_ptr<Thread> Current();
 
   //!
   //! Yields execution of the current thread to another runnable thread, if any.
@@ -47,11 +47,6 @@ class Thread : public Object {
   static void SetCurrentThreadName(const std::string& name) noexcept;
 
   //!
-  //! Returns current thread ID
-  //!
-  static std::string CurrentThreadId();
-
-  //!
   //! Creates a new Thread object that will execute the function f with the arguments args.
   //! The new thread is not started – it must be started by an explicit call to Start().
   //! This allows you to connect to its signals, move Objects to the thread and so on.
@@ -60,20 +55,26 @@ class Thread : public Object {
   //! Returns the newly created Thread instance.
   //!
   template <typename Function, typename... Args>
-  static Thread* Create(Function&& f, Args&&... args) {
+  static std::shared_ptr<Thread> Create(Function&& f, Args&&... args) {
+    struct NewEnabler : Thread {
+      explicit NewEnabler(std::function<void()> alternative_entry_point)
+          : Thread(std::move(alternative_entry_point)) {}
+    };
+
     const auto adopted_invoke = [=] {
       f(std::forward<Args>(args)...);
     };
 
-    return new Thread{adopted_invoke};
+    auto thread = std::make_shared<NewEnabler>(adopted_invoke);
+
+    Initialize(thread);
+
+    return thread;
   }
 
-  explicit Thread(std::shared_ptr<ThreadData> data = nullptr);
+  static std::shared_ptr<Thread> Create(const char* name = "");
 
   ~Thread() override;
-
-  void Attach(NotNull<Object*> object);
-  void Detach(NotNull<Object*> object);
 
   //!
   //! Returns a name assigned to the thread assigned with Thread object.
@@ -142,6 +143,9 @@ class Thread : public Object {
  protected:
   static void Run();
   static void SendMessage(const std::shared_ptr<IMessage>& message);
+  static std::string CurrentThreadId();
+
+  explicit Thread(std::shared_ptr<ThreadData> data = nullptr);
 
  private:
   void StopImpl();
@@ -149,6 +153,8 @@ class Thread : public Object {
   explicit Thread(
     std::function<void()> alternative_entry_point,
     std::shared_ptr<ThreadData> data = nullptr);
+
+  static void Initialize(const std::shared_ptr<Thread>& thread);
 
  private:
   std::shared_ptr<ThreadData> data_;

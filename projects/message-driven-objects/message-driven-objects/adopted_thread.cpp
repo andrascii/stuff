@@ -5,12 +5,13 @@ namespace mdo {
 AdoptedThread::AdoptedThread(const std::shared_ptr<ThreadData>& data) : Thread{data} {}
 
 void AdoptedThread::Start() {
+  LOG_TRACE("starting '{}' thread", CurrentThreadId());
   Run();
 }
 
 void AdoptedThread::Stop() {
-  GetThreadData(this)->Queue().SetInterruptFlag(true);
-  GetThreadData(this)->Queue().Reset();
+  GetThreadData(shared_from_this())->Queue().SetInterruptFlag(true);
+  GetThreadData(shared_from_this())->Queue().Clear();
 }
 
 }// namespace mdo
