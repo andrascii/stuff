@@ -12,6 +12,7 @@ class IMessage {
     kTimerMessage,
     kBenchmarkMessage,
     kTestMessage,
+    kSetThreadNameMessage,
   };
 
   virtual ~IMessage() = default;

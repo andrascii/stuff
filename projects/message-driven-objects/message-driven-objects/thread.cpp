@@ -2,6 +2,7 @@
 #include "adopted_thread.h"
 #include "object.h"
 #include "objects_registry.h"
+#include "set_thread_name_message.h"
 
 #if defined(USE_WINDOWS_SET_THREAD_NAME_HACK)
 
@@ -89,6 +90,8 @@ void Thread::SetName(const std::string& name) {
 
   if (data_->IsAdopted()) {
     SetCurrentThreadName(name_);
+  } else if (IsRunning()) {
+    data_->Queue().Push(std::make_shared<SetThreadNameMessage>(name));
   }
 }
 
@@ -97,7 +100,7 @@ void Thread::Start() {
     return;
   }
 
-  LOG_INFO("starting '{}' thread", Tid());
+  LOG_INFO("starting '{}' thread", CurrentThreadId());
 
   future_ = std::async(std::launch::async, [this] {
     SetCurrentThreadName(name_);
@@ -114,6 +117,7 @@ void Thread::Start() {
 
 void Thread::Wait() const noexcept {
   if (!future_.valid()) {
+    return;
   }
 
   future_.wait();
@@ -154,22 +158,12 @@ bool Thread::IsInterruptionRequested() const noexcept {
   return data_->InterruptionRequested();
 }
 
-std::string Thread::Tid() {
-  const auto id = ToString(current_thread_data->Id());
-  auto thread_name = current_thread_data->Thread()->Name();
-
-  if (thread_name.empty()) {
-    return ToString(id);
-  }
-
-  return thread_name;
-}
-
 void Thread::Run() {
   current_thread_data->SetInterruptionRequest(false);
+  current_thread_data->Queue().Reset();
   current_thread_data->Queue().SetInterruptFlag(false);
 
-  const auto tid = Thread::Tid();
+  const auto tid = Thread::CurrentThreadId();
 
   //
   // Sends LoopStartedMessage message to all objects which "lives" in this thread.
@@ -187,6 +181,8 @@ void Thread::Run() {
   for (; !current_thread_data->InterruptionRequested();) {
     std::shared_ptr<IMessage> message;
     const auto error = current_thread_data->Queue().Poll(message, 1s);
+
+    LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*)&current_thread_data->Queue());
 
     if (error == std::errc::interrupted) {
       LOG_TRACE("the '{}' thread is interrupted", tid);
@@ -217,14 +213,27 @@ void Thread::Run() {
       continue;
     }
 
-    const auto receiver_thread = message->Receiver()->Thread();
-
-    if (this_thread == receiver_thread) {
-      message->Receiver()->OnMessage(message);
-    } else {
-      GetThreadData(receiver_thread)->Queue().Push(message);
+    if (message->Type() == IMessage::kSetThreadNameMessage) {
+      const auto set_thread_name_message = std::static_pointer_cast<SetThreadNameMessage>(message);
+      SetCurrentThreadName(set_thread_name_message->Name());
+      continue;
     }
+
+    SendMessage(message);
   }
+
+  //
+  // Unwind queue (поможет ли дочитка очереди при завершении потока избавиться от падения теста?)
+  // доделать SetInterruptFlag
+  //
+  current_thread_data->Queue().SetInterruptFlag(false);
+
+  std::shared_ptr<IMessage> message;
+  std::error_code ec;
+
+  do {
+    ec = current_thread_data->Queue().Poll(message, 1s);
+  } while (ec != std::errc::timed_out);
 
   //
   // emit 'Finished' signal
@@ -232,6 +241,19 @@ void Thread::Run() {
   this_thread->Finished();
 
   LOG_INFO("the '{}' thread finished", tid);
+}
+
+void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
+  const auto this_thread = current_thread_data->Thread();
+  const auto receiver_thread = message->Receiver()->Thread();
+
+  LOG_TRACE("sending message from thread {:s} to thread {:s}", this_thread->Name(), receiver_thread->Name());
+
+  if (this_thread == receiver_thread) {
+    message->Receiver()->OnMessage(message);
+  } else {
+    GetThreadData(receiver_thread)->Queue().Push(message);
+  }
 }
 
 void Thread::SetCurrentThreadName(const std::string& name) noexcept {
@@ -265,6 +287,17 @@ void Thread::StopImpl() {
   future_.get();
 
   LOG_INFO("the '{}' thread has stopped", tid);
+}
+
+std::string Thread::CurrentThreadId() {
+  const auto id = ToString(current_thread_data->Id());
+  const auto& thread_name = current_thread_data->Thread()->Name();
+
+  if (thread_name.empty()) {
+    return ToString(id);
+  }
+
+  return thread_name;
 }
 
 Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<ThreadData> data)

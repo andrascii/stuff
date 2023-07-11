@@ -47,6 +47,11 @@ class Thread : public Object {
   static void SetCurrentThreadName(const std::string& name) noexcept;
 
   //!
+  //! Returns current thread ID
+  //!
+  static std::string CurrentThreadId();
+
+  //!
   //! Creates a new Thread object that will execute the function f with the arguments args.
   //! The new thread is not started – it must be started by an explicit call to Start().
   //! This allows you to connect to its signals, move Objects to the thread and so on.
@@ -127,20 +132,16 @@ class Thread : public Object {
   void RequestInterruption() const noexcept;
 
   //!
-  //! Return true if the task running on this thread should be stopped. An interruption can be requested by requestInterruption().
+  //! Return true if the task running on this thread should be stopped. An interruption can be requested by RequestInterruption().
   //! This function can be used to make long running tasks cleanly interruptible.
   //! Never checking or acting on the value returned by this function is safe, however it is advisable do so regularly in long running functions.
   //! Take care not to call it too often, to keep the overhead low.
   //!
   bool IsInterruptionRequested() const noexcept;
 
-  //!
-  //! Returns current thread ID
-  //!
-  static std::string Tid();
-
  protected:
   static void Run();
+  static void SendMessage(const std::shared_ptr<IMessage>& message);
 
  private:
   void StopImpl();

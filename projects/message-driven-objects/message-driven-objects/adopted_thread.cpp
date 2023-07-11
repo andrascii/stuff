@@ -10,6 +10,7 @@ void AdoptedThread::Start() {
 
 void AdoptedThread::Stop() {
   GetThreadData(this)->Queue().SetInterruptFlag(true);
+  GetThreadData(this)->Queue().Reset();
 }
 
 }// namespace mdo

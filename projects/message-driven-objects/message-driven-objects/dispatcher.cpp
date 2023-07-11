@@ -32,7 +32,9 @@ void Dispatcher::Quit() {
 }
 
 void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {
-  const auto data = GetThreadData(message->Receiver()->Thread());
+  const auto receiver_thread = message->Receiver()->Thread();
+  LOG_TRACE("dispatching message for thread {:s}", receiver_thread->Name());
+  const auto data = GetThreadData(receiver_thread);
   data->Queue().Push(std::move(message));
 }
 

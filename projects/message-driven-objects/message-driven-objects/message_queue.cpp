@@ -8,6 +8,7 @@ MessageQueue::MessageQueue()
 
 void MessageQueue::Push(std::shared_ptr<IMessage> message) {
   std::unique_lock _{mutex_};
+  LOG_TRACE("pushed message to queue {}", (void*)this);
   messages_.push(std::move(message));
   condition_.notify_all();
 }
@@ -40,13 +41,12 @@ std::error_code MessageQueue::Poll(
 void MessageQueue::SetInterruptFlag(bool value) noexcept {
   std::lock_guard _{mutex_};
   interrupt_ = value;
+  condition_.notify_all();
+}
 
-  if (interrupt_) {
-    condition_.notify_all();
-  } else {
-    while (!messages_.empty()) {
-      messages_.pop();
-    }
+void MessageQueue::Reset() noexcept {
+  while (!messages_.empty()) {
+    messages_.pop();
   }
 }
 

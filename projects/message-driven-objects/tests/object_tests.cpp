@@ -14,6 +14,7 @@ TEST(ObjectTests, ReceiveTimerMessage) {
     }
 
     void OnThreadStarted() {
+      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread::CurrentThreadId());
       timer_id_ = StartTimer(1s);
     }
 
@@ -24,16 +25,17 @@ TEST(ObjectTests, ReceiveTimerMessage) {
    protected:
     bool OnTimerMessage(TimerMessage& msg) override {
       if (timer_id_ == msg.Id()) {
-        LOG_INFO("achieved timer tick");
+        LOG_INFO("[tid: {}] achieved timer tick", Thread::CurrentThreadId());
 
         KillTimer(msg.Id());
 
         ticked_ = true;
       } else {
         LOG_ERROR(
-          "achieved TimerMessage id '{}' ' is not equal to the timer id we start '{}'",
+          "[tid: {}] achieved TimerMessage id '{}' ' is not equal to the timer id we start '{}'",
           msg.Id(),
-          timer_id_);
+          timer_id_,
+          Thread::CurrentThreadId());
       }
 
       return ticked_;
@@ -62,7 +64,7 @@ TEST(ObjectTests, SignalToFunctionSlot) {
   bool slot_was_called = false;
 
   const auto slot = [&slot_was_called] {
-    LOG_INFO("slot was called");
+    LOG_INFO("[tid: {}] slot was called", Thread::CurrentThreadId());
     slot_was_called = true;
   };
 
@@ -89,6 +91,7 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
     }
 
     void OnThreadStarted() {
+      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread::CurrentThreadId());
       TestSignal();
     }
 
@@ -100,7 +103,7 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
     B() : slot_was_called_{} {}
 
     void Slot() noexcept {
-      LOG_INFO("slot was called");
+      LOG_INFO("[tid: {}] slot was called", Thread::CurrentThreadId());
       slot_was_called_ = true;
     }
 
@@ -132,11 +135,12 @@ TEST(ObjectTests, SignalToMethodSlotInSingleThread) {
 TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
   class A : public Object {
    public:
-    explicit A(mdo::Thread* thread) : Object{thread}, TestSignal{this} {
+    A() : TestSignal{this} {
       Thread()->Started.Connect(this, &A::OnThreadStarted);
     }
 
     void OnThreadStarted() {
+      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread::CurrentThreadId());
       TestSignal();
     }
 
@@ -145,10 +149,12 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
 
   class B : public Object {
    public:
-    B() : slot_was_called_{} {}
+    explicit B(mdo::Thread* thread)
+        : Object{thread},
+          slot_was_called_{} {}
 
     void Slot() noexcept {
-      LOG_INFO("slot was called");
+      LOG_INFO("[tid: {}] slot was called", Thread::CurrentThreadId());
       slot_was_called_ = true;
     }
 
@@ -163,13 +169,13 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
   const auto thread = std::make_shared<Thread>();
   thread->SetName("background");
 
-  const auto a = std::make_shared<A>(thread.get());
-  const auto b = std::make_shared<B>();
+  const auto a = std::make_shared<A>();
+  const auto b = std::make_shared<B>(thread.get());
 
   a->TestSignal.Connect(b.get(), &B::Slot);
 
   auto future = std::async(std::launch::async, [] {
-    Thread::Sleep(3s);
+    Thread::Sleep(1s);
     Dispatcher::Quit();
   });
 
@@ -189,6 +195,8 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
     }
 
     void OnThreadStarted() {
+      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread::CurrentThreadId());
+
       TestSignal("Hello, ");
       TestSignal("World!");
     }
@@ -199,6 +207,7 @@ TEST(ObjectTests, SignalToMethodSlotCallsSequence) {
   class B : public Object {
    public:
     void Slot(const std::string& s) {
+      LOG_INFO("[tid: {}] slot was called", Thread::CurrentThreadId());
       cumulative_ += s;
     }
 
@@ -236,6 +245,7 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
     }
 
     void OnThreadStarted() {
+      LOG_INFO("[tid: {}] A object received signal about attached thread start", Thread::CurrentThreadId());
       Dispatcher::Dispatch(std::make_shared<TestMessage>("Hello, ", this, receiver_));
       Dispatcher::Dispatch(std::make_shared<TestMessage>("World!", this, receiver_));
     }
@@ -252,6 +262,7 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
 
    protected:
     bool OnTestMessage(TestMessage& message) override {
+      LOG_INFO("[tid: {}] OnTestMessage was called", Thread::CurrentThreadId());
       cumulative_ += message.Data();
       return true;
     }
