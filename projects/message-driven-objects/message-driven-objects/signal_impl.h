@@ -20,9 +20,10 @@ class Signal final {
 
   explicit Signal(NotNull<Object*> owner) : owner_{owner} {}
 
-  void operator()(Args&&... args) {
+  template <typename... CallArgs>
+  void operator()(CallArgs&&... args) {
     for (const auto& slot : slots_) {
-      slot(std::forward<Args>(args)...);
+      slot(std::forward<CallArgs>(args)...);
     }
   }
 

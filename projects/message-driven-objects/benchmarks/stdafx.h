@@ -17,11 +17,6 @@
 #include <utility>
 
 //
-// benchmark
-//
-#include <benchmark/benchmark.h>
-
-//
 // Spdlog
 //
 

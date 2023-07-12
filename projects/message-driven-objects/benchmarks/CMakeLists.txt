@@ -8,7 +8,7 @@ project(${THIS_TARGET_NAME})
 #
 # precompiled header
 #
-set(PRECOMPILED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h")
+set(PRECOMPILED_HEADER "stdafx.h")
 
 #
 # deps include directories
@@ -19,10 +19,10 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../messa
 #
 # deps
 #
+set(DEPS)
 list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS spdlog::spdlog)
-list(APPEND DEPS benchmark::benchmark)
-list(APPEND DEPS benchmark::benchmark_main)
+list(APPEND DEPS tl::expected)
 list(APPEND DEPS message-driven-objects)
 
 #
