@@ -15,11 +15,12 @@ class TestMessage;
 /*!
 
  Each object has thread affinity.
- "Object O lives in thread T" - means that messages to O would be delivered (called function handler for this message) in the thread T.
- Assume that we have two objects: Client1 and Client2.
- Client1 lives in the main thread and Client2 lives in the background thread.
- When Client1 sends a message TextMessage to Client2, then this message would be posted to the thread T message queue.
- After that the thread T extracts the message and calls 'Object::OnMessage => Object::OnTextMessage' for object Client2.
+ "Object A lives in the thread T" - means that messages to A would be delivered (called function handler for this message) in the thread T.
+
+ Assume that we have two objects: A and B.
+ A lives in the main thread and B lives in the background thread.
+ When A sends a message TextMessage to B, then this message would be posted to the thread T message queue.
+ After that the thread T extracts the message and calls 'Object::OnMessage => Object::OnTextMessage' for object B.
 
 */
 
