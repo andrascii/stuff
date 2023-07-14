@@ -11,4 +11,4 @@ class BenchmarkMessage : public AbstractMessage {
   bool Accept(IMessageVisitor& visitor) noexcept override;
 };
 
-}
+}// namespace mdo

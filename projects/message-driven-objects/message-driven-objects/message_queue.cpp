@@ -1,4 +1,5 @@
 #include "message_queue.h"
+
 #include "imessage.h"
 
 namespace mdo {
@@ -11,7 +12,7 @@ void MessageQueue::Push(std::shared_ptr<IMessage> message) {
   messages_.push(std::move(message));
   condition_.notify_all();
 
-  LOG_TRACE("pushed message to queue '{}', queue size '{}'", (void*)this, messages_.size());
+  LOG_TRACE("pushed message to queue '{}', queue size '{}'", (void*) this, messages_.size());
 }
 
 std::error_code MessageQueue::Poll(
@@ -40,7 +41,7 @@ std::error_code MessageQueue::Poll(
 }
 
 void MessageQueue::SetInterruptFlag(bool value) noexcept {
-  LOG_TRACE("set interrupt flag for queue '{}' to '{}'", (void*)this, value);
+  LOG_TRACE("set interrupt flag for queue '{}' to '{}'", (void*) this, value);
 
   std::lock_guard _{mutex_};
   interrupt_ = value;
@@ -48,7 +49,7 @@ void MessageQueue::SetInterruptFlag(bool value) noexcept {
 }
 
 void MessageQueue::Clear() noexcept {
-  LOG_TRACE("clearing queue '{}'", (void*)this);
+  LOG_TRACE("clearing queue '{}'", (void*) this);
 
   std::lock_guard _{mutex_};
   while (!messages_.empty()) {

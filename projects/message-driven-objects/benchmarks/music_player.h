@@ -14,7 +14,7 @@ public:
     std::string singer;
   };
 
-  MusicPlayer();
+  explicit MusicPlayer(uint64_t iterations);
 
   uint64_t GetVolume() const noexcept;
   void SetVolume(uint64_t value) noexcept;
@@ -31,6 +31,7 @@ private:
 private:
   uint64_t volume_;
   Song song_;
+  uint64_t iterations_;
 };
 
 }

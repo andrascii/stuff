@@ -3,10 +3,11 @@
 
 namespace benchmarks {
 
-MusicPlayer::MusicPlayer()
-  : OnVolumeChanged{this},
-    OnSongChanged{this},
-    volume_ {} {
+MusicPlayer::MusicPlayer(uint64_t iterations)
+    : OnVolumeChanged{this},
+      OnSongChanged{this},
+      volume_{},
+      iterations_{iterations} {
   Thread()->Started.Connect(this, &MusicPlayer::OnThreadStarted);
 }
 
@@ -33,13 +34,11 @@ void MusicPlayer::SetSong(const Song& song) {
 }
 
 void MusicPlayer::OnThreadStarted() {
-  constexpr size_t kMsgsCount = 10000000;
-
-  for (size_t i = 0; i < kMsgsCount; ++i) {
+  for (uint64_t i = 0; i < iterations_; ++i) {
     SetVolume(i + 1);
   }
 
-  for (size_t i = 0; i < kMsgsCount; ++i) {
+  for (uint64_t i = 0; i < iterations_; ++i) {
     SetSong({
       "You're A Woman",
       "BAD BOYES BLUE"

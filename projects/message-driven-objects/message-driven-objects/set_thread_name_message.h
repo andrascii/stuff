@@ -18,4 +18,4 @@ class SetThreadNameMessage : public AbstractMessage {
   std::string name_;
 };
 
-}
+}// namespace mdo

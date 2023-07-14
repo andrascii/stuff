@@ -17,26 +17,35 @@ TestMessageSender::TestMessageSender(const std::shared_ptr<mdo::Thread>& thread,
 }
 
 void TestMessageSender::OnThreadStarted() {
-  LOG_INFO("Sender object started in the thread '{}', generating '{}' messages...", Thread()->Name(), gen_msg_count_);
+  LOG_INFO("TestMessageSender object started in the thread '{}', generating '{}' messages...", Thread()->Name(), gen_msg_count_);
 
   const auto msg = std::make_shared<TestMessage>("Hello!", this, receiver_);
-  static auto millions = 0ul;
-  static const auto start = high_resolution_clock::now();
+
+  constexpr size_t kBatchSize = 1'000'000'0;
+  static auto batches = 0ul;
 
   for (size_t i = 0; i < gen_msg_count_; ++i) {
+    measure_.IncrementCalls();
+
     Dispatcher::Dispatch(msg);
 
-    if ((i + 1) / 1'000'000'0 > millions) {
-      ++millions;
+    const auto call_count = measure_.CallCount();
+    const auto current_batch = measure_.CallCount() / kBatchSize;
 
-      const auto delta = high_resolution_clock::now() - start;
-      const auto msgs_per_sec = gen_msg_count_ / duration_cast<milliseconds>(delta).count();
+    if (current_batch > batches) {
+      ++batches;
+
+      const auto metrics = measure_.GetMetrics();
 
       LOG_INFO(
-        "Sender sent '{}' messages, delta is '{}', messages per second '{}'",
-        i + 1,
-        duration_cast<milliseconds>(delta),
-        msgs_per_sec * 1000
+        "sent '{}' messages, messages per second '{}', "
+        "time avg='{}', time min='{}', time max='{}', median='{}'",
+        call_count,
+        metrics.avg_call_count,
+        metrics.time_avg,
+        metrics.time_min,
+        duration_cast<milliseconds>(metrics.time_max),
+        duration_cast<milliseconds>(metrics.time_median)
       );
     }
   }

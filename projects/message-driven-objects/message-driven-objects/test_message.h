@@ -16,4 +16,4 @@ class TestMessage : public AbstractMessage {
   std::string data_;
 };
 
-}
+}// namespace mdo

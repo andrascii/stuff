@@ -1,4 +1,5 @@
 #include "test_message.h"
+
 #include "imessage_visitor.h"
 
 namespace mdo {
@@ -15,4 +16,4 @@ const std::string& TestMessage::Data() const noexcept {
   return data_;
 }
 
-}
+}// namespace mdo

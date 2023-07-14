@@ -2,6 +2,7 @@
 
 #include "object.h"
 #include "test_message.h"
+#include "measure.h"
 
 namespace benchmarks {
 
@@ -9,7 +10,7 @@ using namespace mdo;
 
 class TestMessageReceiver : public Object {
 public:
-  TestMessageReceiver();
+  TestMessageReceiver(uint64_t iterations);
 
   void OnThreadStarted();
 
@@ -20,6 +21,8 @@ protected:
 
 private:
   size_t ctr_;
+  uint64_t iterations_;
+  Measure measure_;
 };
 
 }

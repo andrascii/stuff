@@ -7,38 +7,42 @@ namespace benchmarks {
 using namespace mdo;
 using namespace std::chrono;
 
-constexpr size_t kGenMsgsCount = 100000000;
-
-TestMessageReceiver::TestMessageReceiver() : ctr_{} {
+TestMessageReceiver::TestMessageReceiver(uint64_t iterations) : ctr_{}, iterations_{iterations} {
   Thread()->Started.Connect(this, &TestMessageReceiver::OnThreadStarted);
 }
 
 void TestMessageReceiver::OnThreadStarted() {
-  LOG_INFO("Receiver object started in the thread '{}'", Thread()->Name());
-}
-
-size_t TestMessageReceiver::Counter() const noexcept {
-  return ctr_;
+  LOG_INFO("TestMessageReceiver object started in the thread '{}'", Thread()->Name());
 }
 
 bool TestMessageReceiver::OnTestMessage(TestMessage&) {
-  static const auto start = high_resolution_clock::now();
-  static auto millions = 0ul;
+  constexpr size_t kBatchSize = 1'000'000'0;
+  static auto batches = 0ul;
 
-  ++ctr_;
+  measure_.IncrementCalls();
 
-  if ((ctr_ + 1) / 1'000'000'0 > millions) {
-    ++millions;
+  const auto call_count = measure_.CallCount();
+  const auto current_batch = measure_.CallCount() / kBatchSize;
 
-    const auto delta = high_resolution_clock::now() - start;
-    const auto msgs_per_sec = (ctr_ + 1) / duration_cast<milliseconds>(delta).count();
+  if (current_batch > batches) {
+    ++batches;
+
+    const auto metrics = measure_.GetMetrics();
 
     LOG_INFO(
-      "Receiver received '{}' messages, delta is '{}', messages per second '{}'",
-      ctr_ + 1,
-      duration_cast<milliseconds>(delta),
-      msgs_per_sec * 1000
+      "got '{}' messages, messages per second '{}', "
+      "time avg='{}', time min='{}', time max='{}', median='{}'",
+      call_count,
+      metrics.avg_call_count,
+      metrics.time_avg,
+      metrics.time_min,
+      duration_cast<milliseconds>(metrics.time_max),
+      duration_cast<milliseconds>(metrics.time_median)
     );
+  }
+
+  if (call_count == iterations_) {
+    Dispatcher::Quit();
   }
 
   return true;

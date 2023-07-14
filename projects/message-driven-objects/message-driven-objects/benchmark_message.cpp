@@ -11,4 +11,4 @@ bool BenchmarkMessage::Accept(IMessageVisitor& visitor) noexcept {
   return visitor.Visit(*this);
 }
 
-}
+}// namespace mdo

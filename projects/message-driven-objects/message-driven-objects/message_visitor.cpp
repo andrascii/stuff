@@ -1,4 +1,5 @@
 #include "message_visitor.h"
+
 #include "object.h"
 
 namespace mdo {

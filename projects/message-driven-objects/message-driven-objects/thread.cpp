@@ -1,4 +1,5 @@
 #include "thread.h"
+
 #include "adopted_thread.h"
 #include "object.h"
 #include "objects_registry.h"
@@ -193,14 +194,14 @@ void Thread::Run() {
   LOG_TRACE(
     "the '{}' thread started, current queue '{}' contains '{}' pending messages",
     tid,
-    (void*)&current_thread_data->Queue(),
+    (void*) &current_thread_data->Queue(),
     current_thread_data->Queue().Size());
 
   for (; !current_thread_data->InterruptionRequested();) {
     std::shared_ptr<IMessage> message;
     const auto error = current_thread_data->Queue().Poll(message, 1s);
 
-    LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*)&current_thread_data->Queue());
+    LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*) &current_thread_data->Queue());
 
     if (error == std::errc::interrupted) {
       LOG_TRACE("the '{}' thread is interrupted", tid);
@@ -218,7 +219,7 @@ void Thread::Run() {
 
     //
     // block ability to destroy an Object class objects
-    // to be sure that we can safely call message->Receiver()->OnMessage(message);
+    // to be sure that we can safely call message->SignalReceiver()->OnMessage(message);
     //
     std::scoped_lock _{ObjectsRegistry::Instance()};
 

@@ -2,10 +2,10 @@
 #include "logger.h"
 #include "thread.h"
 #include "timer_message.h"
-#include "test_message.h"
 #include "test_message_receiver.h"
 #include "test_message_sender.h"
 #include "music_player.h"
+#include "measure.h"
 
 /*
  * do I need to implement building a tree using Objects? For what?
@@ -27,66 +27,115 @@ using namespace mdo;
 using namespace benchmarks;
 using namespace std::chrono;
 
-auto SendAndReceiveTestMessageBenchmark() {
+auto SendAndReceiveTestMessageBenchmark(uint64_t iterations) {
   LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 
   const auto thread = Thread::Create("sender_thread");
   thread->Start();
 
-  const auto receiver = std::make_shared<TestMessageReceiver>();
-  const auto sender = std::make_shared<TestMessageSender>(thread, kGenMsgsCount, receiver.get());
+  const auto receiver = std::make_shared<TestMessageReceiver>(iterations);
+  const auto sender = std::make_shared<TestMessageSender>(thread, iterations, receiver.get());
 
-  return Dispatcher::Instance().Exec();
+  const auto result = Dispatcher::Instance().Exec();
+
+  LOG_INFO("{} done", __FUNCTION__);
+
+  return result;
 }
 
-auto SignalSendBenchmark() {
-  class Receiver : public Object {
-  public:
-    Receiver(const std::shared_ptr<mdo::Thread>& thread) : Object{ thread } {}
+auto SignalSendBenchmark(uint64_t iterations) {
+  using namespace std::chrono;
+
+  static const auto benchmark_name = __FUNCTION__;
+
+  class SignalReceiver : public Object {
+   public:
+    SignalReceiver(const std::shared_ptr<mdo::Thread>& thread, uint64_t iterations)
+        : Object{ thread },
+          iterations_{iterations},
+          on_volume_changed_benchmark_done_{},
+          on_song_changed_benchmark_done_{} {}
 
     void OnVolumeChanged(uint64_t) {
-      static const auto start = high_resolution_clock::now();
-      static auto millions = 0ul;
-      static size_t ctr = 0;
+      constexpr size_t kBatchSize = 1'000'000'0;
+      static auto batches = 0ul;
 
-      ++ctr;
+      measure_.IncrementCalls();
 
-      if ((ctr + 1) / 1'000'000'0 > millions) {
-        ++millions;
+      const auto call_count = measure_.CallCount();
+      const auto current_batch = measure_.CallCount() / kBatchSize;
 
-        const auto delta = high_resolution_clock::now() - start;
-        const auto signals_per_sec = (ctr + 1) / duration_cast<milliseconds>(delta).count();
+      if (current_batch > batches) {
+        ++batches;
+
+        const auto metrics = measure_.GetMetrics();
 
         LOG_INFO(
-          "Receiver received '{}' notifications about volume changed, delta is '{}', notifications per second '{}'",
-          ctr + 1,
-          duration_cast<milliseconds>(delta),
-          signals_per_sec * 1000
+          "volume changed notifications '{}', notifications per second '{}', "
+          "time avg='{}', time min='{}', time max='{}', median='{}'",
+          metrics.call_count,
+          metrics.avg_call_count,
+          metrics.time_avg,
+          metrics.time_min,
+          duration_cast<milliseconds>(metrics.time_max),
+          duration_cast<milliseconds>(metrics.time_median)
         );
+      }
+
+      if (call_count == iterations_) {
+        measure_.Reset();
+
+        on_volume_changed_benchmark_done_ = true;
+
+        if (on_song_changed_benchmark_done_) {
+          LOG_INFO("{} done", benchmark_name);
+          Dispatcher::Quit();
+        }
       }
     }
 
     void OnSongChanged(const MusicPlayer::Song&) {
-      static const auto start = high_resolution_clock::now();
-      static auto millions = 0ul;
-      static size_t ctr = 0;
+      constexpr size_t kBatchSize = 1'000'000'0;
+      static auto batches = 0ul;
 
-      ++ctr;
+      measure_.IncrementCalls();
 
-      if ((ctr + 1) / 1'000'000'0 > millions) {
-        ++millions;
+      const auto call_count = measure_.CallCount();
+      const auto current_batch = measure_.CallCount() / kBatchSize;
 
-        const auto delta = high_resolution_clock::now() - start;
-        const auto signals_per_sec = (ctr + 1) / duration_cast<milliseconds>(delta).count();
+      if (current_batch > batches) {
+        ++batches;
+
+        const auto metrics = measure_.GetMetrics();
 
         LOG_INFO(
-          "Receiver received '{}' notifications about song changed, delta is '{}', notifications per second '{}'",
-          ctr + 1,
-          duration_cast<milliseconds>(delta),
-          signals_per_sec * 1000
+          "song changed notifications '{}', notifications per second '{}', "
+          "time avg='{}', time min='{}', time max='{}', median='{}'",
+          metrics.call_count,
+          metrics.avg_call_count,
+          metrics.time_avg,
+          metrics.time_min,
+          duration_cast<milliseconds>(metrics.time_max),
+          duration_cast<milliseconds>(metrics.time_median)
         );
       }
+
+      if (call_count == iterations_) {
+        measure_.Reset();
+
+        on_song_changed_benchmark_done_ = true;
+
+        if (on_volume_changed_benchmark_done_) {
+          LOG_INFO("{} done", benchmark_name);
+          Dispatcher::Quit();
+        }
+      }
     }
+   private:
+    uint64_t iterations_;
+    bool on_volume_changed_benchmark_done_;
+    bool on_song_changed_benchmark_done_;
+    Measure measure_;
   };
 
   LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
@@ -94,11 +143,11 @@ auto SignalSendBenchmark() {
   const auto thread = Thread::Create("receiver_thread");
   thread->Start();
 
-  const auto receiver = std::make_shared<Receiver>(thread);
-  const auto sender = std::make_shared<MusicPlayer>();
+  const auto receiver = std::make_shared<SignalReceiver>(thread, iterations);
+  const auto sender = std::make_shared<MusicPlayer>(iterations);
 
-  sender->OnVolumeChanged.Connect(receiver.get(), &Receiver::OnVolumeChanged);
-  sender->OnSongChanged.Connect(receiver.get(), &Receiver::OnSongChanged);
+  sender->OnVolumeChanged.Connect(receiver.get(), &SignalReceiver::OnVolumeChanged);
+  sender->OnSongChanged.Connect(receiver.get(), &SignalReceiver::OnSongChanged);
 
   return Dispatcher::Instance().Exec();
 }
@@ -108,11 +157,23 @@ int main() {
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 
-  auto error = SignalSendBenchmark();
+  std::vector<std::function<std::error_code()>> benchmarks;
 
-  if (error) {
-    LOG_ERROR(error.message());
-    return EXIT_FAILURE;
+  benchmarks.emplace_back([] {
+    return SendAndReceiveTestMessageBenchmark(kGenMsgsCount);
+  });
+
+  benchmarks.emplace_back([] {
+    return SignalSendBenchmark(kGenMsgsCount);
+  });
+
+  for (const auto& benchmark : benchmarks) {
+    const auto error = benchmark();
+
+    if (error) {
+      LOG_ERROR(error.message());
+      return EXIT_FAILURE;
+    }
   }
 
   return EXIT_SUCCESS;
