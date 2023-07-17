@@ -6,6 +6,9 @@
 #include "test_message_sender.h"
 #include "music_player.h"
 #include "measure.h"
+#include "single_thread_execution_policy.h"
+#include "thread_pool.h"
+#include "thread_pool_execution_policy.h"
 
 /*
  * do I need to implement building a tree using Objects? For what?
@@ -33,8 +36,10 @@ auto SendAndReceiveTestMessageBenchmark(uint64_t iterations) {
   const auto thread = Thread::Create("sender_thread");
   thread->Start();
 
+  const auto policy = std::make_shared<SingleThreadExecutionPolicy>(thread);
+
   const auto receiver = std::make_shared<TestMessageReceiver>(iterations);
-  const auto sender = std::make_shared<TestMessageSender>(thread, iterations, receiver.get());
+  const auto sender = std::make_shared<TestMessageSender>(policy, iterations, receiver.get());
 
   const auto result = Dispatcher::Instance().Exec();
 
@@ -50,8 +55,8 @@ auto SignalSendBenchmark(uint64_t iterations) {
 
   class SignalReceiver : public Object {
    public:
-    SignalReceiver(const std::shared_ptr<mdo::Thread>& thread, uint64_t iterations)
-        : Object{ thread },
+    SignalReceiver(const std::shared_ptr<IExecutionPolicy>& execution_policy, uint64_t iterations)
+        : Object{ execution_policy },
           iterations_{iterations},
           on_volume_changed_benchmark_done_{},
           on_song_changed_benchmark_done_{} {}
@@ -143,7 +148,9 @@ auto SignalSendBenchmark(uint64_t iterations) {
   const auto thread = Thread::Create("receiver_thread");
   thread->Start();
 
-  const auto receiver = std::make_shared<SignalReceiver>(thread, iterations);
+  const auto policy = std::make_shared<SingleThreadExecutionPolicy>(thread);
+
+  const auto receiver = std::make_shared<SignalReceiver>(policy, iterations);
   const auto sender = std::make_shared<MusicPlayer>(iterations);
 
   sender->OnVolumeChanged.Connect(receiver.get(), &SignalReceiver::OnVolumeChanged);
@@ -152,10 +159,51 @@ auto SignalSendBenchmark(uint64_t iterations) {
   return Dispatcher::Instance().Exec();
 }
 
+class A : public Object {
+ public:
+  explicit A(std::shared_ptr<IExecutionPolicy> policy) : Object{std::move(policy)} {}
+
+ private:
+  bool OnTestMessage(TestMessage& message) override {
+    LOG_INFO("{}: received test message '{}'", std::this_thread::get_id(), message.Data());
+    return true;
+  }
+};
+
+class B : public Object {
+ public:
+  B(uint64_t iterations, Object* receiver) : receiver_{receiver}, iterations_{iterations} {
+    Thread()->Started.Connect(this, &B::OnStart);
+  }
+
+  void OnStart() {
+    for (uint64_t i = 0; i < iterations_; ++i) {
+      const auto msg = std::make_shared<TestMessage>(std::to_string(i), this, receiver_);
+      Dispatcher::Dispatch(msg);
+      LOG_INFO("sent {} message", i);
+    }
+  }
+
+ private:
+  Object* receiver_;
+  uint64_t iterations_;
+};
+
 int main() {
   std::signal(SIGINT, SigIntHandler);
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
+
+  /*const auto pool = std::make_shared<ThreadPool>(10);
+  pool->Start();
+
+  const auto policy = std::make_shared<ThreadPoolExecutionPolicy>(pool);
+  const auto a = std::make_shared<A>(policy);
+  const auto b = std::make_shared<B>(10, a.get());
+
+  Dispatcher::Instance().Exec();
+
+  (void)kGenMsgsCount;*/
 
   std::vector<std::function<std::error_code()>> benchmarks;
 

@@ -5,16 +5,17 @@
 #include "objects_registry.h"
 #include "thread.h"
 #include "timer_service.h"
+#include "single_thread_execution_policy.h"
 
 namespace mdo {
 
 Object::Object()
-    : Object{Thread::Current()} {}
+    : Object{std::make_shared<SingleThreadExecutionPolicy>(Thread::Current())} {}
 
-Object::Object(std::shared_ptr<mdo::Thread> thread)
-    : thread_{std::move(thread)} {
-  if (!thread_) {
-    thread_ = Thread::Current();
+Object::Object(std::shared_ptr<IExecutionPolicy> execution_policy)
+    : execution_policy_{std::move(execution_policy)} {
+  if (!execution_policy_->Thread()) {
+    execution_policy_ = std::make_shared<SingleThreadExecutionPolicy>(Thread::Current());
   }
 
   ObjectsRegistry::Instance().RegisterObject(this);
@@ -59,12 +60,12 @@ bool Object::OnMessage(const std::shared_ptr<IMessage>& message) {
 
 const std::shared_ptr<Thread>& Object::Thread() const noexcept {
   std::scoped_lock _{mutex_};
-  return thread_;
+  return execution_policy_->Thread();
 }
 
-void Object::SetThread(std::shared_ptr<mdo::Thread> thread) {
+void Object::SetExecutionPolicy(std::shared_ptr<IExecutionPolicy> execution_policy) {
   std::scoped_lock _{mutex_};
-  thread_ = std::move(thread);
+  execution_policy_ = std::move(execution_policy);
 }
 
 bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
