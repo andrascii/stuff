@@ -11,7 +11,6 @@ class InvokeSlotMessage;
 class TimerMessage;
 class BenchmarkMessage;
 class TestMessage;
-class IExecutionPolicy;
 
 /*!
 
@@ -30,7 +29,7 @@ class Object {
   friend class MessageVisitor;
 
   Object();
-  explicit Object(std::shared_ptr<IExecutionPolicy> execution_policy);
+  explicit Object(std::shared_ptr<mdo::Thread> thread);
 
   virtual ~Object();
 
@@ -66,7 +65,7 @@ class Object {
   [[nodiscard]] const std::shared_ptr<Thread>& Thread() const noexcept;
 
  protected:
-  void SetExecutionPolicy(std::shared_ptr<IExecutionPolicy> execution_policy);
+  void SetThread(std::shared_ptr<mdo::Thread> thread);
 
   //
   // This function do not intended to be a virtual function
@@ -79,7 +78,7 @@ class Object {
 
  private:
   mutable std::mutex mutex_;
-  std::shared_ptr<IExecutionPolicy> execution_policy_;
+  std::shared_ptr<mdo::Thread> thread_;
   std::set<int> timers_;
 };
 

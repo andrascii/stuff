@@ -9,8 +9,8 @@ using namespace mdo;
 
 class TestMessageSender : public Object {
 public:
-  explicit TestMessageSender(
-    const std::shared_ptr<IExecutionPolicy>& execution_policy,
+  TestMessageSender(
+   const std::shared_ptr<mdo::Thread>& thread,
     size_t gen_msg_count,
     Object* receiver
   );

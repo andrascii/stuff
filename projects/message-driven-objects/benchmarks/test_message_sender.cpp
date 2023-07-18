@@ -9,8 +9,8 @@ namespace benchmarks {
 using namespace mdo;
 using namespace std::chrono;
 
-TestMessageSender::TestMessageSender(const std::shared_ptr<IExecutionPolicy>& execution_policy, size_t gen_msg_count, Object* receiver)
-  : Object{execution_policy},
+TestMessageSender::TestMessageSender(const std::shared_ptr<mdo::Thread>& thread, size_t gen_msg_count, Object* receiver)
+  : Object{thread},
     gen_msg_count_{gen_msg_count},
     receiver_{receiver} {
   Thread()->Started.Connect(this, &TestMessageSender::OnThreadStarted);

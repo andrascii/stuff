@@ -6,14 +6,14 @@ namespace mdo {
 
 class Object;
 
-class ObjectsRegistry final {
+class ObjectsRegistry {
  public:
   static ObjectsRegistry& Instance() {
-    static std::unique_ptr<ObjectsRegistry> instance = nullptr;
+    struct NewOpEnabler : ObjectsRegistry {
+      NewOpEnabler() : ObjectsRegistry() {}
+    };
 
-    if (!instance) {
-      instance.reset(new ObjectsRegistry);
-    }
+    static std::unique_ptr<ObjectsRegistry> instance = std::make_unique<NewOpEnabler>();
 
     return *instance;
   }

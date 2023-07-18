@@ -1,10 +1,8 @@
 #include "thread.h"
 
 #include "adopted_thread.h"
-#include "object.h"
 #include "objects_registry.h"
 #include "set_thread_name_message.h"
-#include "single_thread_execution_policy.h"
 
 #if defined(USE_WINDOWS_SET_THREAD_NAME_HACK)
 
@@ -264,8 +262,7 @@ void Thread::Run() {
 }
 
 void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
-  message->Receiver()->OnMessage(message);
-  /*const auto this_thread = current_thread_data->Thread();
+  const auto this_thread = current_thread_data->Thread();
   const auto receiver_thread = message->Receiver()->Thread();
 
   if (this_thread == receiver_thread) {
@@ -274,7 +271,7 @@ void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
   } else {
     LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
     GetThreadData(receiver_thread)->Queue().Push(message);
-  }*/
+  }
 }
 
 std::string Thread::CurrentThreadId() {
@@ -328,7 +325,7 @@ Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<Th
 }
 
 void Thread::Initialize(const std::shared_ptr<Thread>& thread) {
-  thread->SetExecutionPolicy(std::make_shared<SingleThreadExecutionPolicy>(thread->shared_from_this()));
+  thread->SetThread(thread->shared_from_this());
   thread->data_->SetThread(thread->shared_from_this());
 }
 
