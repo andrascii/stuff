@@ -147,7 +147,10 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
 
  protected:
   static void Run();
-  static void SendMessage(const std::shared_ptr<IMessage>& message);
+
+  static void HandleMessage(const std::shared_ptr<IMessage>& message);
+  static void HandleMessages(const std::deque<std::shared_ptr<IMessage>>& messages);
+
   static std::string CurrentThreadId();
 
   explicit Thread(std::shared_ptr<ThreadData> data = nullptr);

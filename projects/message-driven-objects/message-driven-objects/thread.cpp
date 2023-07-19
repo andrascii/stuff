@@ -197,8 +197,8 @@ void Thread::Run() {
     current_thread_data->Queue().Size());
 
   for (; !current_thread_data->InterruptionRequested();) {
-    std::shared_ptr<IMessage> message;
-    const auto error = current_thread_data->Queue().Poll(message, 1s);
+    std::deque<std::shared_ptr<IMessage>> messages;
+    const auto error = current_thread_data->Queue().Poll(messages, 1s);
 
     LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*) &current_thread_data->Queue());
 
@@ -212,16 +212,55 @@ void Thread::Run() {
       continue;
     }
 
-    if (message) {
-      LOG_TRACE("the '{}' thread got a message", tid);
+    if (!messages.empty()) {
+      LOG_TRACE("the '{}' thread got the '{}' messages to process", tid, messages.size());
     }
 
-    //
-    // block ability to destroy an Object class objects
-    // to be sure that we can safely call message->SignalReceiver()->OnMessage(message);
-    //
-    std::scoped_lock _{ObjectsRegistry::Instance()};
+    HandleMessages(messages);
+  }
 
+  //
+  // TODO: what if some object still lives and sends to us a messages?
+  // we need here block incoming messages but should continue handle that already received
+  //
+  current_thread_data->Queue().SetInterruptFlag(false);
+  std::error_code ec;
+
+  do {
+    std::deque<std::shared_ptr<IMessage>> messages;
+    ec = current_thread_data->Queue().Poll(messages, 1s);
+    HandleMessages(messages);
+  } while (ec != std::errc::timed_out);
+
+  //
+  // emit 'Finished' signal
+  //
+  this_thread->Finished();
+
+  LOG_TRACE("the '{}' thread finished", tid);
+}
+
+void Thread::HandleMessage(const std::shared_ptr<IMessage>& message) {
+  const auto this_thread = current_thread_data->Thread();
+  const auto receiver_thread = message->Receiver()->Thread();
+
+  if (this_thread == receiver_thread) {
+    LOG_TRACE("the thread '{}' received and handling a message", this_thread->Name());
+    message->Receiver()->OnMessage(message);
+  } else {
+    LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
+    GetThreadData(receiver_thread)->Queue().Push(message);
+  }
+}
+
+void Thread::HandleMessages(const std::deque<std::shared_ptr<IMessage>>& messages) {
+  //
+  // block ability to destroy an Object class objects
+  // to be sure that we can safely call message->Receiver()->OnMessage(message);
+  //
+  std::scoped_lock _{ObjectsRegistry::Instance()};
+
+  for (const auto& message : messages) {
     if (!ObjectsRegistry::Instance().HasObject(message->Receiver())) {
       LOG_INFO(
         "the object {} that lived in thread {} is dead so the message to it is skipped",
@@ -237,40 +276,7 @@ void Thread::Run() {
       continue;
     }
 
-    SendMessage(message);
-  }
-
-  //
-  // TODO: what if some object still lives and sends to us a messages?
-  // we need here block incoming messages but should continue handle that already received
-  //
-  current_thread_data->Queue().SetInterruptFlag(false);
-
-  std::shared_ptr<IMessage> message;
-  std::error_code ec;
-
-  do {
-    ec = current_thread_data->Queue().Poll(message, 1s);
-  } while (ec != std::errc::timed_out);
-
-  //
-  // emit 'Finished' signal
-  //
-  this_thread->Finished();
-
-  LOG_TRACE("the '{}' thread finished", tid);
-}
-
-void Thread::SendMessage(const std::shared_ptr<IMessage>& message) {
-  const auto this_thread = current_thread_data->Thread();
-  const auto receiver_thread = message->Receiver()->Thread();
-
-  if (this_thread == receiver_thread) {
-    LOG_TRACE("the thread '{}' received and handling a message", this_thread->Name());
-    message->Receiver()->OnMessage(message);
-  } else {
-    LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
-    GetThreadData(receiver_thread)->Queue().Push(message);
+    HandleMessage(message);
   }
 }
 

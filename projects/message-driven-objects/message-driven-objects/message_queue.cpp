@@ -9,14 +9,14 @@ MessageQueue::MessageQueue()
 
 void MessageQueue::Push(std::shared_ptr<IMessage> message) {
   std::unique_lock _{mutex_};
-  messages_.push(std::move(message));
+  messages_.push_back(std::move(message));
   condition_.notify_all();
 
   LOG_TRACE("pushed message to queue '{}', queue size '{}'", (void*) this, messages_.size());
 }
 
 std::error_code MessageQueue::Poll(
-  std::shared_ptr<IMessage>& message,
+  std::deque<std::shared_ptr<IMessage>>& messages,
   const std::chrono::seconds& timeout) noexcept {
   std::unique_lock _{mutex_};
 
@@ -32,8 +32,8 @@ std::error_code MessageQueue::Poll(
     return std::make_error_code(std::errc::interrupted);
   }
 
-  message = std::move_if_noexcept(messages_.front());
-  messages_.pop();
+  swap(messages, messages_);
+  _.unlock();
 
   condition_.notify_all();
 
@@ -52,9 +52,7 @@ void MessageQueue::Clear() noexcept {
   LOG_TRACE("clearing queue '{}'", (void*) this);
 
   std::lock_guard _{mutex_};
-  while (!messages_.empty()) {
-    messages_.pop();
-  }
+  messages_.clear();
 }
 
 size_t MessageQueue::Size() const noexcept {

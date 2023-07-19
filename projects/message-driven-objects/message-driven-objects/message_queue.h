@@ -19,7 +19,7 @@ class MessageQueue {
   //!     - no error (if all is ok, in this case 'message' argument would contain a pointer to extracted message).
   //!
   std::error_code Poll(
-    std::shared_ptr<IMessage>& message,
+    std::deque<std::shared_ptr<IMessage>>& messages,
     const std::chrono::seconds& timeout = 0s) noexcept;
 
   void SetInterruptFlag(bool value) noexcept;
@@ -31,7 +31,7 @@ class MessageQueue {
  private:
   mutable std::mutex mutex_;
   std::condition_variable condition_;
-  std::queue<std::shared_ptr<IMessage>> messages_;
+  std::deque<std::shared_ptr<IMessage>> messages_;
   bool interrupt_;
 };
 

@@ -52,6 +52,11 @@ std::string ToString(const T& data) {
   return ss.str();
 }
 
+#include <SQLiteCpp/Column.h>
+#include <SQLiteCpp/Database.h>
+#include <SQLiteCpp/Statement.h>
+#include <SQLiteCpp/Transaction.h>
+
 #include "logger.h"
 
 using namespace std::literals;

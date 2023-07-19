@@ -24,6 +24,9 @@ list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS spdlog::spdlog)
 list(APPEND DEPS tl::expected)
 list(APPEND DEPS message-driven-objects)
+list(APPEND DEPS SQLiteCpp)
+list(APPEND DEPS benchmark::benchmark)
+list(APPEND DEPS benchmark::benchmark_main)
 
 #
 # collecting sources and headers
