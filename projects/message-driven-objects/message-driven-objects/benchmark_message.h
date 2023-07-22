@@ -1,14 +1,12 @@
 #pragma once
 
-#include "abstract_message.h"
+#include "message_base.h"
 
 namespace mdo {
 
-class BenchmarkMessage : public AbstractMessage {
+class BenchmarkMessage : public MessageBase {
  public:
   BenchmarkMessage(Object* sender, Object* receiver);
-
-  bool Accept(IMessageVisitor& visitor) noexcept override;
 };
 
 }// namespace mdo

@@ -1,14 +1,12 @@
 #pragma once
 
-#include "abstract_message.h"
+#include "message_base.h"
 
 namespace mdo {
 
-class TestMessage : public AbstractMessage {
+class TestMessage : public MessageBase {
  public:
   TestMessage(const std::string& data, Object* sender, Object* receiver);
-
-  bool Accept(IMessageVisitor& visitor) noexcept override;
 
   const std::string& Data() const noexcept;
 

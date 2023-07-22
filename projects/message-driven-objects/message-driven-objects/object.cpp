@@ -1,7 +1,6 @@
 #include "object.h"
 
 #include "invoke_slot_message.h"
-#include "message_visitor.h"
 #include "objects_registry.h"
 #include "thread.h"
 #include "timer_service.h"
@@ -65,11 +64,11 @@ bool Object::OnMessage(Message& message) {
     [this](BenchmarkMessage& msg) -> bool {
       return OnBenchmarkMessage(msg);
     },
-    [this](SetThreadNameMessage& msg) -> bool {
-      return OnSetThreadNameMessage(msg);
-    },
     [this](TimerMessage& msg) -> bool {
       return OnTimerMessage(msg);
+    },
+    [](SetThreadNameMessage&) -> bool {
+      abort();
     },
     [](std::monostate&) -> bool {
       abort();
@@ -89,11 +88,6 @@ void Object::SetThread(std::shared_ptr<mdo::Thread> thread) {
 
 bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
   message.Invoke();
-  return true;
-}
-
-bool Object::OnSetThreadNameMessage(SetThreadNameMessage& message) {
-  Thread::SetCurrentThreadName(message.Name());
   return true;
 }
 

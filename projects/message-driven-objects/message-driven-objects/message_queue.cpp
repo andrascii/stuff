@@ -1,7 +1,5 @@
 #include "message_queue.h"
 
-#include "imessage.h"
-
 namespace mdo {
 
 MessageQueue::MessageQueue()

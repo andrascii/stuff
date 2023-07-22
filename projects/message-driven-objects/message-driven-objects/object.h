@@ -1,6 +1,5 @@
 #pragma once
 
-#include "imessage.h"
 #include "locked.h"
 #include "message_queue.h"
 #include "message.h"
@@ -72,7 +71,6 @@ class Object {
   // This function do not intended to be a virtual function
   //
   bool OnInvokeSlotMessage(InvokeSlotMessage& message);
-  bool OnSetThreadNameMessage(SetThreadNameMessage& message);
 
   virtual bool OnTimerMessage(TimerMessage& message);
   virtual bool OnBenchmarkMessage(BenchmarkMessage& message);

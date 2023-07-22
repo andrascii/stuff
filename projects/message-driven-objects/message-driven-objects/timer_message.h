@@ -1,14 +1,12 @@
 #pragma once
 
-#include "abstract_message.h"
+#include "message_base.h"
 
 namespace mdo {
 
-class TimerMessage : public AbstractMessage {
+class TimerMessage : public MessageBase {
  public:
   TimerMessage(int id, Object* sender, Object* receiver);
-
-  bool Accept(IMessageVisitor& visitor) noexcept override;
 
   int Id() const noexcept;
 
