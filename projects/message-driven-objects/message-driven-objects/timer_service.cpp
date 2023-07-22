@@ -352,7 +352,7 @@ class TimerService::Impl {
       for (int i = 0; i < n; ++i) {
         if (events[i].filter == EVFILT_TIMER) {
           LOG_TRACE("dispatching timer tick for timer id: {}", events[i].ident);
-          Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].ident, nullptr, (Object*) events[i].udata));
+          Dispatcher::Dispatch(TimerMessage(events[i].ident, nullptr, (Object*) events[i].udata));
         }
       }
     }

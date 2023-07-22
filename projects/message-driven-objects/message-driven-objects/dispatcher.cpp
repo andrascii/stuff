@@ -22,7 +22,6 @@ std::error_code Dispatcher::Exec() {
 
 void Dispatcher::Quit() {
   const auto thread = Instance().Thread();
-  const auto thread_data = GetThreadData(thread);
 
   thread->Stop();
 
@@ -32,8 +31,8 @@ void Dispatcher::Quit() {
   thread->Started.DisconnectAll();
 }
 
-void Dispatcher::Dispatch(std::shared_ptr<IMessage> message) {
-  const auto receiver_thread = message->Receiver()->Thread();
+void Dispatcher::Dispatch(Message&& message) {
+  const auto receiver_thread = std::visit(GetReceiver, message)->Thread();
 
   LOG_TRACE("dispatching message for thread '{}'", receiver_thread->Name());
 

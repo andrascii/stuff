@@ -16,7 +16,7 @@ class Dispatcher : public Object {
   std::error_code Exec();
 
   static void Quit();
-  static void Dispatch(std::shared_ptr<IMessage> message);
+  static void Dispatch(Message&& message);
 
  private:
   Dispatcher() = default;

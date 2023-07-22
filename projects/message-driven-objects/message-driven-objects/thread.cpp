@@ -106,7 +106,7 @@ void Thread::SetName(const std::string& name) {
   if (data_->IsAdopted()) {
     SetCurrentThreadName(name_);
   } else if (IsRunning()) {
-    data_->Queue().Push(std::make_shared<SetThreadNameMessage>(name));
+    data_->Queue().Push(SetThreadNameMessage(name));
   }
 }
 
@@ -197,7 +197,7 @@ void Thread::Run() {
     current_thread_data->Queue().Size());
 
   for (; !current_thread_data->InterruptionRequested();) {
-    std::deque<std::shared_ptr<IMessage>> messages;
+    std::deque<Message> messages;
     const auto error = current_thread_data->Queue().Poll(messages, 1s);
 
     LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*) &current_thread_data->Queue());
@@ -227,7 +227,7 @@ void Thread::Run() {
   std::error_code ec;
 
   do {
-    std::deque<std::shared_ptr<IMessage>> messages;
+    std::deque<Message> messages;
     ec = current_thread_data->Queue().Poll(messages, 1s);
     HandleMessages(messages);
   } while (ec != std::errc::timed_out);
@@ -240,43 +240,46 @@ void Thread::Run() {
   LOG_TRACE("the '{}' thread finished", tid);
 }
 
-void Thread::HandleMessage(const std::shared_ptr<IMessage>& message) {
+void Thread::HandleMessage(Message&& message) {
   const auto this_thread = current_thread_data->Thread();
-  const auto receiver_thread = message->Receiver()->Thread();
+  const auto receiver = std::visit(GetReceiver, message);
+  const auto receiver_thread = receiver->Thread();
 
   if (this_thread == receiver_thread) {
     LOG_TRACE("the thread '{}' received and handling a message", this_thread->Name());
-    message->Receiver()->OnMessage(message);
+    receiver->OnMessage(message);
   } else {
     LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
-    GetThreadData(receiver_thread)->Queue().Push(message);
+    GetThreadData(receiver_thread)->Queue().Push(std::move(message));
   }
 }
 
-void Thread::HandleMessages(const std::deque<std::shared_ptr<IMessage>>& messages) {
+void Thread::HandleMessages(std::deque<Message>& messages) {
   //
   // block ability to destroy an Object class objects
   // to be sure that we can safely call message->Receiver()->OnMessage(message);
   //
   std::scoped_lock _{ObjectsRegistry::Instance()};
 
-  for (const auto& message : messages) {
-    if (!ObjectsRegistry::Instance().HasObject(message->Receiver())) {
+  for (auto& message : messages) {
+    const auto receiver = std::visit(GetReceiver, message);
+
+    if (!ObjectsRegistry::Instance().HasObject(receiver)) {
       LOG_INFO(
         "the object {} that lived in thread {} is dead so the message to it is skipped",
-        static_cast<void*>(message->Receiver()),
+        static_cast<void*>(receiver),
         ToString(current_thread_data->Id()));
 
       continue;
     }
 
-    if (message->Type() == IMessage::kSetThreadNameMessage) {
-      const auto set_thread_name_message = std::static_pointer_cast<SetThreadNameMessage>(message);
-      SetCurrentThreadName(set_thread_name_message->Name());
+    if (std::holds_alternative<SetThreadNameMessage>(message)) {
+      const auto set_thread_name_message = std::get<SetThreadNameMessage>(message);
+      SetCurrentThreadName(set_thread_name_message.Name());
       continue;
     }
 
-    HandleMessage(message);
+    HandleMessage(std::move(message));
   }
 }
 

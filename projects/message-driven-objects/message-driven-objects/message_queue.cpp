@@ -7,7 +7,7 @@ namespace mdo {
 MessageQueue::MessageQueue()
     : interrupt_{} {}
 
-void MessageQueue::Push(std::shared_ptr<IMessage> message) {
+void MessageQueue::Push(Message&& message) {
   std::unique_lock _{mutex_};
   messages_.push_back(std::move(message));
   condition_.notify_all();
@@ -16,7 +16,7 @@ void MessageQueue::Push(std::shared_ptr<IMessage> message) {
 }
 
 std::error_code MessageQueue::Poll(
-  std::deque<std::shared_ptr<IMessage>>& messages,
+  std::deque<Message>& messages,
   const std::chrono::seconds& timeout) noexcept {
   std::unique_lock _{mutex_};
 

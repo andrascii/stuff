@@ -1,14 +1,14 @@
 #pragma once
 
-namespace mdo {
+#include "message.h"
 
-class IMessage;
+namespace mdo {
 
 class MessageQueue {
  public:
   MessageQueue();
 
-  void Push(std::shared_ptr<IMessage> message);
+  void Push(Message&& message);
 
   //!
   //! Extracts a message from queue and assigns 'message' argument to extracted value.
@@ -19,7 +19,7 @@ class MessageQueue {
   //!     - no error (if all is ok, in this case 'message' argument would contain a pointer to extracted message).
   //!
   std::error_code Poll(
-    std::deque<std::shared_ptr<IMessage>>& messages,
+    std::deque<Message>& messages,
     const std::chrono::seconds& timeout = 0s) noexcept;
 
   void SetInterruptFlag(bool value) noexcept;
@@ -31,7 +31,7 @@ class MessageQueue {
  private:
   mutable std::mutex mutex_;
   std::condition_variable condition_;
-  std::deque<std::shared_ptr<IMessage>> messages_;
+  std::deque<Message> messages_;
   bool interrupt_;
 };
 

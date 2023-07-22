@@ -5,6 +5,8 @@
 #include "objects_registry.h"
 #include "thread.h"
 #include "timer_service.h"
+#include "message.h"
+#include "overloaded.h"
 
 namespace mdo {
 
@@ -52,9 +54,28 @@ void Object::KillTimer(int id) noexcept {
   TimerService::Instance()->RemoveTimer(id);
 }
 
-bool Object::OnMessage(const std::shared_ptr<IMessage>& message) {
-  MessageVisitor visitor{this};
-  return message->Accept(visitor);
+bool Object::OnMessage(Message& message) {
+  return std::visit(Overloaded{
+    [this](InvokeSlotMessage& msg) -> bool {
+      return OnInvokeSlotMessage(msg);
+    },
+    [this](TestMessage& msg) -> bool {
+      return OnTestMessage(msg);
+    },
+    [this](BenchmarkMessage& msg) -> bool {
+      return OnBenchmarkMessage(msg);
+    },
+    [this](SetThreadNameMessage& msg) -> bool {
+      return OnSetThreadNameMessage(msg);
+    },
+    [this](TimerMessage& msg) -> bool {
+      return OnTimerMessage(msg);
+    },
+    [](std::monostate& msg) -> bool {
+      abort();
+      return false;
+    }
+  }, message);
 }
 
 const std::shared_ptr<Thread>& Object::Thread() const noexcept {
@@ -69,6 +90,11 @@ void Object::SetThread(std::shared_ptr<mdo::Thread> thread) {
 
 bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
   message.Invoke();
+  return true;
+}
+
+bool Object::OnSetThreadNameMessage(SetThreadNameMessage& message) {
+  Thread::SetCurrentThreadName(message.Name());
   return true;
 }
 

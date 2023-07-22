@@ -19,7 +19,7 @@ TestMessageSender::TestMessageSender(const std::shared_ptr<mdo::Thread>& thread,
 void TestMessageSender::OnThreadStarted() {
   LOG_INFO("TestMessageSender object started in the thread '{}', generating '{}' messages...", Thread()->Name(), gen_msg_count_);
 
-  const auto msg = std::make_shared<TestMessage>("Hello!", this, receiver_);
+  const auto msg = TestMessage{"Hello!", this, receiver_};
 
   constexpr size_t kBatchSize = 1'000'000'0;
   static auto batches = 0ul;

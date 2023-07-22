@@ -148,8 +148,8 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
  protected:
   static void Run();
 
-  static void HandleMessage(const std::shared_ptr<IMessage>& message);
-  static void HandleMessages(const std::deque<std::shared_ptr<IMessage>>& messages);
+  static void HandleMessage(Message&& message);
+  static void HandleMessages(std::deque<Message>& messages);
 
   static std::string CurrentThreadId();
 

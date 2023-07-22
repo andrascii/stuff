@@ -3,6 +3,7 @@
 #include "imessage.h"
 #include "locked.h"
 #include "message_queue.h"
+#include "message.h"
 
 namespace mdo {
 
@@ -57,7 +58,7 @@ class Object {
   //!
   //! If no one child returned true then a message would be delivered to all children objects.
   //!
-  bool OnMessage(const std::shared_ptr<IMessage>& message);
+  bool OnMessage(Message& message);
 
   //!
   //! Returns the pointer to the thread where this object "lives".
@@ -71,6 +72,7 @@ class Object {
   // This function do not intended to be a virtual function
   //
   bool OnInvokeSlotMessage(InvokeSlotMessage& message);
+  bool OnSetThreadNameMessage(SetThreadNameMessage& message);
 
   virtual bool OnTimerMessage(TimerMessage& message);
   virtual bool OnBenchmarkMessage(BenchmarkMessage& message);
