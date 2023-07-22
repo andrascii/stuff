@@ -15,6 +15,7 @@
 #include <sstream>
 #include <thread>
 #include <utility>
+#include <variant>
 
 //
 // Spdlog

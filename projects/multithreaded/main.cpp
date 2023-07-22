@@ -1,12 +1,14 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include <fcntl.h>
-#include <unistd.h>
 #include "sync_by_flag.h"
 #include "sync_by_mutex.h"
 
 using namespace std::literals;
+
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <unistd.h>
 
 void Foo() {
   using namespace std::chrono;
@@ -41,6 +43,7 @@ void Foo() {
 
   close(fd);
 }
+#endif
 
 //
 // true - reader can read, writer can't write

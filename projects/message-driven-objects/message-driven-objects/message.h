@@ -24,7 +24,6 @@ const auto GetReceiver = [](auto&& msg) -> Object* {
 
   if constexpr (std::is_same_v<std::monostate, T>) {
     abort();
-    return nullptr;
   } else {
     return msg.Receiver();
   }

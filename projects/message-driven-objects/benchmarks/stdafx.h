@@ -18,6 +18,7 @@
 #include <functional>
 #include <filesystem>
 #include <fstream>
+#include <variant>
 
 //
 // Spdlog
@@ -43,6 +44,8 @@
 #else
 #define USE_WINDOWS_SET_THREAD_NAME_HACK
 #include <windows.h>
+#undef max
+#undef min
 #endif
 
 template <typename T>

@@ -264,13 +264,13 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
     void OnThreadStarted() {
       EXPECT_EQ(Thread(), Thread::Current());
       LOG_TRACE("[tid: {}] A object received signal about attached thread start", Thread()->Name());
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("Hello, ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("World! ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("One, ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("Two, ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("Three, ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("Four, ", this, receiver_));
-      Dispatcher::Dispatch(std::make_shared<TestMessage>("Five.", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("Hello, ", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("World! ", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("One, ", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("Two, ", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("Three, ", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("Four, ", this, receiver_));
+      Dispatcher::Dispatch(TestMessage("Five.", this, receiver_));
     }
 
    private:

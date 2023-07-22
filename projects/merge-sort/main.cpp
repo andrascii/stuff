@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 using namespace std::literals;
 
@@ -32,40 +33,6 @@ void MergeSort(T1 first1, T1 last1, T2 first2, T2 last2, T3 out) {
   return std::copy(first2, last2, out);
 }
 
-void Foo() {
-  using namespace std::chrono;
-
-  int fd = open("file.dat", O_SYNC | O_CREAT | O_RDWR | F_NOCACHE, S_IRUSR | S_IWUSR);
-
-  if (fd == -1) {
-    std::cerr << "can't open file\n";
-    return;
-  }
-
-  struct Block {
-    size_t magic_start = 0;
-    size_t payload = 0;
-    size_t magic_end = 0;
-  };
-
-  Block block;
-
-  const auto start = high_resolution_clock::now();
-
-  for (size_t i = 0; i < 1000; ++i) {
-    block.payload = i;
-    write(fd, &block, sizeof(Block));
-  }
-
-  const auto end = high_resolution_clock::now();
-
-  const auto delta = end - start;
-  std::cout << "1000 write operations took " << delta.count() << " nanoseconds\n";
-  std::cout << "1 write operation took " << delta.count() / 1000 << " nanoseconds\n";
-
-  close(fd);
-}
-
 int main() {
   // fill the vectors with random numbers
   std::random_device rd;
@@ -89,5 +56,5 @@ int main() {
   std::vector<int> dst;
   std::merge(v1.begin(), v1.end(), v2.begin(), v2.end(), std::back_inserter(dst));
 
-  print("\nAfter merging:\ndst: ", dst);*/
+  print("\nAfter merging:\ndst: ", dst);
 }

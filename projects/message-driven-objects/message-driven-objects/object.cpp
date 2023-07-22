@@ -71,9 +71,8 @@ bool Object::OnMessage(Message& message) {
     [this](TimerMessage& msg) -> bool {
       return OnTimerMessage(msg);
     },
-    [](std::monostate& msg) -> bool {
+    [](std::monostate&) -> bool {
       abort();
-      return false;
     }
   }, message);
 }

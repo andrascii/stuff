@@ -165,9 +165,7 @@ class TimerService::Impl {
 
       const auto& context = it->second;
 
-      Dispatcher::Dispatch(
-        std::make_shared<TimerMessage>(context->id, nullptr, context->object)
-      );
+      Dispatcher::Dispatch(TimerMessage{ context->id, nullptr, context->object });
 
       if (context->single_shot) {
         RemoveTimer(context->id);
