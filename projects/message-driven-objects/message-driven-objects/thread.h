@@ -14,7 +14,7 @@ namespace mdo {
 //!
 static thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
 
-class Thread : virtual public std::enable_shared_from_this<Thread>, public Object {
+class Thread : public std::enable_shared_from_this<Thread>, public Object {
  public:
   friend const std::shared_ptr<ThreadData>& GetThreadData(const std::shared_ptr<Thread>& thread) noexcept;
 
