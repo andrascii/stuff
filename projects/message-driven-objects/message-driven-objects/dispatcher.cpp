@@ -21,6 +21,8 @@ std::error_code Dispatcher::Exec() {
 }
 
 void Dispatcher::Quit() {
+  LOG_INFO("stopping dispatcher...");
+
   const auto thread = Instance().Thread();
 
   thread->Stop();
@@ -32,6 +34,10 @@ void Dispatcher::Quit() {
 }
 
 void Dispatcher::Dispatch(Message&& message) {
+  if (Instance().Thread()->IsInterruptionRequested()) {
+    return;
+  }
+
   const auto receiver_thread = std::visit(GetReceiver, message)->Thread();
 
   LOG_TRACE("dispatching message for thread '{}'", receiver_thread->Name());

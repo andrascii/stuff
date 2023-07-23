@@ -301,7 +301,9 @@ std::string Thread::CurrentThreadId() {
 Thread::Thread(std::shared_ptr<ThreadData> data) : Thread{{}, std::move(data)} {}
 
 void Thread::StopImpl() {
-  if (!future_.valid()) {
+  const auto is_adopted = data_->IsAdopted();
+
+  if (!is_adopted && !future_.valid()) {
     return;
   }
 
@@ -311,14 +313,23 @@ void Thread::StopImpl() {
     tid = name_ + "/" + tid;
   }
 
+  if (IsInterruptionRequested()) {
+    LOG_INFO("the '{}' thread is already in stopping process", tid);
+    return;
+  }
+
   RequestInterruption();
   data_->Queue().SetInterruptFlag(true);
 
-  while (future_.wait_for(1s) == std::future_status::timeout) {
-    LOG_TRACE("waiting for '{}' thread to stop", tid);
-  }
+  if (!is_adopted) {
+    while (future_.wait_for(1s) == std::future_status::timeout) {
+      LOG_TRACE("waiting for '{}' thread to stop", tid);
+    }
 
-  future_.get();
+    future_.get();
+  } else {
+    Wait();
+  }
 
   LOG_TRACE("the '{}' thread has stopped", tid);
 }

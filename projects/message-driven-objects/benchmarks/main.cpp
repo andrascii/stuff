@@ -1,7 +1,6 @@
 #include "dispatcher.h"
 #include "logger.h"
 #include "thread.h"
-#include "timer_message.h"
 #include "test_message_receiver.h"
 #include "test_message_sender.h"
 #include "music_player.h"
@@ -14,7 +13,7 @@
 namespace {
 
 void SigIntHandler(int signal) {
-  if (signal == SIGINT) {
+  if (signal == SIGINT || signal == SIGHUP) {
     mdo::Dispatcher::Quit();
   }
 }
@@ -31,11 +30,11 @@ auto SendAndReceiveTestMessageBenchmark(uint64_t iterations) {
   LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
 
   const auto thread = Thread::Create("sender_thread");
-  thread->Start();
 
   const auto receiver = std::make_shared<TestMessageReceiver>(iterations);
   const auto sender = std::make_shared<TestMessageSender>(thread, iterations, receiver.get());
 
+  thread->Start();
   const auto result = Dispatcher::Instance().Exec();
 
   LOG_INFO("{} done", __FUNCTION__);
@@ -154,6 +153,7 @@ auto SignalSendBenchmark(uint64_t iterations) {
 
 int main() {
   std::signal(SIGINT, SigIntHandler);
+  std::signal(SIGHUP, SigIntHandler);
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 

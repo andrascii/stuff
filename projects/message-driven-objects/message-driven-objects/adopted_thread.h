@@ -9,7 +9,6 @@ class AdoptedThread : public Thread {
   explicit AdoptedThread(const std::shared_ptr<ThreadData>& data = nullptr);
 
   void Start() override;
-  void Stop() override;
 };
 
 }// namespace mdo

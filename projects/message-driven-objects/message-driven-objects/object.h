@@ -26,8 +26,6 @@ class TestMessage;
 
 class Object {
  public:
-  friend class MessageVisitor;
-
   Object();
   explicit Object(std::shared_ptr<mdo::Thread> thread);
 
@@ -77,7 +75,12 @@ class Object {
   virtual bool OnTestMessage(TestMessage& message);
 
  private:
-  mutable std::mutex mutex_;
+  //
+  // WARN: mutex must be recursive to avoid deadlock when handling SIGINT:
+  // OS kernel can interrupt any thread at any time for handling the signal.
+  // If this interruption occurs when someone already locked this mutex (for example call of Dispatcher::Quit), then would be deadlock.
+  //
+  mutable std::recursive_mutex mutex_;
   std::shared_ptr<mdo::Thread> thread_;
   std::set<int> timers_;
 };

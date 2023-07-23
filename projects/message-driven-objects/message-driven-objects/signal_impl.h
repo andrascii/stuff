@@ -31,6 +31,10 @@ class Signal final {
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
+    /*if (!owner_->Thread()->IsRunning()) {
+      LOG_WARNING("attempting to attach a signal to an object slot whose thread has not yet been started");
+    }*/
+
     Slot wrapper = [=](Args&&... args) {
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object, std::forward<Args>(args)...);

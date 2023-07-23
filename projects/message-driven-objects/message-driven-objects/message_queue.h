@@ -29,8 +29,13 @@ class MessageQueue {
   size_t Size() const noexcept;
 
  private:
-  mutable std::mutex mutex_;
-  std::condition_variable condition_;
+  //
+  // WARN: mutex must be recursive to avoid deadlock when handling SIGINT:
+  // OS kernel can interrupt any thread at any time for handling the signal.
+  // If this interruption occurs when someone already locked this mutex (for example call of Dispatcher::Quit), then would be deadlock.
+  //
+  mutable std::recursive_mutex mutex_;
+  std::condition_variable_any condition_;
   std::deque<Message> messages_;
   bool interrupt_;
 };
