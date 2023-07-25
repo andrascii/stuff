@@ -12,7 +12,7 @@ namespace mdo {
 Object::Object()
     : Object{Thread::Current()} {}
 
-Object::Object(std::shared_ptr<mdo::Thread> thread)
+Object::Object(mdo::Thread* thread)
     : thread_{std::move(thread)} {
   if (!Thread()) {
     thread_ = Thread::Current();
@@ -76,14 +76,14 @@ bool Object::OnMessage(Message& message) {
   }, message);
 }
 
-const std::shared_ptr<Thread>& Object::Thread() const noexcept {
+mdo::Thread* Object::Thread() const noexcept {
   std::scoped_lock _{mutex_};
   return thread_;
 }
 
-void Object::SetThread(std::shared_ptr<mdo::Thread> thread) {
+void Object::SetThread(mdo::Thread* thread) {
   std::scoped_lock _{mutex_};
-  thread_ = std::move(thread);
+  thread_ = thread;
 }
 
 bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {

@@ -13,6 +13,8 @@ class Dispatcher : public Object {
  public:
   static Dispatcher& Instance();
 
+  ~Dispatcher();
+
   std::error_code Exec();
 
   static void Quit();

@@ -31,7 +31,7 @@ class Signal final {
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
-    /*if (!owner_->Thread()->IsRunning()) {
+    /*if (!Utils::IsThreadRunning(owner_->Thread())) {
       LOG_WARNING("attempting to attach a signal to an object slot whose thread has not yet been started");
     }*/
 
@@ -80,6 +80,10 @@ class Signal<void> {
   template <typename ObjectType>
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
+
+    /*if (!Utils::IsThreadRunning(owner_->Thread())) {
+      LOG_WARNING("attempting to attach a signal to an object slot whose thread has not yet been started");
+    }*/
 
     Slot wrapper = [=]() {
       if (Utils::CurrentThread() == object->Thread()) {

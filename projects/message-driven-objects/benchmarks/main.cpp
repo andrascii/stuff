@@ -10,11 +10,17 @@
  * do I need to implement building a tree using Objects? For what?
  * */
 
+using namespace mdo;
+using namespace benchmarks;
+using namespace std::chrono;
+
 namespace {
 
 void SigIntHandler(int signal) {
-  if (signal == SIGINT || signal == SIGHUP) {
-    mdo::Dispatcher::Quit();
+  static std::once_flag flag;
+
+  if (signal == SIGINT) {
+    std::call_once(flag, Dispatcher::Quit);
   }
 }
 
@@ -22,20 +28,20 @@ void SigIntHandler(int signal) {
 
 }// namespace
 
-using namespace mdo;
-using namespace benchmarks;
-using namespace std::chrono;
-
 auto SendAndReceiveTestMessageBenchmark(uint64_t iterations) {
-  LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
-
   const auto thread = Thread::Create("sender_thread");
 
+  LOG_INFO("sender_thread address '{}'", (void*)thread.get());
+  LOG_INFO("dispatcher_thread address '{}'", (void*)Dispatcher::Instance().Thread());
+
   const auto receiver = std::make_shared<TestMessageReceiver>(iterations);
-  const auto sender = std::make_shared<TestMessageSender>(thread, iterations, receiver.get());
+  const auto sender = std::make_shared<TestMessageSender>(thread.get(), iterations, receiver.get());
 
   thread->Start();
+
   const auto result = Dispatcher::Instance().Exec();
+
+  thread->Stop();
 
   LOG_INFO("{} done", __FUNCTION__);
 
@@ -49,7 +55,7 @@ auto SignalSendBenchmark(uint64_t iterations) {
 
   class SignalReceiver : public Object {
    public:
-    SignalReceiver(const std::shared_ptr<mdo::Thread>& thread, uint64_t iterations)
+    SignalReceiver(mdo::Thread* thread, uint64_t iterations)
         : Object{thread},
           iterations_{iterations},
           on_volume_changed_benchmark_done_{},
@@ -70,8 +76,8 @@ auto SignalSendBenchmark(uint64_t iterations) {
         const auto metrics = measure_.GetMetrics();
 
         LOG_INFO(
-          "volume changed notifications '{}', notifications per second '{}', "
-          "time avg='{}', time min='{}', time max='{}', median='{}'",
+          "volume changed notifications '{}', per second '{}', "
+          "avg='{}', min='{}', max='{}', median='{}'",
           metrics.call_count,
           metrics.avg_call_count,
           metrics.time_avg,
@@ -108,8 +114,8 @@ auto SignalSendBenchmark(uint64_t iterations) {
         const auto metrics = measure_.GetMetrics();
 
         LOG_INFO(
-          "song changed notifications '{}', notifications per second '{}', "
-          "time avg='{}', time min='{}', time max='{}', median='{}'",
+          "song changed notifications '{}', per second '{}', "
+          "avg='{}', min='{}', max='{}', median='{}'",
           metrics.call_count,
           metrics.avg_call_count,
           metrics.time_avg,
@@ -137,23 +143,29 @@ auto SignalSendBenchmark(uint64_t iterations) {
     Measure measure_;
   };
 
-  LOG_INFO("the main thread id: {}", ToString(std::this_thread::get_id()));
+  //
+  // to clear all messages that could possibly there after previous benchmark was interrupted
+  //
+  current_thread_data->Queue().Clear();
 
   const auto thread = Thread::Create("receiver_thread");
-  thread->Start();
-
-  const auto receiver = std::make_shared<SignalReceiver>(thread, iterations);
+  const auto receiver = std::make_shared<SignalReceiver>(thread.get(), iterations);
   const auto sender = std::make_shared<MusicPlayer>(iterations);
+
+  thread->Start();
 
   sender->OnVolumeChanged.Connect(receiver.get(), &SignalReceiver::OnVolumeChanged);
   sender->OnSongChanged.Connect(receiver.get(), &SignalReceiver::OnSongChanged);
 
-  return Dispatcher::Instance().Exec();
+  const auto error = Dispatcher::Instance().Exec();
+
+  thread->Stop();
+
+  return error;
 }
 
 int main() {
   std::signal(SIGINT, SigIntHandler);
-  std::signal(SIGHUP, SigIntHandler);
   EnableConsoleLogging();
   Logger()->set_level(spdlog::level::info);
 

@@ -36,19 +36,21 @@ void SetThreadName(DWORD thread_id, const std::string& thread_name) {
 
 namespace mdo {
 
-const std::shared_ptr<ThreadData>& GetThreadData(const std::shared_ptr<Thread>& thread) noexcept {
+thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
+
+const std::shared_ptr<ThreadData>& GetThreadData(const Thread* thread) noexcept {
   return thread->data_;
 }
 
-std::shared_ptr<Thread> Thread::Current() {
+Thread* Thread::Current() {
   if (current_thread_data) {
     return current_thread_data->Thread();
   }
 
-  current_thread_data = std::make_shared<ThreadData>();
+  current_thread_data = std::make_unique<ThreadData>();
   current_thread_data->SetId(std::this_thread::get_id());
   current_thread_data->SetIsAdopted(true);
-  current_thread_data->SetThread(std::make_shared<AdoptedThread>(current_thread_data));
+  current_thread_data->SetThread(new AdoptedThread(current_thread_data)); // how to delete it?
 
   return current_thread_data->Thread();
 }
@@ -71,17 +73,17 @@ void Thread::SetCurrentThreadName(const std::string& name) noexcept {
 #endif
 }
 
-std::shared_ptr<Thread> Thread::Create(const char* name) {
+std::unique_ptr<Thread> Thread::Create(const char* name) {
   struct NewEnabler : Thread {
     explicit NewEnabler(std::function<void()> alternative_entry_point)
         : Thread(std::move(alternative_entry_point)) {}
   };
 
-  auto thread = std::make_shared<NewEnabler>(std::function<void()>{});
+  auto thread = std::make_unique<NewEnabler>(std::function<void()>{});
 
   thread->SetName(name);
 
-  Initialize(thread);
+  Initialize(*thread);
 
   return thread;
 }
@@ -91,7 +93,7 @@ Thread::~Thread() {
 
   const auto thread_name = name_.empty() ? ToString(std::this_thread::get_id()) : name_;
 
-  LOG_TRACE("thread '{}' destroyed", thread_name);
+  LOG_INFO("thread '{}' destroyed", thread_name);
 
   data_->SetThread(nullptr);
 }
@@ -180,15 +182,12 @@ void Thread::Run() {
   const auto tid = Thread::CurrentThreadId();
 
   //
-  // Sends LoopStartedMessage message to all objects which "lives" in this thread.
-  // So the objects have an ability to find out when the loop is started and can initiate their job.
-  //
-  const std::shared_ptr<Thread>& this_thread = current_thread_data->Thread();
-
-  //
   // emit 'Started' signal
   //
-  this_thread->Started();
+  {
+    std::scoped_lock _{ObjectsRegistry::Instance()};
+    Started();
+  }
 
   LOG_TRACE(
     "the '{}' thread started, current queue '{}' contains '{}' pending messages",
@@ -223,19 +222,22 @@ void Thread::Run() {
   // TODO: what if some object still lives and sends to us a messages?
   // we need here block incoming messages but should continue handle that already received
   //
-  current_thread_data->Queue().SetInterruptFlag(false);
+  /*current_thread_data->Queue().SetInterruptFlag(false);
   std::error_code ec;
 
   do {
     std::deque<Message> messages;
     ec = current_thread_data->Queue().Poll(messages, 1s);
     HandleMessages(messages);
-  } while (ec != std::errc::timed_out);
+  } while (ec != std::errc::timed_out);*/
 
   //
   // emit 'Finished' signal
   //
-  this_thread->Finished();
+  {
+    std::scoped_lock _{ObjectsRegistry::Instance()};
+    Finished();
+  }
 
   LOG_TRACE("the '{}' thread finished", tid);
 }
@@ -247,6 +249,22 @@ void Thread::HandleMessage(Message&& message) {
 
   if (this_thread == receiver_thread) {
     LOG_TRACE("the thread '{}' received and handling a message", this_thread->Name());
+
+    //
+    // block ability to destroy an Object class objects
+    // to be sure that we can safely call message->Receiver()->OnMessage(message);
+    //
+    std::scoped_lock _{ObjectsRegistry::Instance()};
+
+    if (!ObjectsRegistry::Instance().HasObject(receiver)) {
+      LOG_WARNING(
+        "the object {} that lived in thread {} is dead so the message to it is skipped",
+        static_cast<void*>(receiver),
+        ToString(current_thread_data->Id()));
+
+      return;
+    }
+
     receiver->OnMessage(message);
   } else {
     LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
@@ -255,24 +273,7 @@ void Thread::HandleMessage(Message&& message) {
 }
 
 void Thread::HandleMessages(std::deque<Message>& messages) {
-  //
-  // block ability to destroy an Object class objects
-  // to be sure that we can safely call message->Receiver()->OnMessage(message);
-  //
-  std::scoped_lock _{ObjectsRegistry::Instance()};
-
   for (auto& message : messages) {
-    const auto receiver = std::visit(GetReceiver, message);
-
-    if (!ObjectsRegistry::Instance().HasObject(receiver)) {
-      LOG_INFO(
-        "the object {} that lived in thread {} is dead so the message to it is skipped",
-        static_cast<void*>(receiver),
-        ToString(current_thread_data->Id()));
-
-      continue;
-    }
-
     if (std::holds_alternative<SetThreadNameMessage>(message)) {
       const auto set_thread_name_message = std::get<SetThreadNameMessage>(message);
       SetCurrentThreadName(set_thread_name_message.Name());
@@ -344,9 +345,9 @@ Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<Th
   }
 }
 
-void Thread::Initialize(const std::shared_ptr<Thread>& thread) {
-  thread->SetThread(thread->shared_from_this());
-  thread->data_->SetThread(thread->shared_from_this());
+void Thread::Initialize(Thread& thread) {
+  thread.SetThread(&thread);
+  thread.data_->SetThread(&thread);
 }
 
 }// namespace mdo

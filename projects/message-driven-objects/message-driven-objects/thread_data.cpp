@@ -37,12 +37,12 @@ void ThreadData::SetId(const std::thread::id& id) {
   id_ = id;
 }
 
-const std::shared_ptr<mdo::Thread>& ThreadData::Thread() const noexcept {
+mdo::Thread* ThreadData::Thread() const noexcept {
   std::scoped_lock _{*this};
   return thread_;
 }
 
-void ThreadData::SetThread(std::shared_ptr<mdo::Thread> thread) noexcept {
+void ThreadData::SetThread(mdo::Thread* thread) noexcept {
   std::scoped_lock _{*this};
   thread_ = std::move(thread);
 }

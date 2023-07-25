@@ -14,6 +14,10 @@ Dispatcher& Dispatcher::Instance() {
   return *app;
 }
 
+Dispatcher::~Dispatcher() {
+  LOG_INFO("dispatcher destroyed in thread '{}'", current_thread_data->Thread()->Name());
+}
+
 std::error_code Dispatcher::Exec() {
   Thread()->SetName("dispatcher");
   Thread()->Start();

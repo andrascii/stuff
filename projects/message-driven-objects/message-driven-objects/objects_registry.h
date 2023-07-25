@@ -21,7 +21,7 @@ class ObjectsRegistry {
   ObjectsRegistry(ObjectsRegistry&& other) = delete;
   ObjectsRegistry(const ObjectsRegistry& other) = delete;
 
-  ~ObjectsRegistry() {
+  virtual ~ObjectsRegistry() {
     if (!objects_.empty()) {
       //Logger()->error("ObjectsRegistry destroys but some Objects is still alive");
     }

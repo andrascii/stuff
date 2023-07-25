@@ -11,6 +11,7 @@ using namespace mdo;
 class TestMessageReceiver : public Object {
 public:
   TestMessageReceiver(uint64_t iterations);
+  ~TestMessageReceiver();
 
   void OnThreadStarted();
 

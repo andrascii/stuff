@@ -10,10 +10,12 @@ using namespace mdo;
 class TestMessageSender : public Object {
 public:
   TestMessageSender(
-   const std::shared_ptr<mdo::Thread>& thread,
+   mdo::Thread* thread,
     size_t gen_msg_count,
     Object* receiver
   );
+
+  ~TestMessageSender();
 
   void OnThreadStarted();
 

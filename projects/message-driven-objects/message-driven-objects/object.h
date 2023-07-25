@@ -22,12 +22,15 @@ class TestMessage;
  When A sends a message TextMessage to B, then this message would be posted to the thread T message queue.
  After that the thread T extracts the message and calls 'Object::OnMessage => Object::OnTextMessage' for object B.
 
+ The developer must ensure that the object is deleted before the thread to be sure that Thread* thread_ in the Object's object is valid.
+ Also developer usually should to stop the thread manually before the object that lives in this thread is deleted.
+
 */
 
 class Object {
  public:
   Object();
-  explicit Object(std::shared_ptr<mdo::Thread> thread);
+  explicit Object(mdo::Thread* thread);
 
   virtual ~Object();
 
@@ -60,10 +63,10 @@ class Object {
   //!
   //! Returns the pointer to the thread where this object "lives".
   //!
-  [[nodiscard]] const std::shared_ptr<Thread>& Thread() const noexcept;
+  [[nodiscard]] virtual mdo::Thread* Thread() const noexcept;
 
  protected:
-  void SetThread(std::shared_ptr<mdo::Thread> thread);
+  void SetThread(mdo::Thread* thread);
 
   //
   // This function do not intended to be a virtual function
@@ -81,7 +84,7 @@ class Object {
   // If this interruption occurs when someone already locked this mutex (for example call of Dispatcher::Quit), then would be deadlock.
   //
   mutable std::recursive_mutex mutex_;
-  std::shared_ptr<mdo::Thread> thread_;
+  mdo::Thread* thread_;
   std::set<int> timers_;
 };
 

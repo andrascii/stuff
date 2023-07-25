@@ -11,6 +11,10 @@ TestMessageReceiver::TestMessageReceiver(uint64_t iterations) : ctr_{}, iteratio
   Thread()->Started.Connect(this, &TestMessageReceiver::OnThreadStarted);
 }
 
+TestMessageReceiver::~TestMessageReceiver() {
+  LOG_INFO("TestMessageReceiver destroyed in thread '{}'", current_thread_data->Thread()->Name());
+}
+
 void TestMessageReceiver::OnThreadStarted() {
   LOG_INFO("TestMessageReceiver object started in the thread '{}'", Thread()->Name());
 }
@@ -30,8 +34,8 @@ bool TestMessageReceiver::OnTestMessage(TestMessage&) {
     const auto metrics = measure_.GetMetrics();
 
     LOG_INFO(
-      "got '{}' messages, messages per second '{}', "
-      "time avg='{}', time min='{}', time max='{}', median='{}'",
+      "got '{}' messages, per second '{}', "
+      "avg='{}', min='{}', max='{}', median='{}'",
       call_count,
       metrics.avg_call_count,
       metrics.time_avg,

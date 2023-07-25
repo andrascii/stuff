@@ -9,11 +9,15 @@ namespace benchmarks {
 using namespace mdo;
 using namespace std::chrono;
 
-TestMessageSender::TestMessageSender(const std::shared_ptr<mdo::Thread>& thread, size_t gen_msg_count, Object* receiver)
+TestMessageSender::TestMessageSender(mdo::Thread* thread, size_t gen_msg_count, Object* receiver)
   : Object{thread},
     gen_msg_count_{gen_msg_count},
     receiver_{receiver} {
   Thread()->Started.Connect(this, &TestMessageSender::OnThreadStarted);
+}
+
+TestMessageSender::~TestMessageSender() {
+  LOG_INFO("TestMessageSender destroyed in thread '{}'", current_thread_data->Thread()->Name());
 }
 
 void TestMessageSender::OnThreadStarted() {
@@ -38,8 +42,8 @@ void TestMessageSender::OnThreadStarted() {
       const auto metrics = measure_.GetMetrics();
 
       LOG_INFO(
-        "sent '{}' messages, messages per second '{}', "
-        "time avg='{}', time min='{}', time max='{}', median='{}'",
+        "sent '{}' messages, per second '{}', "
+        "avg='{}', min='{}', max='{}', median='{}'",
         call_count,
         metrics.avg_call_count,
         metrics.time_avg,

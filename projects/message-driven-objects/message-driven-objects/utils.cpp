@@ -4,8 +4,12 @@
 
 namespace mdo {
 
-std::shared_ptr<Thread> Utils::CurrentThread() {
+Thread* Utils::CurrentThread() {
   return Thread::Current();
+}
+
+bool Utils::IsThreadRunning(Thread* thread) {
+  return thread->IsRunning();
 }
 
 }// namespace mdo

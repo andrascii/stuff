@@ -12,11 +12,11 @@ namespace mdo {
 //! Using this variable is very easy to make a mistake in your code!
 //! Instead of it use a call GetThreadData(Thread::Current()) or GetThreadData(thread).
 //!
-static thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
+extern thread_local std::shared_ptr<ThreadData> current_thread_data;
 
-class Thread : public std::enable_shared_from_this<Thread>, public Object {
+class Thread : public Object {
  public:
-  friend const std::shared_ptr<ThreadData>& GetThreadData(const std::shared_ptr<Thread>& thread) noexcept;
+  friend const std::shared_ptr<ThreadData>& GetThreadData(const Thread* thread) noexcept;
 
   //!
   //! This signal is emitted from the associated thread right before it finishes executing.
@@ -33,7 +33,7 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
   //!
   //! Returns a pointer to a Thread which manages the currently executing thread.
   //!
-  static std::shared_ptr<Thread> Current();
+  static Thread* Current();
 
   //!
   //! Yields execution of the current thread to another runnable thread, if any.
@@ -60,7 +60,7 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
   //! Returns the newly created Thread instance.
   //!
   template <typename Function, typename... Args>
-  static std::shared_ptr<Thread> Create(Function&& f, Args&&... args) {
+  static std::unique_ptr<Thread> Create(Function&& f, Args&&... args) {
     struct NewEnabler : Thread {
       explicit NewEnabler(std::function<void()> alternative_entry_point)
           : Thread(std::move(alternative_entry_point)) {}
@@ -70,14 +70,14 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
       f(std::forward<Args>(args)...);
     };
 
-    auto thread = std::make_shared<NewEnabler>(adopted_invoke);
+    auto thread = std::make_unique<NewEnabler>(adopted_invoke);
 
-    Initialize(thread);
+    Initialize(*thread);
 
     return thread;
   }
 
-  static std::shared_ptr<Thread> Create(const char* name = "");
+  static std::unique_ptr<Thread> Create(const char* name = "");
 
   ~Thread() override;
 
@@ -146,10 +146,10 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
   bool IsInterruptionRequested() const noexcept;
 
  protected:
-  static void Run();
+  void Run();
 
-  static void HandleMessage(Message&& message);
-  static void HandleMessages(std::deque<Message>& messages);
+  void HandleMessage(Message&& message);
+  void HandleMessages(std::deque<Message>& messages);
 
   static std::string CurrentThreadId();
 
@@ -162,14 +162,13 @@ class Thread : public std::enable_shared_from_this<Thread>, public Object {
     std::function<void()> alternative_entry_point,
     std::shared_ptr<ThreadData> data = nullptr);
 
-  static void Initialize(const std::shared_ptr<Thread>& thread);
+  static void Initialize(Thread& thread);
 
  private:
   std::shared_ptr<ThreadData> data_;
   std::future<void> future_;
   std::string name_;
   std::function<void()> alternative_entry_point_;
-  Locked<std::set<Object*>> attached_;
 };
 
 }// namespace mdo
