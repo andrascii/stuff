@@ -14,7 +14,7 @@ void MessageQueue::Push(Message&& message) {
 }
 
 std::error_code MessageQueue::Poll(
-  std::deque<Message>& messages,
+  std::vector<Message>& messages,
   const std::chrono::seconds& timeout) noexcept {
   std::unique_lock _{mutex_};
 
@@ -39,7 +39,7 @@ std::error_code MessageQueue::Poll(
 }
 
 void MessageQueue::SetInterruptFlag(bool value) noexcept {
-  LOG_INFO("set interrupt flag for queue '{}' to '{}'", (void*) this, value);
+  LOG_TRACE("set interrupt flag for queue '{}' to '{}'", (void*) this, value);
 
   std::lock_guard _{mutex_};
   interrupt_ = value;

@@ -37,9 +37,8 @@ void Measure::IncrementCalls() noexcept {
   const auto common_measure_delta = current_time_point - first_call_time_point_;
 
   ++call_count_;
-  const auto delimiter = duration_cast<milliseconds>(common_measure_delta).count();
-  avg_call_count_per_second_ = (call_count_ / (delimiter ? delimiter : 1)) * 1000;
-  time_avg_ns_ = one_call_measure_delta / call_count_;
+  avg_call_count_per_second_ = (call_count_ / duration_cast<milliseconds>(common_measure_delta).count()) * 1'000;
+  time_avg_ns_ = common_measure_delta / call_count_;
 
   if (one_call_measure_delta < time_min_ns_) {
     time_min_ns_ = one_call_measure_delta;

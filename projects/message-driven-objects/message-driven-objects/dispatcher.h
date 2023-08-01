@@ -3,10 +3,6 @@
 #include "message_queue.h"
 #include "object.h"
 
-//
-// 1. the thread where we create Dispatch object is the main thread
-//
-
 namespace mdo {
 
 class Dispatcher : public Object {

@@ -196,7 +196,7 @@ void Thread::Run() {
     current_thread_data->Queue().Size());
 
   for (; !current_thread_data->InterruptionRequested();) {
-    std::deque<Message> messages;
+    std::vector<Message> messages;
     const auto error = current_thread_data->Queue().Poll(messages, 1s);
 
     LOG_TRACE("the '{}' thread is reading from '{}' queue", tid, (void*) &current_thread_data->Queue());
@@ -272,7 +272,7 @@ void Thread::HandleMessage(Message&& message) {
   }
 }
 
-void Thread::HandleMessages(std::deque<Message>& messages) {
+void Thread::HandleMessages(std::vector<Message>& messages) {
   for (auto& message : messages) {
     if (std::holds_alternative<SetThreadNameMessage>(message)) {
       const auto set_thread_name_message = std::get<SetThreadNameMessage>(message);

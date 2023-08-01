@@ -25,7 +25,7 @@ void TestMessageSender::OnThreadStarted() {
 
   const auto msg = TestMessage{"Hello!", this, receiver_};
 
-  constexpr size_t kBatchSize = 1'000'000'0;
+  constexpr size_t kBatchSize = 1'000'000;
   static auto batches = 0ul;
 
   for (size_t i = 0; i < gen_msg_count_ && !Thread()->IsInterruptionRequested(); ++i) {

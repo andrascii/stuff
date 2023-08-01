@@ -53,6 +53,10 @@ void Object::KillTimer(int id) noexcept {
   TimerService::Instance()->RemoveTimer(id);
 }
 
+void Object::ResetTimer(int id) const noexcept {
+  TimerService::Instance()->ResetTimer(id);
+}
+
 bool Object::OnMessage(Message& message) {
   return std::visit(Overloaded{
     [this](InvokeSlotMessage& msg) -> bool {

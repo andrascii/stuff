@@ -19,7 +19,7 @@ class MessageQueue {
   //!     - no error (if all is ok, in this case 'message' argument would contain a pointer to extracted message).
   //!
   std::error_code Poll(
-    std::deque<Message>& messages,
+    std::vector<Message>& messages,
     const std::chrono::seconds& timeout = 0s) noexcept;
 
   void SetInterruptFlag(bool value) noexcept;
@@ -36,7 +36,7 @@ class MessageQueue {
   //
   mutable std::recursive_mutex mutex_;
   std::condition_variable_any condition_;
-  std::deque<Message> messages_;
+  std::vector<Message> messages_;
   bool interrupt_;
 };
 

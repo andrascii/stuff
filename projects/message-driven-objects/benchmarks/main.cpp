@@ -62,7 +62,7 @@ auto SignalSendBenchmark(uint64_t iterations) {
           on_song_changed_benchmark_done_{} {}
 
     void OnVolumeChanged(uint64_t) {
-      constexpr size_t kBatchSize = 1'000'000'0;
+      constexpr size_t kBatchSize = 1'000'000;
       static auto batches = 0ul;
 
       measure_.IncrementCalls();
@@ -100,7 +100,7 @@ auto SignalSendBenchmark(uint64_t iterations) {
     }
 
     void OnSongChanged(const MusicPlayer::Song&) {
-      constexpr size_t kBatchSize = 1'000'000'0;
+      constexpr size_t kBatchSize = 1'000'000;
       static auto batches = 0ul;
 
       measure_.IncrementCalls();

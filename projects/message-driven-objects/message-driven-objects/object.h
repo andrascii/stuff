@@ -48,6 +48,8 @@ class Object {
   //!
   void KillTimer(int id) noexcept;
 
+  void ResetTimer(int id) const noexcept;
+
   //!
   //! \param message is a message that must be handled by this object
   //!

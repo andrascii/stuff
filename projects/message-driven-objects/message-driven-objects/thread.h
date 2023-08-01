@@ -149,7 +149,7 @@ class Thread : public Object {
   void Run();
 
   void HandleMessage(Message&& message);
-  void HandleMessages(std::deque<Message>& messages);
+  void HandleMessages(std::vector<Message>& messages);
 
   static std::string CurrentThreadId();
 

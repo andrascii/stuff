@@ -20,7 +20,7 @@ void TestMessageReceiver::OnThreadStarted() {
 }
 
 bool TestMessageReceiver::OnTestMessage(TestMessage&) {
-  constexpr size_t kBatchSize = 1'000'000'0;
+  constexpr size_t kBatchSize = 1'000'000;
   static auto batches = 0ul;
 
   measure_.IncrementCalls();
