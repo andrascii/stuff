@@ -9,7 +9,7 @@ using namespace mdo;
 TEST(ObjectTests, ReceiveTimerMessage) {
   class A : public Object {
    public:
-    A(std::shared_ptr<mdo::Thread> thread = nullptr) : Object{std::move(thread)}, timer_id_{-1}, ticked_{} {
+    A(mdo::Thread* thread = nullptr) : Object{std::move(thread)}, timer_id_{-1}, ticked_{} {
       Thread()->Started.Connect(this, &A::OnThreadStarted);
     }
 
@@ -23,7 +23,7 @@ TEST(ObjectTests, ReceiveTimerMessage) {
     }
 
    protected:
-    bool OnTimerMessage(TimerMessage& msg) override {
+    void OnTimerMessage(TimerMessage& msg) override {
       EXPECT_EQ(Thread(), Thread::Current());
 
       if (timer_id_ == msg.Id()) {
@@ -39,8 +39,6 @@ TEST(ObjectTests, ReceiveTimerMessage) {
           timer_id_,
           Thread()->Name());
       }
-
-      return ticked_;
     }
 
    private:
@@ -157,7 +155,7 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
 
   class B : public Object {
    public:
-    explicit B(const std::shared_ptr<mdo::Thread>& thread)
+    explicit B(mdo::Thread* thread)
         : Object{thread},
           slot_was_called_{} {}
 
@@ -178,7 +176,7 @@ TEST(ObjectTests, SignalToMethodSlotInSecondThread) {
 
   const auto thread = Thread::Create("background");
   const auto a = std::make_shared<A>();
-  const auto b = std::make_shared<B>(thread);
+  const auto b = std::make_shared<B>(thread.get());
 
   a->TestSignal.Connect(b.get(), &B::Slot);
 
@@ -284,11 +282,10 @@ TEST(ObjectTests, ReceiveMessagesSequence) {
     }
 
    protected:
-    bool OnTestMessage(TestMessage& message) override {
+    void OnTestMessage(TestMessage& message) override {
       EXPECT_EQ(Thread(), Thread::Current());
       LOG_TRACE("[tid: {}] OnTestMessage was called", Thread()->Name());
       cumulative_ += message.Data();
-      return true;
     }
 
    private:

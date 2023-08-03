@@ -59,6 +59,7 @@ class FixMessageParser {
   static Expected<std::string> SecurityGroup(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<uint64_t> MsgSeqNum(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> SendingTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
+  static Expected<std::string> LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<uint64_t> NoMdEntries(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> Tenor(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> SettlementDate(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
@@ -67,4 +68,5 @@ class FixMessageParser {
   static Expected<std::string> MdEntryPx(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<uint64_t> MdEntrySize(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> SubscriptionRequestType(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
+  static Expected<uint64_t> NoRelatedSym(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
 };

@@ -19,7 +19,7 @@ void TestMessageReceiver::OnThreadStarted() {
   LOG_INFO("TestMessageReceiver object started in the thread '{}'", Thread()->Name());
 }
 
-bool TestMessageReceiver::OnTestMessage(TestMessage&) {
+void TestMessageReceiver::OnTestMessage(TestMessage&) {
   constexpr size_t kBatchSize = 1'000'000;
   static auto batches = 0ul;
 
@@ -48,8 +48,6 @@ bool TestMessageReceiver::OnTestMessage(TestMessage&) {
   if (call_count == iterations_) {
     Dispatcher::Quit();
   }
-
-  return true;
 }
 
 }

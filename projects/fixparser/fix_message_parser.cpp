@@ -130,7 +130,82 @@ Expected<TestRequest> FixMessageParser::OnTestRequest(hffix::message_reader& rea
 }
 
 Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message_reader& reader) {
-  return {};
+  auto hint = reader.begin();
+
+  auto header = ParseFixHeader(reader, hint);
+
+  if (!header) {
+    return Unexpected<>{header.error()};
+  }
+
+  auto md_req_id = MdReqId(reader, hint);
+
+  if (!md_req_id) {
+    return Unexpected<>{md_req_id.error()};
+  }
+
+  auto subscription_request_type = SubscriptionRequestType(reader, hint);
+
+  if (!subscription_request_type) {
+    return Unexpected<>{subscription_request_type.error()};
+  }
+
+  const auto no_related_sym = NoRelatedSym(reader, hint);
+
+  if (!no_related_sym) {
+    return Unexpected<>{no_related_sym.error()};
+  }
+
+  std::vector<MarketDataRequest::Instrument> instruments;
+
+  for (uint64_t i = 0; i < *no_related_sym; ++i) {
+    auto symbol = Symbol(reader, hint);
+
+    if (!symbol) {
+      return Unexpected<>{symbol.error()};
+    }
+
+    auto security_type = SecurityType(reader, hint);
+
+    if (!security_type) {
+      return Unexpected<>{security_type.error()};
+    }
+
+    auto security_group = SecurityGroup(reader, hint);
+
+    if (!security_group) {
+      return Unexpected<>{security_group.error()};
+    }
+
+    auto tenor = Tenor(reader, hint);
+
+    if (!tenor) {
+      return Unexpected<>{tenor.error()};
+    }
+
+    auto settlement_date = SettlementDate(reader, hint);
+
+    if (!settlement_date) {
+      return Unexpected<>{settlement_date.error()};
+    }
+
+    instruments.push_back(
+      MarketDataRequest::Instrument{
+        std::move(*symbol),
+        std::move(*security_type),
+        std::move(*security_group),
+        std::move(*tenor),
+        std::move(*settlement_date),
+      }
+    );
+  }
+
+  return MarketDataRequest{
+    std::move(*header),
+    std::move(*md_req_id),
+    std::move(*subscription_request_type),
+    std::move(instruments)
+  };
 }
 
 Expected<MarketDataRequestReject> FixMessageParser::OnMarketDataRequestReject(hffix::message_reader& reader) {
@@ -200,16 +275,7 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
     return Unexpected<>{MakeErrorCode(Error::kNotFoundNorTenorNorSettlementDate)};
   }
 
-  MarketDataSnapshotFullRefresh result{
-    std::move(*header),
-    std::move(*symbol),
-    std::move(*security_type),
-    std::move(*security_group),
-    std::move(*tenor),
-    std::move(*settlement_date),
-    std::move(*md_req_id),
-    {}
-  };
+  std::vector<OrderBookLevel> levels;
 
   for (uint64_t j = 0; j < *no_md_entries; ++j) {
     OrderBookLevel level{};
@@ -229,7 +295,7 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
       return Unexpected<>{MakeErrorCode(Error::kUnhandledMdEntryTypeValue)};
     }
 
-    const auto md_entry_px = MdEntryPx(reader, hint);
+    auto md_entry_px = MdEntryPx(reader, hint);
 
     if (!md_entry_px) {
       return Unexpected<>{md_entry_px.error()};
@@ -241,10 +307,28 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
       return Unexpected<>{md_entry_size.error()};
     }
 
-    level.price = *md_entry_px;
+    level.price = std::move(*md_entry_px);
     level.volume = *md_entry_size;
-    result.levels.push_back(level);
+    levels.push_back(std::move(level));
   }
+
+  auto last_update_time = LastUpdateTime(reader, hint);
+
+  if (!last_update_time) {
+    return Unexpected<>{last_update_time.error()};
+  }
+
+  MarketDataSnapshotFullRefresh result{
+    std::move(*header),
+    std::move(*symbol),
+    std::move(*security_type),
+    std::move(*security_group),
+    std::move(*tenor),
+    std::move(*settlement_date),
+    std::move(*md_req_id),
+    std::move(*last_update_time),
+    std::move(levels)
+  };
 
   return result;
 }
@@ -313,6 +397,14 @@ Expected<std::string> FixMessageParser::SendingTime(hffix::message_reader& reade
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSendingTime)};
 }
 
+Expected<std::string> FixMessageParser::LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+  if (reader.find_with_hint(hffix::tag::LastUpdateTime, hint)) {
+    return hint->value().as_string();
+  }
+
+  return Unexpected<>{MakeErrorCode(Error::kNotFoundLastUpdateTime)};
+}
+
 Expected<uint64_t> FixMessageParser::NoMdEntries(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::NoMDEntries, hint)) {
     return hint->value().as_int<uint64_t>();
@@ -375,4 +467,12 @@ Expected<std::string> FixMessageParser::SubscriptionRequestType(hffix::message_r
   }
 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSubscriptionRequestType)};
+}
+
+Expected<uint64_t> FixMessageParser::NoRelatedSym(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+  if (reader.find_with_hint(hffix::tag::NoRelatedSym, hint)) {
+    return hint->value().as_int<uint64_t>();
+  }
+
+  return Unexpected<>{MakeErrorCode(Error::kNotFoundNoRelatedSym)};
 }

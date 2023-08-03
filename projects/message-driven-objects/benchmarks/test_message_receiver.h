@@ -18,7 +18,7 @@ public:
   size_t Counter() const noexcept;
 
 protected:
-  bool OnTestMessage(TestMessage&) override;
+  void OnTestMessage(TestMessage&) override;
 
 private:
   size_t ctr_;

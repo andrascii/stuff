@@ -80,7 +80,27 @@ int main(int argc, char** argv) {
           << "SendingTime  = " << v.sending_time << std::endl
           << "MsgSeqNum  = " << v.seq_num << std::endl << std::endl;
       } else if constexpr (std::is_same_v<T, MarketDataRequest>) {
+        std::cout
+          << "MarketDataRequest message:" << std::endl
+          << "SenderCompID  = " << v.sender << std::endl
+          << "TargetCompID  = " << v.receiver << std::endl
+          << "SendingTime  = " << v.sending_time << std::endl
+          << "MsgSeqNum  = " << v.seq_num << std::endl
+          << "MDReqID  = " << v.md_req_id << std::endl
+          << "SubscriptionRequestType  = " << v.subscription_request_type << std::endl << std::endl;
 
+        std::cout << "  Instruments: " << std::endl;
+
+        for (const auto& instrument : v.instruments) {
+          std::cout
+            << "    Symbol  = " << instrument.symbol << std::endl
+            << "    Security Type  = " << instrument.security_type << std::endl
+            << "    Security Group  = " << instrument.security_group << std::endl
+            << "    Tenor  = " << instrument.tenor << std::endl
+            << "    Settlement Date  = " << instrument.settlement_date << std::endl;
+        }
+
+        std::cout << std::endl;
       } else if constexpr (std::is_same_v<T, MarketDataRequestReject>) {
         std::cout
           << "MarketDataRequestReject message:" << std::endl
@@ -101,6 +121,7 @@ int main(int argc, char** argv) {
           << "SettlementDate  = " << v.settlement_date << std::endl
           << "MDReqID  = " << v.md_req_id << std::endl
           << "SendingTime  = " << v.sending_time << std::endl
+          << "LastUpdateTime  = " << v.sending_time << std::endl
           << "MsgSeqNum  = " << v.seq_num << std::endl << std::endl;
 
         for (const auto& level : v.levels) {

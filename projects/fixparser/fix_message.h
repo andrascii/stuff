@@ -27,12 +27,17 @@ struct Heartbeat : FixMessageHeader {};
 struct TestRequest : FixMessageHeader {};
 
 struct MarketDataRequest : FixMessageHeader {
-  std::string symbol;
-  std::string security_type;
-  std::string security_group;
-  std::string tenor;
-  std::string settlement_date;
+  struct Instrument {
+    std::string symbol;
+    std::string security_type;
+    std::string security_group;
+    std::string tenor;
+    std::string settlement_date;
+  };
+
   std::string md_req_id;
+  std::string subscription_request_type;
+  std::vector<Instrument> instruments;
 };
 
 struct MarketDataRequestReject : FixMessageHeader {
@@ -46,6 +51,7 @@ struct MarketDataSnapshotFullRefresh : FixMessageHeader {
   std::string tenor;
   std::string settlement_date;
   std::string md_req_id;
+  std::string last_update_time;
   std::vector<OrderBookLevel> levels;
 };
 

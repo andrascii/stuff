@@ -57,24 +57,24 @@ void Object::ResetTimer(int id) const noexcept {
   TimerService::Instance()->ResetTimer(id);
 }
 
-bool Object::OnMessage(Message& message) {
-  return std::visit(Overloaded{
-    [this](InvokeSlotMessage& msg) -> bool {
-      return OnInvokeSlotMessage(msg);
+void Object::OnMessage(Message& message) {
+  std::visit(Overloaded{
+    [this](InvokeSlotMessage& msg) {
+      OnInvokeSlotMessage(msg);
     },
-    [this](TestMessage& msg) -> bool {
-      return OnTestMessage(msg);
+    [this](TestMessage& msg) {
+      OnTestMessage(msg);
     },
-    [this](BenchmarkMessage& msg) -> bool {
-      return OnBenchmarkMessage(msg);
+    [this](BenchmarkMessage& msg) {
+      OnBenchmarkMessage(msg);
     },
-    [this](TimerMessage& msg) -> bool {
-      return OnTimerMessage(msg);
+    [this](TimerMessage& msg) {
+      OnTimerMessage(msg);
     },
-    [](SetThreadNameMessage&) -> bool {
+    [](SetThreadNameMessage&) {
       abort();
     },
-    [](std::monostate&) -> bool {
+    [](std::monostate&) {
       abort();
     }
   }, message);
@@ -90,21 +90,14 @@ void Object::SetThread(mdo::Thread* thread) {
   thread_ = thread;
 }
 
-bool Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
+void Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
   message.Invoke();
-  return true;
 }
 
-bool Object::OnBenchmarkMessage(BenchmarkMessage&) {
-  return true;
-}
+void Object::OnBenchmarkMessage(BenchmarkMessage&) {}
 
-bool Object::OnTimerMessage(TimerMessage&) {
-  return false;
-}
+void Object::OnTimerMessage(TimerMessage&) {}
 
-bool Object::OnTestMessage(TestMessage&) {
-  return false;
-}
+void Object::OnTestMessage(TestMessage&) {}
 
 }// namespace mdo

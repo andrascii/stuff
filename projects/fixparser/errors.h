@@ -14,6 +14,7 @@ enum class Error {
   kNotFoundSecurityGroup,
   kNotFoundMsgSeqNum,
   kNotFoundSendingTime,
+  kNotFoundLastUpdateTime,
   kNotFoundNoMdEntries,
   kNotFoundTenor,
   kNotFoundSettlementDate,
@@ -24,6 +25,7 @@ enum class Error {
   kNotFoundNorTenorNorSettlementDate,
   kNotFoundMdEntryPx,
   kNotFoundMdEntrySize,
+  kNotFoundNoRelatedSym,
   kUnhandledMdEntryTypeValue,
 };
 

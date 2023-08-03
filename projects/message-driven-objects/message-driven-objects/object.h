@@ -54,13 +54,8 @@ class Object {
   //! \param message is a message that must be handled by this object
   //!
   //! Receives a message and calls corresponding handle function for it for this object.
-  //! Then by default it sends a message to all children of this object.
-  //! When some child returns true as a result of handling message it means that that child accepted the message.
-  //! When a message is accepted the delivery a message process to children objects interrupts and considered completed.
   //!
-  //! If no one child returned true then a message would be delivered to all children objects.
-  //!
-  bool OnMessage(Message& message);
+  void OnMessage(Message& message);
 
   //!
   //! Returns the pointer to the thread where this object "lives".
@@ -73,11 +68,11 @@ class Object {
   //
   // This function do not intended to be a virtual function
   //
-  bool OnInvokeSlotMessage(InvokeSlotMessage& message);
+  void OnInvokeSlotMessage(InvokeSlotMessage& message);
 
-  virtual bool OnTimerMessage(TimerMessage& message);
-  virtual bool OnBenchmarkMessage(BenchmarkMessage& message);
-  virtual bool OnTestMessage(TestMessage& message);
+  virtual void OnTimerMessage(TimerMessage& message);
+  virtual void OnBenchmarkMessage(BenchmarkMessage& message);
+  virtual void OnTestMessage(TestMessage& message);
 
  private:
   //

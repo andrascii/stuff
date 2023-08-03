@@ -43,6 +43,9 @@ class ErrorCategory final : public std::error_category {
       case Error::kNotFoundSendingTime: {
         return fmt::format("not found SendingTime <{}> field", hffix::tag::SendingTime);
       }
+      case Error::kNotFoundLastUpdateTime: {
+        return fmt::format("not found LastUpdateTime <{}> field", hffix::tag::LastUpdateTime);
+      }
       case Error::kNotFoundNoMdEntries: {
         return fmt::format("not found NoMDEntries <{}> field", hffix::tag::NoMDEntries);
       }
