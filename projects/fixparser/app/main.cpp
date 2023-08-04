@@ -4,10 +4,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <hffix.hpp>
-
 #include "fix_message.h"
 #include "fix_message_parser.h"
 
@@ -126,9 +122,9 @@ int main(int argc, char** argv) {
 
         for (const auto& level : v.levels) {
           std::cout
-            << (level.type == OrderBookLevelType::kBid ? "Bid" : "Offer") << std::endl
-            << "  Price  = " << level.price << std::endl
-            << "  Volume  = " << level.volume << std::endl << std::endl;
+            << (level.type == OrderBookLevelType::kBid ? "  Bid" : "  Offer") << std::endl
+            << "    Price  = " << level.price << std::endl
+            << "    Volume  = " << level.volume << std::endl << std::endl;
         }
       }
     }, *message);
