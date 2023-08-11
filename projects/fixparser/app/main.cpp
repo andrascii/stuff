@@ -92,6 +92,7 @@ int main(int argc, char** argv) {
             << "    Symbol  = " << instrument.symbol << std::endl
             << "    Security Type  = " << instrument.security_type << std::endl
             << "    Security Group  = " << instrument.security_group << std::endl
+            << "    Accout  = " << instrument.account << std::endl
             << "    Tenor  = " << instrument.tenor << std::endl
             << "    Settlement Date  = " << instrument.settlement_date << std::endl;
         }
@@ -113,6 +114,7 @@ int main(int argc, char** argv) {
           << "TargetCompID  = " << v.receiver << std::endl
           << "SecurityType  = " << v.security_type << std::endl
           << "SecurityGroup  = " << v.security_group << std::endl
+          << "Account  = " << v.account << std::endl
           << "Tenor  = " << v.tenor << std::endl
           << "SettlementDate  = " << v.settlement_date << std::endl
           << "MDReqID  = " << v.md_req_id << std::endl

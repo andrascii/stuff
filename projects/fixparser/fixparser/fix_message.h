@@ -33,6 +33,7 @@ struct MarketDataRequest : FixMessageHeader {
     std::string security_group;
     std::string tenor;
     std::string settlement_date;
+    std::string account;
   };
 
   std::string md_req_id;
@@ -48,6 +49,7 @@ struct MarketDataSnapshotFullRefresh : FixMessageHeader {
   std::string symbol;
   std::string security_type;
   std::string security_group;
+  std::string account;
   std::string tenor;
   std::string settlement_date;
   std::string md_req_id;

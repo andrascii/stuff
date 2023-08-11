@@ -8,6 +8,7 @@ enum class Error {
   kReaderIsNotValid,
   kReaderUnhandledMessageType,
   kNotFoundSymbol,
+  kNotFoundAccount,
   kNotFoundSenderCompId,
   kNotFoundTargetCompId,
   kNotFoundSecurityType,

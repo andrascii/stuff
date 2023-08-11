@@ -52,6 +52,7 @@ class FixMessageParser {
   static Expected<MarketDataSnapshotFullRefresh> OnMarketDataSnapshotFullRefresh(hffix::message_reader& reader);
 
   static Expected<std::string> Symbol(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
+  static Expected<std::string> Account(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> Sender(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> Receiver(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<uint64_t> HeartbeatInterval(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);

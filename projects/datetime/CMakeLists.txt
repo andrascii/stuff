@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.16)
 
 include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME quiz1)
+set(THIS_TARGET_NAME datetime)
 project(${THIS_TARGET_NAME})
 
 #
 # deps
 #
-list(APPEND DEPS)
+list(APPEND DEPS date::date)
+list(APPEND DEPS date::date-tz)
 
 #
 # collecting sources and headers

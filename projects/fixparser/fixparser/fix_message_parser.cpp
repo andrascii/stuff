@@ -189,6 +189,13 @@ Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message
       return Unexpected<>{settlement_date.error()};
     }
 
+    auto account = Account(reader, hint);
+    std::string account_value;
+
+    if (account) {
+      account_value = std::move(*account);
+    }
+
     instruments.push_back(
       MarketDataRequest::Instrument{
         std::move(*symbol),
@@ -196,6 +203,7 @@ Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message
         std::move(*security_group),
         std::move(*tenor),
         std::move(*settlement_date),
+        std::move(account_value)
       }
     );
   }
@@ -236,6 +244,13 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
 
   if (!header) {
     return Unexpected<>{header.error()};
+  }
+
+  auto account = Account(reader, hint);
+  std::string account_value;
+
+  if (account) {
+    account_value = std::move(*account);
   }
 
   auto symbol = Symbol(reader, hint);
@@ -323,6 +338,7 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
     std::move(*symbol),
     std::move(*security_type),
     std::move(*security_group),
+    std::move(account_value),
     std::move(*tenor),
     std::move(*settlement_date),
     std::move(*md_req_id),
@@ -339,6 +355,14 @@ Expected<std::string> FixMessageParser::Symbol(hffix::message_reader& reader, hf
   }
 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSymbol)};
+}
+
+Expected<std::string> FixMessageParser::Account(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+  if (reader.find_with_hint(hffix::tag::Account, hint)) {
+    return hint->value().as_string();
+  }
+
+  return Unexpected<>{MakeErrorCode(Error::kNotFoundAccount)};
 }
 
 Expected<std::string> FixMessageParser::Sender(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {

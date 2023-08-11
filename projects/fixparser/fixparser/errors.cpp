@@ -25,6 +25,9 @@ class ErrorCategory final : public std::error_category {
       case Error::kNotFoundSymbol: {
         return fmt::format("not found Symbol <{}> field", hffix::tag::Symbol);
       }
+      case Error::kNotFoundAccount: {
+        return fmt::format("not found Account <{}> field", hffix::tag::Account);
+      }
       case Error::kNotFoundSenderCompId: {
         return fmt::format("not found SenderCompID <{}> field", hffix::tag::SenderCompID);
       }

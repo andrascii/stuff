@@ -1,6 +1,6 @@
 #include "fix_message_parser.h"
 
-static void ParseSnapshotBenchmark(benchmark::State& state) {
+static void MarketDataSnapshotFullRefreshBenchmark(benchmark::State& state) {
   const auto w =
     "8=FIX.4.4\u0001"
     "9=2568\u0001"
@@ -134,7 +134,7 @@ static void ParseSnapshotBenchmark(benchmark::State& state) {
   }
 }
 
-static void ParseMarketDataRequestBenchmark(benchmark::State& state) {
+static void MarketDataRequestBenchmark(benchmark::State& state) {
   const auto v =
     "8=FIX.4.4\u0001"
     "9=219\u0001"
@@ -164,7 +164,7 @@ static void ParseMarketDataRequestBenchmark(benchmark::State& state) {
   }
 }
 
-static void ParseLogonBenchmark(benchmark::State& state) {
+static void LogonBenchmark(benchmark::State& state) {
   const auto a =
     "8=FIX.4.4\u0001"
     "9=101\u0001"
@@ -185,7 +185,7 @@ static void ParseLogonBenchmark(benchmark::State& state) {
   }
 }
 
-BENCHMARK(ParseLogonBenchmark);
-BENCHMARK(ParseMarketDataRequestBenchmark);
-BENCHMARK(ParseSnapshotBenchmark);
+BENCHMARK(LogonBenchmark);
+BENCHMARK(MarketDataRequestBenchmark);
+BENCHMARK(MarketDataSnapshotFullRefreshBenchmark);
 BENCHMARK_MAIN();

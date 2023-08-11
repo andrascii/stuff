@@ -57,6 +57,7 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(benchmark CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(hffix CONFIG REQUIRED)
+find_package(date CONFIG REQUIRED)
 
 #
 # C++ compiler settings
