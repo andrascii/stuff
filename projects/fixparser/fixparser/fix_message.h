@@ -1,5 +1,10 @@
 #pragma once
 
+using Milliseconds = std::chrono::milliseconds;
+
+template <typename T>
+using TimePoint = std::chrono::time_point<std::chrono::system_clock, T>;
+
 enum class OrderBookLevelType {
   kBid,
   kOffer
@@ -14,17 +19,18 @@ struct OrderBookLevel {
 struct FixMessageHeader {
   std::string sender;
   std::string receiver;
-  std::string sending_time;
-  uint64_t seq_num;
+  TimePoint<Milliseconds> sending_time;
+  uint64_t seq_num{1};
 };
 
 struct Logon : FixMessageHeader {
-  uint64_t heartbeat_interval;
+  uint64_t heartbeat_interval{};
 };
 
 struct Logout : FixMessageHeader {};
 struct Heartbeat : FixMessageHeader {};
 struct TestRequest : FixMessageHeader {};
+struct Reject : FixMessageHeader {};
 
 struct MarketDataRequest : FixMessageHeader {
   struct Instrument {
@@ -53,7 +59,7 @@ struct MarketDataSnapshotFullRefresh : FixMessageHeader {
   std::string tenor;
   std::string settlement_date;
   std::string md_req_id;
-  std::string last_update_time;
+  TimePoint<Milliseconds> last_update_time;
   std::vector<OrderBookLevel> levels;
 };
 
@@ -62,6 +68,7 @@ using FixMessage = std::variant<
   Logout,
   Heartbeat,
   TestRequest,
+  Reject,
   MarketDataRequest,
   MarketDataRequestReject,
   MarketDataSnapshotFullRefresh

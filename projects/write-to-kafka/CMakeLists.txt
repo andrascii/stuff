@@ -1,31 +1,28 @@
 cmake_minimum_required(VERSION 3.16)
 
-include(make_static_library_sanitized_target)
+include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME fixparser-app)
+set(THIS_TARGET_NAME write-to-kafka)
 project(${THIS_TARGET_NAME})
 
 #
 # precompiled header
 #
-set(PRECOMPILED_HEADER "stdafx.h")
+set(PRECOMPILED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h")
 
 #
 # deps include directories
 #
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
-list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../fixparser")
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CPPKAFKA_INCLUDES}")
 
 #
 # deps
 #
-set(DEPS)
 list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS spdlog::spdlog)
 list(APPEND DEPS tl::expected)
-list(APPEND DEPS fixparser)
-list(APPEND DEPS date::date)
-list(APPEND DEPS date::date-tz)
+list(APPEND DEPS nlohmann_json::nlohmann_json)
 
 #
 # collecting sources and headers
@@ -64,10 +61,10 @@ target_link_libraries(${THIS_TARGET_NAME} PUBLIC ${DEPS})
 #
 # creating sanitized version of this target to check UB
 #
-make_executable_sanitized_target(
-  TARGET_NAME ${THIS_TARGET_NAME}
-  SOURCES ${SOURCES_LIST}
-  HEADERS ${HEADERS_LIST}
-  DEPS ${DEPS}
-  PRECOMPILED_HEADER ${PRECOMPILED_HEADER}
-)
+#make_executable_sanitized_target(
+#  TARGET_NAME ${THIS_TARGET_NAME}-sanitized
+#  SOURCES ${SOURCES_LIST}
+#  HEADERS ${HEADERS_LIST}
+#  DEPS ${DEPS}
+#  PRECOMPILED_HEADER ${PRECOMPILED_HEADER}
+#)

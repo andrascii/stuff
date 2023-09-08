@@ -3,10 +3,12 @@
 #include <vector>
 #include <filesystem>
 #include <fstream>
+#include <date/date.h>
 
 #include "fix_message.h"
 #include "fix_message_parser.h"
 
+using namespace date;
 using namespace std::chrono;
 
 std::vector<std::string> ReadFile(const std::filesystem::path& path) {
@@ -34,6 +36,8 @@ int main(int argc, char** argv) {
   }
 
   const auto lines = ReadFile(argv[1]);
+
+  auto start = std::chrono::system_clock::now();
 
   for (const auto& line : lines) {
     const auto message = FixMessageParser::Parse(line);
@@ -119,7 +123,7 @@ int main(int argc, char** argv) {
           << "SettlementDate  = " << v.settlement_date << std::endl
           << "MDReqID  = " << v.md_req_id << std::endl
           << "SendingTime  = " << v.sending_time << std::endl
-          << "LastUpdateTime  = " << v.sending_time << std::endl
+          << "LastUpdateTime  = " << v.last_update_time << std::endl
           << "MsgSeqNum  = " << v.seq_num << std::endl << std::endl;
 
         for (const auto& level : v.levels) {
@@ -131,4 +135,9 @@ int main(int argc, char** argv) {
       }
     }, *message);
   }
+
+  auto end = std::chrono::system_clock::now();
+  auto delta = end - start;
+
+  std::cout << "took time " << std::chrono::duration_cast<std::chrono::milliseconds>(delta) << std::endl;
 }

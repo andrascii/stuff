@@ -2,7 +2,6 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <hffix.hpp>
 
-#include <string>
 #include <string_view>
 
 #include "fix_message_parser.h"
@@ -27,6 +26,8 @@ Expected<FixMessage> FixMessageParser::Parse(std::string_view fix_message) {
     return OnHeartbeat(reader);
   } else if (reader.message_type()->value() == "1") {
     return OnTestRequest(reader);
+  } else if (reader.message_type()->value() == "3") {
+    return OnReject(reader);
   } else if (reader.message_type()->value() == "V") {
     return OnMarketDataRequest(reader);
   } else if (reader.message_type()->value() == "Y") {
@@ -35,7 +36,7 @@ Expected<FixMessage> FixMessageParser::Parse(std::string_view fix_message) {
     return OnMarketDataSnapshotFullRefresh(reader);
   }
 
-  return Unexpected<>{MakeErrorCode(Error::kReaderUnhandledMessageType)};
+  return Unexpected<>{MakeErrorCode(Error::kUnhandledMessageType)};
 }
 
 Expected<FixMessage> FixMessageParser::Parse(const std::string& fix_message) {
@@ -127,6 +128,18 @@ Expected<TestRequest> FixMessageParser::OnTestRequest(hffix::message_reader& rea
   }
 
   return TestRequest{*header};
+}
+
+Expected<Reject> FixMessageParser::OnReject(hffix::message_reader& reader) {
+  auto hint = reader.begin();
+
+  const auto header = ParseFixHeader(reader, hint);
+
+  if (!header) {
+    return Unexpected<>{header.error()};
+  }
+
+  return Reject{*header};
 }
 
 Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message_reader& reader) {
@@ -413,17 +426,23 @@ Expected<uint64_t> FixMessageParser::MsgSeqNum(hffix::message_reader& reader, hf
   return Unexpected<>{MakeErrorCode(Error::kNotFoundMsgSeqNum)};
 }
 
-Expected<std::string> FixMessageParser::SendingTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<TimePoint<Milliseconds>> FixMessageParser::SendingTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+  TimePoint<Milliseconds> tp;
+
   if (reader.find_with_hint(hffix::tag::SendingTime, hint)) {
-    return hint->value().as_string();
+    hint->value().as_timestamp(tp);
+    return tp;
   }
 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSendingTime)};
 }
 
-Expected<std::string> FixMessageParser::LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<TimePoint<Milliseconds>> FixMessageParser::LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+  TimePoint<Milliseconds> tp;
+
   if (reader.find_with_hint(hffix::tag::LastUpdateTime, hint)) {
-    return hint->value().as_string();
+    hint->value().as_timestamp(tp);
+    return tp;
   }
 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundLastUpdateTime)};

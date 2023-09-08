@@ -19,8 +19,11 @@ class ErrorCategory final : public std::error_category {
       case Error::kReaderIsNotValid: {
         return "reader is in invalid state";
       }
-      case Error::kReaderUnhandledMessageType: {
+      case Error::kUnhandledMessageType: {
         return "unhandled message type by parser";
+      }
+      case Error::kNotFoundMsgType: {
+        return fmt::format("not found MsgType <{}> field", hffix::tag::MsgType);
       }
       case Error::kNotFoundSymbol: {
         return fmt::format("not found Symbol <{}> field", hffix::tag::Symbol);
@@ -81,6 +84,18 @@ class ErrorCategory final : public std::error_category {
       }
       case Error::kUnhandledMdEntryTypeValue: {
         return fmt::format("unhandled MDEntryType <{}> value", hffix::tag::MDEntryType);
+      }
+      case Error::kNotFoundEqualSignInFieldParseError: {
+        return fmt::format("parsing FIX message error: not found equal sign in field");
+      }
+      case Error::kNotFoundFieldDelimiterParseError: {
+        return fmt::format("parsing FIX message error: not found SOH");
+      }
+      case Error::kStringValueIsNotNumberParsingError: {
+        return fmt::format("parsing number from string error: value must consist only from digits");
+      }
+      case Error::kConvertingNegativeStringNumberToUnsignedNumber: {
+        return fmt::format("parsing number from string error: string contains negative number but target variable is unsigned type");
       }
       default: {
         return "undefined error code";

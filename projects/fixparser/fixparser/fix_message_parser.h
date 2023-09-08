@@ -10,6 +10,11 @@ using Expected = tl::expected<T, E>;
 template <typename E = std::error_code>
 using Unexpected = tl::unexpected<E>;
 
+using Milliseconds = std::chrono::milliseconds;
+
+template <typename T>
+using TimePoint = std::chrono::time_point<std::chrono::system_clock, T>;
+
 class FixMessageParser {
  public:
   /*
@@ -47,6 +52,7 @@ class FixMessageParser {
   static Expected<Logout> OnLogout(hffix::message_reader& reader);
   static Expected<Heartbeat> OnHeartbeat(hffix::message_reader& reader);
   static Expected<TestRequest> OnTestRequest(hffix::message_reader& reader);
+  static Expected<Reject> OnReject(hffix::message_reader& reader);
   static Expected<MarketDataRequest> OnMarketDataRequest(hffix::message_reader& reader);
   static Expected<MarketDataRequestReject> OnMarketDataRequestReject(hffix::message_reader& reader);
   static Expected<MarketDataSnapshotFullRefresh> OnMarketDataSnapshotFullRefresh(hffix::message_reader& reader);
@@ -59,8 +65,8 @@ class FixMessageParser {
   static Expected<std::string> SecurityType(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> SecurityGroup(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<uint64_t> MsgSeqNum(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
-  static Expected<std::string> SendingTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
-  static Expected<std::string> LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
+  static Expected<TimePoint<Milliseconds>> SendingTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
+  static Expected<TimePoint<Milliseconds>> LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<uint64_t> NoMdEntries(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> Tenor(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);
   static Expected<std::string> SettlementDate(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint);

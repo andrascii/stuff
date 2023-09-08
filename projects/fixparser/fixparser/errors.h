@@ -6,7 +6,8 @@
 enum class Error {
   kReaderIsNotComplete,
   kReaderIsNotValid,
-  kReaderUnhandledMessageType,
+  kUnhandledMessageType,
+  kNotFoundMsgType,
   kNotFoundSymbol,
   kNotFoundAccount,
   kNotFoundSenderCompId,
@@ -28,6 +29,11 @@ enum class Error {
   kNotFoundMdEntrySize,
   kNotFoundNoRelatedSym,
   kUnhandledMdEntryTypeValue,
+  // my parser
+  kNotFoundEqualSignInFieldParseError,
+  kNotFoundFieldDelimiterParseError,
+  kStringValueIsNotNumberParsingError,
+  kConvertingNegativeStringNumberToUnsignedNumber,
 };
 
 auto MakeErrorCode(Error code) noexcept -> std::error_code;
