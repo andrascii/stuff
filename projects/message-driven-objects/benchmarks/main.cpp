@@ -41,6 +41,10 @@ auto SendAndReceiveTestMessageBenchmark(uint64_t iterations) {
 
   const auto result = Dispatcher::Instance().Exec();
 
+  //
+  // WARN: without this call possibly would be crash, stop call is required before 'sender' object would be destroyed.
+  // Otherwise, the thread will continue execution and calling of methods of 'sender' object.
+  //
   thread->Stop();
 
   LOG_INFO("{} done", __FUNCTION__);

@@ -60,19 +60,17 @@ class Object {
   //!
   //! Returns the pointer to the thread where this object "lives".
   //!
-  [[nodiscard]] virtual mdo::Thread* Thread() const noexcept;
+  [[nodiscard]] mdo::Thread* Thread() const noexcept;
 
  protected:
   void SetThread(mdo::Thread* thread);
 
-  //
-  // This function do not intended to be a virtual function
-  //
-  void OnInvokeSlotMessage(InvokeSlotMessage& message);
-
   virtual void OnTimerMessage(TimerMessage& message);
   virtual void OnBenchmarkMessage(BenchmarkMessage& message);
   virtual void OnTestMessage(TestMessage& message);
+
+ private:
+  void OnInvokeSlotMessage(InvokeSlotMessage& message);
 
  private:
   //

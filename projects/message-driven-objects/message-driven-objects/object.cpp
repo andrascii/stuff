@@ -13,7 +13,7 @@ Object::Object()
     : Object{Thread::Current()} {}
 
 Object::Object(mdo::Thread* thread)
-    : thread_{std::move(thread)} {
+    : thread_{thread} {
   if (!Thread()) {
     thread_ = Thread::Current();
   }
@@ -90,14 +90,14 @@ void Object::SetThread(mdo::Thread* thread) {
   thread_ = thread;
 }
 
-void Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
-  message.Invoke();
-}
-
 void Object::OnBenchmarkMessage(BenchmarkMessage&) {}
 
 void Object::OnTimerMessage(TimerMessage&) {}
 
 void Object::OnTestMessage(TestMessage&) {}
+
+void Object::OnInvokeSlotMessage(InvokeSlotMessage& message) {
+  message.Invoke();
+}
 
 }// namespace mdo
