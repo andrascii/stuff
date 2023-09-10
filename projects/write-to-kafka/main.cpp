@@ -3,6 +3,14 @@
 #include "producer.h"
 #include "command_line_arguments.h"
 
+/*
+ * utility used to write data in to kafka:
+ * 1. ./write-to-kafka -c config.json line-to-write1 line-to-write2
+ * 2. cat file.txt | ./write-to-kafka -c config.json
+ *
+ * [-c;--config] parameter used to pass a path to config.json which specifies kafka settings.
+ */
+
 int main(int argc, char** argv) {
   using namespace write_to_kafka;
 
@@ -36,7 +44,7 @@ int main(int argc, char** argv) {
     std::string line;
 
     while(std::cin >> line) {
-      std::cout << "cin string: " << line << std::endl;
+      producer.Write(line);
     }
   } catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;

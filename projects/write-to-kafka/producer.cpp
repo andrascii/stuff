@@ -1,4 +1,5 @@
 #include "producer.h"
+#include "logger.h"
 
 namespace write_to_kafka {
 
@@ -8,6 +9,7 @@ Producer::Producer(const Config& config)
 
 std::error_code Producer::Write(const std::string& message) noexcept {
   try {
+    LOG_TRACE("writing '{}' to '{}', topic '{}'", message, config_.KafkaBrokerList(), config_.KafkaTopic());
     producer_.produce(cppkafka::MessageBuilder(config_.KafkaTopic()).partition(0).payload(message));
     producer_.flush();
     return std::error_code{};

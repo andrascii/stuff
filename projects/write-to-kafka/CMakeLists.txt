@@ -23,6 +23,9 @@ list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS spdlog::spdlog)
 list(APPEND DEPS tl::expected)
 list(APPEND DEPS nlohmann_json::nlohmann_json)
+list(APPEND DEPS ${CPPKAFKA_LIBRARY})
+list(APPEND DEPS RdKafka::rdkafka)
+list(APPEND DEPS RdKafka::rdkafka++)
 
 #
 # collecting sources and headers
