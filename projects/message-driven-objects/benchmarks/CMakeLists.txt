@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME benchmarks)
+set(THIS_TARGET_NAME mdo-benchmarks)
 project(${THIS_TARGET_NAME})
 
 #
@@ -19,7 +19,6 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../messa
 #
 # deps
 #
-set(DEPS)
 list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS spdlog::spdlog)
 list(APPEND DEPS tl::expected)

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 include(make_coverage_target)
 include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME tests)
+set(THIS_TARGET_NAME mdo-tests)
 project(${THIS_TARGET_NAME})
 
 #
