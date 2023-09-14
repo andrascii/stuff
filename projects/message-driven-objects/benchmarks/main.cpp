@@ -150,7 +150,7 @@ auto SignalSendBenchmark(uint64_t iterations) {
   //
   // to clear all messages that could possibly there after previous benchmark was interrupted
   //
-  current_thread_data->Queue().Clear();
+  GetThreadData(Thread::Current())->Queue().Clear();
 
   const auto thread = Thread::Create("receiver_thread");
   const auto receiver = std::make_shared<SignalReceiver>(thread.get(), iterations);

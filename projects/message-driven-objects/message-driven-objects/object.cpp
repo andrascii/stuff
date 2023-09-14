@@ -54,6 +54,7 @@ void Object::KillTimer(int id) noexcept {
 }
 
 void Object::ResetTimer(int id) const noexcept {
+  assert(timers_.find(id) != timers_.end());
   TimerService::Instance()->ResetTimer(id);
 }
 
