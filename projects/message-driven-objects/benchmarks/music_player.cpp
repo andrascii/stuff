@@ -4,8 +4,8 @@
 namespace benchmarks {
 
 MusicPlayer::MusicPlayer(uint64_t iterations)
-    : OnVolumeChanged{this},
-      OnSongChanged{this},
+    : VolumeChanged{this},
+      SongChanged{this},
       volume_{},
       iterations_{iterations} {
   Thread()->Started.Connect(this, &MusicPlayer::OnThreadStarted);
@@ -21,7 +21,7 @@ void MusicPlayer::SetVolume(uint64_t value) noexcept {
   }
 
   volume_ = value;
-  OnVolumeChanged(volume_);
+  VolumeChanged(volume_);
 }
 
 const MusicPlayer::Song& MusicPlayer::GetSong() const noexcept {
@@ -30,7 +30,7 @@ const MusicPlayer::Song& MusicPlayer::GetSong() const noexcept {
 
 void MusicPlayer::SetSong(const Song& song) {
   song_ = song;
-  OnSongChanged(song_);
+  SongChanged(song_);
 }
 
 void MusicPlayer::OnThreadStarted() {

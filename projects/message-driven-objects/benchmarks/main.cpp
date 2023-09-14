@@ -158,8 +158,8 @@ auto SignalSendBenchmark(uint64_t iterations) {
 
   thread->Start();
 
-  sender->OnVolumeChanged.Connect(receiver.get(), &SignalReceiver::OnVolumeChanged);
-  sender->OnSongChanged.Connect(receiver.get(), &SignalReceiver::OnSongChanged);
+  sender->VolumeChanged.Connect(receiver.get(), &SignalReceiver::OnVolumeChanged);
+  sender->SongChanged.Connect(receiver.get(), &SignalReceiver::OnSongChanged);
 
   const auto error = Dispatcher::Instance().Exec();
 

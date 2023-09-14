@@ -22,8 +22,8 @@ public:
   const Song& GetSong() const noexcept;
   void SetSong(const Song& song);
 
-  Signal<uint64_t> OnVolumeChanged;
-  Signal<const Song&> OnSongChanged;
+  Signal<uint64_t> VolumeChanged;
+  Signal<const Song&> SongChanged;
 
 private:
   void OnThreadStarted();

@@ -31,16 +31,16 @@ class Signal final {
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
-    /*if (!Utils::IsThreadRunning(owner_->Thread())) {
-      LOG_WARNING("attempting to attach a signal to an object slot whose thread has not yet been started");
-    }*/
-
     Slot wrapper = [=](Args&&... args) {
+      if (!Utils::IsThreadRunning(object->Thread())) {
+        LOG_WARNING("signal receiver object's thread has not yet been started so this emit would be skipped by the object");
+      }
+
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
-        Dispatcher::Dispatch(InvokeSlotMessage{[=] {
-          std::invoke(slot, object, args...);// std::forward<Args>(args)...
+        Dispatcher::Dispatch(InvokeSlotMessage{[=]() mutable {
+          std::invoke(slot, object, std::forward<Args>(args)...);
         }, owner_, object});
       }
     };
@@ -81,11 +81,11 @@ class Signal<void> {
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
     static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
 
-    /*if (!Utils::IsThreadRunning(owner_->Thread())) {
-      LOG_WARNING("attempting to attach a signal to an object slot whose thread has not yet been started");
-    }*/
-
     Slot wrapper = [=]() {
+      if (!Utils::IsThreadRunning(object->Thread())) {
+        LOG_WARNING("signal receiver object's thread has not yet been started so this emit would be skipped by the object");
+      }
+
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object);
       } else {
