@@ -1,5 +1,8 @@
 #pragma once
 
+#include <chrono>
+#include <variant>
+
 using Milliseconds = std::chrono::milliseconds;
 
 template <typename T>

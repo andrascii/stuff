@@ -45,7 +45,9 @@ Expected<T> StringToInteger(const char* begin, const char* end) {
     ++begin;
   }
 
-  if (std::is_unsigned_v<T> && is_negative) {
+  const auto is_valid_non_negative = std::is_unsigned_v<T> && is_negative;
+
+  if (is_valid_non_negative) {
     return Unexpected<>{MakeErrorCode(Error::kConvertingNegativeStringNumberToUnsignedNumber)};
   }
 
@@ -181,7 +183,7 @@ MyFixParser::MyFixParser() {
 }
 
 Expected<FixMessage> MyFixParser::Parse(std::string_view fix_message) {
-  std::unordered_map<tag::Field, std::string_view> labels;
+  MessageLabels labels;
 
   for (size_t i = 0; i < fix_message.size();) {
     auto equal_sign_index = fix_message.find('=', i);
@@ -382,11 +384,11 @@ Expected<MarketDataRequest> MyFixParser::OnMarketDataRequest(const MyFixParser::
   return my::Expected<MarketDataRequest>();
 }
 
-Expected<MarketDataRequestReject> MyFixParser::OnMarketDataRequestReject(const MyFixParser::MessageLabels& labels) {
+Expected<MarketDataRequestReject> MyFixParser::OnMarketDataRequestReject(const MyFixParser::MessageLabels&) {
   return my::Expected<MarketDataRequestReject>();
 }
 
-Expected<MarketDataSnapshotFullRefresh> MyFixParser::OnMarketDataSnapshotFullRefresh(const MyFixParser::MessageLabels& labels) {
+Expected<MarketDataSnapshotFullRefresh> MyFixParser::OnMarketDataSnapshotFullRefresh(const MyFixParser::MessageLabels&) {
   return my::Expected<MarketDataSnapshotFullRefresh>();
 }
 

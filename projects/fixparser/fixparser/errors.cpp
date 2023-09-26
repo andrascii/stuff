@@ -1,8 +1,22 @@
 #include "errors.h"
 
 #include <fmt/format.h>
+#include <vector>
+
+#if defined(_WIN32)
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4101)
+#include <Windows.h>
+using ssize_t = SSIZE_T;
+#endif
 
 #include <hffix.hpp>
+
+#if defined(_WIN32)
+#pragma warning(pop)
+#endif
+
 #include <string_view>
 
 using namespace std::literals;
@@ -37,7 +51,7 @@ class ErrorCategory final : public std::error_category {
         return fmt::format("not found SenderCompID <{}> field", hffix::tag::SenderCompID);
       }
       case Error::kNotFoundTargetCompId: {
-        return fmt::format("not found TargetCompID <{}}> field", hffix::tag::TargetCompID);
+        return fmt::format("not found TargetCompID <{}> field", hffix::tag::TargetCompID);
       }
       case Error::kNotFoundSecurityType: {
         return fmt::format("not found SecurityType <{}> field", hffix::tag::SecurityType);
@@ -61,7 +75,7 @@ class ErrorCategory final : public std::error_category {
         return "not found Tenor <6215> field";
       }
       case Error::kNotFoundSettlementDate: {
-        return fmt::format("not found SettlementDate <{}}> field", hffix::tag::SettlDate);
+        return fmt::format("not found SettlementDate <{}> field", hffix::tag::SettlDate);
       }
       case Error::kNotFoundMdReqId: {
         return fmt::format("not found MDReqID <{}> field", hffix::tag::MDReqID);
