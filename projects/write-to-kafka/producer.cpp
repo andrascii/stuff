@@ -1,4 +1,5 @@
 #include "producer.h"
+
 #include "logger.h"
 
 namespace write_to_kafka {
@@ -20,8 +21,7 @@ std::error_code Producer::Write(const std::string& message) noexcept {
 
 cppkafka::Configuration Producer::CreateConfiguration(const Config& config) noexcept {
   return cppkafka::Configuration{
-    {"metadata.broker.list", config.KafkaBrokerList()}
-  };
+    {"metadata.broker.list", config.KafkaBrokerList()}};
 }
 
 }// namespace write_to_kafka

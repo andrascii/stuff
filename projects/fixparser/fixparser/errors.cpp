@@ -1,7 +1,9 @@
 #include "errors.h"
+
+#include <fmt/format.h>
+
 #include <hffix.hpp>
 #include <string_view>
-#include <fmt/format.h>
 
 using namespace std::literals;
 

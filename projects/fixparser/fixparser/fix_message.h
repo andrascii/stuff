@@ -71,5 +71,4 @@ using FixMessage = std::variant<
   Reject,
   MarketDataRequest,
   MarketDataRequestReject,
-  MarketDataSnapshotFullRefresh
->;
+  MarketDataSnapshotFullRefresh>;

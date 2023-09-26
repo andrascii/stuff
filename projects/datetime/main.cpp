@@ -1,7 +1,8 @@
-#include <iostream>
-#include <chrono>
 #include <date/date.h>
 #include <date/tz.h>
+
+#include <chrono>
+#include <iostream>
 
 template <typename T>
 using TimePoint = std::chrono::time_point<std::chrono::system_clock, T>;
@@ -59,7 +60,8 @@ int main() {
   std::cout
     << "start of the day by MSK: "
     << ConvertToTimeZone(start_of_the_day_current_day_by_msk, "Europe/Moscow")
-    << std::endl << std::endl;
+    << std::endl
+    << std::endl;
 
   std::cout
     << "start of the day by GMT (Argentina time at this moment): "

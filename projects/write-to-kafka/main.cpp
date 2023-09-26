@@ -1,7 +1,7 @@
+#include "command_line_arguments.h"
 #include "config.h"
 #include "logger.h"
 #include "producer.h"
-#include "command_line_arguments.h"
 
 /*
  * utility used to write data in to kafka:
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 
     std::string line;
 
-    while(std::cin >> line) {
+    while (std::cin >> line) {
       producer.Write(line);
     }
   } catch (const std::exception& ex) {

@@ -1,4 +1,5 @@
 #include "message_base.h"
+
 #include "object.h"
 
 namespace mdo {

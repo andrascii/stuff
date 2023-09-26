@@ -50,7 +50,7 @@ Thread* Thread::Current() {
   current_thread_data = std::make_unique<ThreadData>();
   current_thread_data->SetId(std::this_thread::get_id());
   current_thread_data->SetIsAdopted(true);
-  current_thread_data->SetThread(new AdoptedThread(current_thread_data)); // how to delete it?
+  current_thread_data->SetThread(new AdoptedThread(current_thread_data));// how to delete it?
 
   return current_thread_data->Thread();
 }
@@ -267,7 +267,11 @@ void Thread::HandleMessage(Message&& message) {
 
     receiver->OnMessage(message);
   } else {
-    LOG_TRACE("the thread '{}' received a message for the '{}' thread, dispatching it further", this_thread->Name(), receiver_thread->Name());
+    LOG_TRACE(
+      "the thread '{}' received a message for the '{}' thread, dispatching it further",
+      this_thread->Name(),
+      receiver_thread->Name());
+
     GetThreadData(receiver_thread)->Queue().Push(std::move(message));
   }
 }

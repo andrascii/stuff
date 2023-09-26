@@ -1,8 +1,8 @@
 #pragma once
 
 #include "locked.h"
-#include "message_queue.h"
 #include "message.h"
+#include "message_queue.h"
 
 namespace mdo {
 

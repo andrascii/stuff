@@ -48,8 +48,7 @@ std::error_code MakeErrorCode(boost::system::error_code error) noexcept {
 
   [[maybe_unused]] const auto& [iterator, is_inserted] = name_to_category.emplace(
     error.category().name(),
-    error.category()
-  );
+    error.category());
 
   [[maybe_unused]] const auto& [key, value] = *iterator;
   return std::error_code{error.value(), value};

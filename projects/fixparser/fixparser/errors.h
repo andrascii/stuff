@@ -1,7 +1,7 @@
 #pragma once
 
-#include <system_error>
 #include <boost/system/error_code.hpp>
+#include <system_error>
 
 enum class Error {
   kReaderIsNotComplete,

@@ -37,7 +37,7 @@ bool ReadRequiredBoolOption(const nlohmann::json& json, const std::string& field
   return json[field_name];
 }
 
-}
+}// namespace
 
 namespace write_to_kafka {
 
@@ -58,8 +58,7 @@ Config::Config(const std::filesystem::path& path)
 
   if (log_level_ == spdlog::level::off) {
     throw std::logic_error{
-      fmt::format("incorrect value of 'log_level' field in the json which is: {}", log_level)
-    };
+      fmt::format("incorrect value of 'log_level' field in the json which is: {}", log_level)};
   }
 
   quiet_mode_ = ReadRequiredBoolOption(json, "quiet_mode");
@@ -81,4 +80,4 @@ bool Config::QuietMode() const noexcept {
   return quiet_mode_;
 }
 
-}
+}// namespace write_to_kafka

@@ -7,4 +7,4 @@ class Producer final {
   Producer();
 };
 
-}
+}// namespace write_to_kafka

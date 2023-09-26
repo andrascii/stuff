@@ -1,9 +1,9 @@
 #pragma once
 
-#include "invoke_slot_message.h"
-#include "test_message.h"
 #include "benchmark_message.h"
+#include "invoke_slot_message.h"
 #include "set_thread_name_message.h"
+#include "test_message.h"
 #include "timer_message.h"
 
 namespace mdo {
@@ -16,8 +16,7 @@ using Message = std::variant<
   TestMessage,
   BenchmarkMessage,
   SetThreadNameMessage,
-  TimerMessage
->;
+  TimerMessage>;
 
 const auto GetReceiver = [](auto&& msg) -> Object* {
   using T = std::decay_t<decltype(msg)>;
@@ -40,4 +39,4 @@ const auto GetSender = [](auto&& msg) -> Object* {
   }
 };
 
-}
+}// namespace mdo

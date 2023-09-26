@@ -1,6 +1,7 @@
 #include "my_fix_parser.h"
-#include "fields.h"
+
 #include "errors.h"
+#include "fields.h"
 
 namespace {
 
@@ -16,7 +17,7 @@ Parses ascii and returns a (possibly negative) integer.
 \param end Pointer to past-the-end of the ascii string.
 \return The ascii string represented as an integer of type Int_type.
 */
-template<typename Int_type>
+template <typename Int_type>
 Int_type atoi(const char* begin, const char* end) {
   Int_type val{};
   bool isnegative{};
@@ -26,9 +27,9 @@ Int_type atoi(const char* begin, const char* end) {
     ++begin;
   }
 
-  for(; begin < end; ++begin) {
+  for (; begin < end; ++begin) {
     val *= 10;
-    val += (Int_type)(*begin - '0');
+    val += (Int_type) (*begin - '0');
   }
 
   return isnegative ? -val : val;
@@ -78,8 +79,7 @@ inline bool atodate(
   char const* end,
   int& year,
   int& month,
-  int& day
-) {
+  int& day) {
   if (end - begin != 8) return false;
 
   year = atoi<int>(begin, begin + 4);
@@ -108,8 +108,7 @@ inline bool atotime(
   int& hour,
   int& minute,
   int& second,
-  int& millisecond
-) {
+  int& millisecond) {
   if (end - begin != 8 && end - begin != 12) {
     return false;
   }
@@ -141,8 +140,7 @@ template <typename TimePoint>
 inline bool atotimepoint(
   char const* begin,
   char const* end,
-  TimePoint& tp
-) {
+  TimePoint& tp) {
   // TODO: after c++20 this simplifies to
   // std::chrono::parse("%Y%m%d-%T", tp);
   int year, month, day, hour, minute, second, millisecond;
@@ -173,7 +171,7 @@ inline bool atotimepoint(
   return true;
 }
 
-}
+}// namespace
 
 namespace my {
 
@@ -265,7 +263,8 @@ Expected<FixMessageHeader> MyFixParser::ParseFixHeader(const MyFixParser::Messag
 
   atotimepoint(
     sending_time_it->second.data(),
-    sending_time_it->second.data() + sending_time_it->second.size(), tp);
+    sending_time_it->second.data() + sending_time_it->second.size(),
+    tp);
 
   const auto msg_seq_num = StringToInteger<uint64_t>(
     msg_seq_num_it->second.data(),
@@ -279,8 +278,7 @@ Expected<FixMessageHeader> MyFixParser::ParseFixHeader(const MyFixParser::Messag
     std::string{sender_it->second},
     std::string{target_it->second},
     tp,
-    *msg_seq_num
-  };
+    *msg_seq_num};
 }
 
 Expected<Logon> MyFixParser::OnLogon(const MyFixParser::MessageLabels& labels) {
@@ -306,8 +304,7 @@ Expected<Logon> MyFixParser::OnLogon(const MyFixParser::MessageLabels& labels) {
 
   return Logon{
     std::move(*header),
-    *heart_bt_int
-  };
+    *heart_bt_int};
 }
 Expected<Logout> MyFixParser::OnLogout(const MyFixParser::MessageLabels& labels) {
   auto header = ParseFixHeader(labels);
@@ -317,8 +314,7 @@ Expected<Logout> MyFixParser::OnLogout(const MyFixParser::MessageLabels& labels)
   }
 
   return Logout{
-    *header
-  };
+    *header};
 }
 
 Expected<Heartbeat> MyFixParser::OnHeartbeat(const MyFixParser::MessageLabels& labels) {
@@ -329,8 +325,7 @@ Expected<Heartbeat> MyFixParser::OnHeartbeat(const MyFixParser::MessageLabels& l
   }
 
   return Heartbeat{
-    *header
-  };
+    *header};
 }
 
 Expected<TestRequest> MyFixParser::OnTestRequest(const MyFixParser::MessageLabels& labels) {
@@ -341,8 +336,7 @@ Expected<TestRequest> MyFixParser::OnTestRequest(const MyFixParser::MessageLabel
   }
 
   return TestRequest{
-    *header
-  };
+    *header};
 }
 
 Expected<Reject> MyFixParser::OnReject(const MyFixParser::MessageLabels& labels) {
@@ -353,8 +347,7 @@ Expected<Reject> MyFixParser::OnReject(const MyFixParser::MessageLabels& labels)
   }
 
   return Reject{
-    *header
-  };
+    *header};
 }
 
 Expected<MarketDataRequest> MyFixParser::OnMarketDataRequest(const MyFixParser::MessageLabels& labels) {
@@ -397,4 +390,4 @@ Expected<MarketDataSnapshotFullRefresh> MyFixParser::OnMarketDataSnapshotFullRef
   return my::Expected<MarketDataSnapshotFullRefresh>();
 }
 
-}
+}// namespace my

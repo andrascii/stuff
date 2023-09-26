@@ -20,4 +20,4 @@ class Config {
   bool quiet_mode_;
 };
 
-}
+}// namespace write_to_kafka

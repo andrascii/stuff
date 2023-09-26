@@ -1,11 +1,11 @@
 #pragma once
 
+#include <algorithm>
+#include <chrono>
+#include <deque>
+#include <iterator>
 #include <string>
 #include <vector>
-#include <deque>
-#include <algorithm>
-#include <iterator>
-#include <chrono>
 
 using namespace std::chrono;
 using namespace std::literals;
@@ -14,7 +14,8 @@ namespace by_flag {
 
 class Sync {
  public:
-  Sync() : flag_ ATOMIC_FLAG_INIT, quit_{false} {}
+  Sync() : flag_ ATOMIC_FLAG_INIT,
+           quit_{false} {}
 
   bool Push1(std::string&& v) {
     // if flag_ is false - we can write data
@@ -59,7 +60,8 @@ class Sync {
 
   std::deque<std::string> GetData() {
     // awaiting while flag_ is false (it means that writer writes something)
-    while (!quit_.load(std::memory_order_relaxed) && !flag_.test(std::memory_order_acquire));
+    while (!quit_.load(std::memory_order_relaxed) && !flag_.test(std::memory_order_acquire))
+      ;
 
     if (quit_.load(std::memory_order_relaxed)) {
       return {};
@@ -161,7 +163,7 @@ inline void Writer3(Sync& s) {
 
     const auto size = accumulated.size();
 
-    while(!s.Push2(accumulated)) {}
+    while (!s.Push2(accumulated)) {}
     sent += size;
 
     const auto current = high_resolution_clock::now();
@@ -220,7 +222,7 @@ inline void Reader(Sync& s) {
   auto prev = start;
   size_t received = 0;
 
-  for (;!s.IsQuit();) {
+  for (; !s.IsQuit();) {
     auto d = s.GetData();
     received += d.size();
 
@@ -236,4 +238,4 @@ inline void Reader(Sync& s) {
   printf("reader done\n");
 }
 
-}
+}// namespace by_flag

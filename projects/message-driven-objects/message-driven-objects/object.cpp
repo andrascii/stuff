@@ -1,11 +1,11 @@
 #include "object.h"
 
 #include "invoke_slot_message.h"
+#include "message.h"
 #include "objects_registry.h"
+#include "overloaded.h"
 #include "thread.h"
 #include "timer_service.h"
-#include "message.h"
-#include "overloaded.h"
 
 namespace mdo {
 
@@ -59,26 +59,27 @@ void Object::ResetTimer(int id) const noexcept {
 }
 
 void Object::OnMessage(Message& message) {
-  std::visit(Overloaded{
-    [this](InvokeSlotMessage& msg) {
-      OnInvokeSlotMessage(msg);
-    },
-    [this](TestMessage& msg) {
-      OnTestMessage(msg);
-    },
-    [this](BenchmarkMessage& msg) {
-      OnBenchmarkMessage(msg);
-    },
-    [this](TimerMessage& msg) {
-      OnTimerMessage(msg);
-    },
-    [](SetThreadNameMessage&) {
-      abort();
-    },
-    [](std::monostate&) {
-      abort();
-    }
-  }, message);
+  std::visit(
+    Overloaded{
+      [this](InvokeSlotMessage& msg) {
+        OnInvokeSlotMessage(msg);
+      },
+      [this](TestMessage& msg) {
+        OnTestMessage(msg);
+      },
+      [this](BenchmarkMessage& msg) {
+        OnBenchmarkMessage(msg);
+      },
+      [this](TimerMessage& msg) {
+        OnTimerMessage(msg);
+      },
+      [](SetThreadNameMessage&) {
+        abort();
+      },
+      [](std::monostate&) {
+        abort();
+      }},
+    message);
 }
 
 mdo::Thread* Object::Thread() const noexcept {

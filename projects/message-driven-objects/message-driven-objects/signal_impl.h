@@ -39,9 +39,13 @@ class Signal final {
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
-        Dispatcher::Dispatch(InvokeSlotMessage{[=]() mutable {
-          std::invoke(slot, object, std::forward<Args>(args)...);
-        }, owner_, object});
+        Dispatcher::Dispatch(
+          InvokeSlotMessage{
+            [=]() mutable {
+              std::invoke(slot, object, std::forward<Args>(args)...);
+            },
+            owner_,
+            object});
       }
     };
 
@@ -89,9 +93,13 @@ class Signal<void> {
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object);
       } else {
-        Dispatcher::Dispatch(InvokeSlotMessage{[=] {
-          std::invoke(slot, object);
-        }, owner_, object});
+        Dispatcher::Dispatch(
+          InvokeSlotMessage{
+            [=] {
+              std::invoke(slot, object);
+            },
+            owner_,
+            object});
       }
     };
 

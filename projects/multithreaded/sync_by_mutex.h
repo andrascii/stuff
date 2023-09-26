@@ -1,11 +1,11 @@
 #pragma once
 
+#include <algorithm>
+#include <chrono>
+#include <deque>
+#include <iterator>
 #include <string>
 #include <vector>
-#include <deque>
-#include <algorithm>
-#include <iterator>
-#include <chrono>
 
 using namespace std::chrono;
 using namespace std::literals;
@@ -93,7 +93,7 @@ class Sync {
 
   std::deque<std::string> GetData() {
     std::unique_lock _{mutex_};
-    condition_.wait(_, [this]{
+    condition_.wait(_, [this] {
       return quit_ || !data_.empty();
     });
 
@@ -294,4 +294,4 @@ inline void Reader(Sync& s) {
   }
 }
 
-}
+}// namespace by_mutex

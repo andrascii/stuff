@@ -1,10 +1,10 @@
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <hffix.hpp>
+#include "fix_message_parser.h"
 
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <hffix.hpp>
 #include <string_view>
 
-#include "fix_message_parser.h"
 #include "errors.h"
 
 Expected<FixMessage> FixMessageParser::Parse(std::string_view fix_message) {
@@ -72,8 +72,7 @@ Expected<FixMessageHeader> FixMessageParser::ParseFixHeader(hffix::message_reade
     *sender,
     *receiver,
     *sending_time,
-    *msg_seq_num
-  };
+    *msg_seq_num};
 }
 
 Expected<Logon> FixMessageParser::OnLogon(hffix::message_reader& reader) {
@@ -216,17 +215,14 @@ Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message
         std::move(*security_group),
         std::move(*tenor),
         std::move(*settlement_date),
-        std::move(account_value)
-      }
-    );
+        std::move(account_value)});
   }
 
   return MarketDataRequest{
     std::move(*header),
     std::move(*md_req_id),
     std::move(*subscription_request_type),
-    std::move(instruments)
-  };
+    std::move(instruments)};
 }
 
 Expected<MarketDataRequestReject> FixMessageParser::OnMarketDataRequestReject(hffix::message_reader& reader) {
@@ -246,8 +242,7 @@ Expected<MarketDataRequestReject> FixMessageParser::OnMarketDataRequestReject(hf
 
   return MarketDataRequestReject{
     *header,
-    *md_req_id
-  };
+    *md_req_id};
 }
 
 Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFullRefresh(hffix::message_reader& reader) {
@@ -356,8 +351,7 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
     std::move(*settlement_date),
     std::move(*md_req_id),
     std::move(*last_update_time),
-    std::move(levels)
-  };
+    std::move(levels)};
 
   return result;
 }

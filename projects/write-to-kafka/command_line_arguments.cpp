@@ -1,4 +1,5 @@
 #include "command_line_arguments.h"
+
 #include "errors.h"
 #include "types.h"
 
@@ -34,8 +35,7 @@ Expected<std::shared_ptr<CommandLineArguments>> CommandLineArguments::Read(
   int argc,
   char** argv,
   const std::string& app_name,
-  const std::string& app_description
-) {
+  const std::string& app_description) {
   struct MakeSharedEnabler : public CommandLineArguments {
     MakeSharedEnabler(
       std::filesystem::path json_config_path,
@@ -48,9 +48,7 @@ Expected<std::shared_ptr<CommandLineArguments>> CommandLineArguments::Read(
   try {
     cxxopts::Options options{app_name, app_description};
 
-    options.add_options()
-      (kConfigOption, kConfigOptionDescription, cxxopts::value<std::filesystem::path>())
-      (kHelpOption, kHelpOptionDescription);
+    options.add_options()(kConfigOption, kConfigOptionDescription, cxxopts::value<std::filesystem::path>())(kHelpOption, kHelpOptionDescription);
 
     options.allow_unrecognised_options();
 

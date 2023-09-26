@@ -1,8 +1,9 @@
 #pragma once
 
-#include <tl/expected.hpp>
-#include "fix_message.h"
 #include <system_error>
+#include <tl/expected.hpp>
+
+#include "fix_message.h"
 
 template <typename T, typename E = std::error_code>
 using Expected = tl::expected<T, E>;

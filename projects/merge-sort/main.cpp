@@ -1,10 +1,10 @@
+#include <algorithm>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <random>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <chrono>
 
 using namespace std::literals;
 
