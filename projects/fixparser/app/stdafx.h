@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <fstream>
 #include <variant>
+#include <vector>
 
 //
 // Spdlog
@@ -57,7 +58,20 @@ std::string ToString(const T& data) {
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+
+#if defined(_WIN32)
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4101)
+#include <Windows.h>
+using ssize_t = SSIZE_T;
+#endif
+
 #include <hffix.hpp>
+
+#if defined(_WIN32)
+#pragma warning(pop)
+#endif
 
 #include "logger.h"
 

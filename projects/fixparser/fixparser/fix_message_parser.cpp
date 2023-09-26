@@ -1,6 +1,19 @@
+#include <date/date.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <vector>
+
+#if defined(_WIN32)
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#pragma warning(disable: 4101)
+#include <Windows.h>
+using ssize_t = SSIZE_T;
+#endif
 #include <hffix.hpp>
+#if defined(_WIN32)
+#pragma warning(pop)
+#endif
 
 #include <string_view>
 
@@ -430,7 +443,22 @@ Expected<TimePoint<Milliseconds>> FixMessageParser::SendingTime(hffix::message_r
   TimePoint<Milliseconds> tp;
 
   if (reader.find_with_hint(hffix::tag::SendingTime, hint)) {
-    hint->value().as_timestamp(tp);
+    int year{};
+    int month{};
+    int day{};
+    int hour{};
+    int minute{};
+    int second{};
+    int millisecond{};
+
+    hint->value().as_timestamp(year, month, day, hour, minute, second, millisecond);
+
+    const auto ymd = date::year{ year } / date::month{ (unsigned)month } / date::day{ (unsigned)day };
+    tp = date::sys_days(ymd);
+    tp += std::chrono::minutes{ minute };
+    tp += std::chrono::seconds{ second };
+    tp += std::chrono::milliseconds{ millisecond };
+
     return tp;
   }
 
@@ -441,7 +469,22 @@ Expected<TimePoint<Milliseconds>> FixMessageParser::LastUpdateTime(hffix::messag
   TimePoint<Milliseconds> tp;
 
   if (reader.find_with_hint(hffix::tag::LastUpdateTime, hint)) {
-    hint->value().as_timestamp(tp);
+    int year{};
+    int month{};
+    int day{};
+    int hour{};
+    int minute{};
+    int second{};
+    int millisecond{};
+
+    hint->value().as_timestamp(year, month, day, hour, minute, second, millisecond);
+
+    const auto ymd = date::year{ year } / date::month{ (unsigned)month } / date::day{ (unsigned)day };
+    tp = date::sys_days(ymd);
+    tp += std::chrono::minutes{ minute };
+    tp += std::chrono::seconds{ second };
+    tp += std::chrono::milliseconds{ millisecond };
+
     return tp;
   }
 
