@@ -1,6 +1,5 @@
 #include "command_line_arguments.h"
 #include "config.h"
-#include "logger.h"
 #include "producer.h"
 
 /*
@@ -30,14 +29,6 @@ int main(int argc, char** argv) {
     }
 
     Config config{args->ConfigPath()};
-
-    if (config.QuietMode()) {
-      DisableConsoleLogging();
-    } else {
-      EnableConsoleLogging();
-    }
-
-    Logger()->set_level(config.LogLevel());
 
     Producer producer{config};
 

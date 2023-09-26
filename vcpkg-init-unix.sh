@@ -7,3 +7,6 @@ vcpkg install fmt
 vcpkg install tl-expected
 vcpkg install nlohmann-json
 vcpkg install mio
+vcpkg install grpc
+vcpkg install hffix
+vcpkg install date

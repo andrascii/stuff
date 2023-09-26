@@ -139,5 +139,5 @@ int main(int argc, char** argv) {
   auto end = std::chrono::system_clock::now();
   auto delta = end - start;
 
-  std::cout << "took time " << std::chrono::duration_cast<std::chrono::milliseconds>(delta) << std::endl;
+  std::cout << "took time " << duration_cast<milliseconds>(delta).count() << "ms" << std::endl;
 }

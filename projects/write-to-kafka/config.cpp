@@ -41,27 +41,15 @@ bool ReadRequiredBoolOption(const nlohmann::json& json, const std::string& field
 
 namespace write_to_kafka {
 
-Config::Config(const std::filesystem::path& path)
-    : log_level_{spdlog::level::info},
-      quiet_mode_{} {
+Config::Config(const std::filesystem::path& path) {
   const mio::mmap_source mmap{path.generic_string()};
   const std::string_view view{mmap.data(), mmap.size()};
 
-  SPDLOG_INFO(view);
+  std::cout << view;
 
   const nlohmann::json json = nlohmann::json::parse(view);
   kafka_broker_list_ = ReadRequiredStringOption(json, "kafka_broker_list");
   kafka_topic_ = ReadRequiredStringOption(json, "kafka_topic");
-
-  const auto log_level = ReadRequiredStringOption(json, "log_level");
-  log_level_ = spdlog::level::from_str(log_level);
-
-  if (log_level_ == spdlog::level::off) {
-    throw std::logic_error{
-      fmt::format("incorrect value of 'log_level' field in the json which is: {}", log_level)};
-  }
-
-  quiet_mode_ = ReadRequiredBoolOption(json, "quiet_mode");
 }
 
 const std::string& Config::KafkaBrokerList() const noexcept {
@@ -70,14 +58,6 @@ const std::string& Config::KafkaBrokerList() const noexcept {
 
 const std::string& Config::KafkaTopic() const noexcept {
   return kafka_topic_;
-}
-
-spdlog::level::level_enum Config::LogLevel() const noexcept {
-  return log_level_;
-}
-
-bool Config::QuietMode() const noexcept {
-  return quiet_mode_;
 }
 
 }// namespace write_to_kafka

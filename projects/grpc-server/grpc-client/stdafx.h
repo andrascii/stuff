@@ -50,42 +50,9 @@
 #include <boost/thread.hpp>
 
 //
-// Spdlog
-//
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#include <spdlog/fmt/ostr.h>
-#include <spdlog/logger.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/daily_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
-
-//
 // Expected
 //
 #include <tl/expected.hpp>
-
-//
-// CppKafka
-//
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#elif _MSC_VER
-#pragma warning(push, 1)
-#pragma warning(disable : 4251)
-#pragma warning(disable : 4275)
-#endif
-
-#include <cppkafka/configuration.h>
-#include <cppkafka/consumer.h>
-#include <cppkafka/cppkafka.h>
-#include <cppkafka/producer.h>
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#elif _MSC_VER
-#pragma warning(pop)
-#endif
 
 //
 // nlohmann

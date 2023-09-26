@@ -38,7 +38,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # adding settings for cl/clang compiler (depends on which compiler actully used)
 #
 include(clang_options)
-include(msvc_options)
+include(msvc_set_target_options)
 
 #
 # function to register source files for reformatting by clang-format
@@ -120,6 +120,10 @@ endif()
 
 foreach(TARGET ${TARGETS})
   add_subdirectory(${PROJECTS_DIR}/${TARGET})
+  
+  if (MSVC AND NOT ${TARGET} MATCHES proto)
+    msvc_set_target_options(TARGET_NAME ${TARGET})
+  endif()
 endforeach()
 
 #

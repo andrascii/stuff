@@ -58,7 +58,7 @@ Expected<std::shared_ptr<CommandLineArguments>> CommandLineArguments::Read(
 
     return std::make_shared<MakeSharedEnabler>(json_config_path, help_requested, options.help(), result.unmatched());
   } catch (const std::exception& ex) {
-    SPDLOG_ERROR("error initializing command line arguments: {}", ex.what());
+    std::cerr << fmt::format("error initializing command line arguments: {}", ex.what());
     return Unexpected<>{MakeErrorCode(Error::kCommandLineParsingError)};
   }
 }

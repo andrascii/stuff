@@ -27,6 +27,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <filesystem>
 
 //
 // Boost
@@ -50,15 +51,9 @@
 #include <boost/thread.hpp>
 
 //
-// Spdlog
+// fmt/format
 //
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#include <spdlog/fmt/ostr.h>
-#include <spdlog/logger.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/daily_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
+#include <fmt/format.h>
 
 //
 // Expected
@@ -74,6 +69,7 @@
 #pragma warning(push, 1)
 #pragma warning(disable : 4251)
 #pragma warning(disable : 4275)
+#define cppkafka_EXPORTS
 #endif
 
 #include <cppkafka/configuration.h>
