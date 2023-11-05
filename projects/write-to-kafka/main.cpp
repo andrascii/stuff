@@ -7,14 +7,19 @@
  * 1. ./write-to-kafka -c config.json line-to-write1 line-to-write2
  * 2. cat file.txt | ./write-to-kafka -c config.json
  *
- * [-c;--config] parameter used to pass a path to config.json which specifies kafka settings.
+ * [-c;--config] parameter used to pass a path to config.json which specifies
+ * kafka settings.
  */
 
 int main(int argc, char** argv) {
   using namespace write_to_kafka;
 
   try {
-    const auto expected_arguments = CommandLineArguments::Read(argc, argv, "write-to-kafka", "write-to-kafka");
+    const auto expected_arguments = CommandLineArguments::Read(
+      argc,
+      argv,
+      "write-to-kafka",
+      "write-to-kafka");
 
     if (!expected_arguments) {
       std::cerr << "can't parse command line arguments\n";

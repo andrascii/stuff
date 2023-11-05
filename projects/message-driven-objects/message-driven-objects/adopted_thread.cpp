@@ -2,7 +2,8 @@
 
 namespace mdo {
 
-AdoptedThread::AdoptedThread(const std::shared_ptr<ThreadData>& data) : Thread{data} {}
+AdoptedThread::AdoptedThread(const std::shared_ptr<ThreadData>& data)
+    : Thread{data} {}
 
 void AdoptedThread::Start() {
   LOG_TRACE("starting '{}' thread", CurrentThreadId());

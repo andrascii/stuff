@@ -2,8 +2,7 @@
 
 namespace mdo {
 
-MessageQueue::MessageQueue()
-    : interrupt_{} {}
+MessageQueue::MessageQueue() : interrupt_{} {}
 
 void MessageQueue::Push(Message&& message) {
   std::unique_lock _{mutex_};
@@ -13,9 +12,9 @@ void MessageQueue::Push(Message&& message) {
   LOG_TRACE("pushed message to queue '{}', queue size '{}'", (void*) this, messages_.size());
 }
 
-std::error_code MessageQueue::Poll(
-  std::vector<Message>& messages,
-  const std::chrono::seconds& timeout) noexcept {
+std::error_code
+MessageQueue::Poll(std::vector<Message>& messages,
+                   const std::chrono::seconds& timeout) noexcept {
   std::unique_lock _{mutex_};
 
   const auto has_event_or_interrupted = [this] {

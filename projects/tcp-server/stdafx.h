@@ -10,6 +10,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <deque>
+#include <filesystem>
 #include <functional>
 #include <future>
 #include <iostream>
@@ -19,6 +20,7 @@
 #include <optional>
 #include <queue>
 #include <set>
+#include <stop_token>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -27,8 +29,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <filesystem>
-
 
 //
 // Expected
@@ -39,6 +39,11 @@
 // nlohmann
 //
 #include <nlohmann/json.hpp>
+
+//
+// cxxopts
+//
+#include <cxxopts.hpp>
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;

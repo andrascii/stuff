@@ -2,12 +2,12 @@
 
 namespace mdo {
 
-InvokeSlotMessage::InvokeSlotMessage(const std::function<void()>& f, Object* sender, Object* receiver)
+InvokeSlotMessage::InvokeSlotMessage(const std::function<void()>& f,
+                                     Object* sender,
+                                     Object* receiver)
     : MessageBase{sender, receiver},
       f_{f} {}
 
-void InvokeSlotMessage::Invoke() const {
-  f_();
-}
+void InvokeSlotMessage::Invoke() const { f_(); }
 
 }// namespace mdo

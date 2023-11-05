@@ -11,7 +11,8 @@ class Producer final {
   std::error_code Write(const std::string& message) noexcept;
 
  private:
-  static cppkafka::Configuration CreateConfiguration(const Config& config) noexcept;
+  static cppkafka::Configuration
+  CreateConfiguration(const Config& config) noexcept;
 
  private:
   cppkafka::Producer producer_;

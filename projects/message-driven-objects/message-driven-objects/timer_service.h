@@ -16,10 +16,7 @@ class TimerService {
 
   ~TimerService();
 
-  int AddTimer(
-    NotNull<Object*> object,
-    const milliseconds& ms,
-    bool single_shot = false);
+  int AddTimer(NotNull<Object*> object, const milliseconds& ms, bool single_shot = false);
 
   void RemoveTimer(int id);
   void ResetTimer(int id);

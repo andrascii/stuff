@@ -8,10 +8,8 @@ using Milliseconds = std::chrono::milliseconds;
 template <typename T>
 using TimePoint = std::chrono::time_point<std::chrono::system_clock, T>;
 
-enum class OrderBookLevelType {
-  kBid,
-  kOffer
-};
+enum class OrderBookLevelType { kBid,
+                                kOffer };
 
 struct OrderBookLevel {
   OrderBookLevelType type;
@@ -66,12 +64,4 @@ struct MarketDataSnapshotFullRefresh : FixMessageHeader {
   std::vector<OrderBookLevel> levels;
 };
 
-using FixMessage = std::variant<
-  Logon,
-  Logout,
-  Heartbeat,
-  TestRequest,
-  Reject,
-  MarketDataRequest,
-  MarketDataRequestReject,
-  MarketDataSnapshotFullRefresh>;
+using FixMessage = std::variant<Logon, Logout, Heartbeat, TestRequest, Reject, MarketDataRequest, MarketDataRequestReject, MarketDataSnapshotFullRefresh>;

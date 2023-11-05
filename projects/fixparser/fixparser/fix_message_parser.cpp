@@ -1,13 +1,14 @@
 #include <date/date.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <vector>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <string_view>
+#include <vector>
 
 #if defined(_WIN32)
 #pragma warning(push)
-#pragma warning(disable: 4244)
-#pragma warning(disable: 4101)
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4101)
 #include <Windows.h>
 using ssize_t = SSIZE_T;
 #endif
@@ -55,7 +56,9 @@ Expected<FixMessage> FixMessageParser::Parse(const std::string& fix_message) {
   return Parse(std::string_view{fix_message});
 }
 
-Expected<FixMessageHeader> FixMessageParser::ParseFixHeader(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<FixMessageHeader>
+FixMessageParser::ParseFixHeader(hffix::message_reader& reader,
+                                 hffix::message_reader::const_iterator& hint) {
   const auto sender = Sender(reader, hint);
 
   if (!sender) {
@@ -80,11 +83,7 @@ Expected<FixMessageHeader> FixMessageParser::ParseFixHeader(hffix::message_reade
     return Unexpected<>{sending_time.error()};
   }
 
-  return FixMessageHeader{
-    *sender,
-    *receiver,
-    *sending_time,
-    *msg_seq_num};
+  return FixMessageHeader{*sender, *receiver, *sending_time, *msg_seq_num};
 }
 
 Expected<Logon> FixMessageParser::OnLogon(hffix::message_reader& reader) {
@@ -117,7 +116,8 @@ Expected<Logout> FixMessageParser::OnLogout(hffix::message_reader& reader) {
   return Logout{*header};
 }
 
-Expected<Heartbeat> FixMessageParser::OnHeartbeat(hffix::message_reader& reader) {
+Expected<Heartbeat>
+FixMessageParser::OnHeartbeat(hffix::message_reader& reader) {
   auto hint = reader.begin();
 
   const auto header = ParseFixHeader(reader, hint);
@@ -129,7 +129,8 @@ Expected<Heartbeat> FixMessageParser::OnHeartbeat(hffix::message_reader& reader)
   return Heartbeat{*header};
 }
 
-Expected<TestRequest> FixMessageParser::OnTestRequest(hffix::message_reader& reader) {
+Expected<TestRequest>
+FixMessageParser::OnTestRequest(hffix::message_reader& reader) {
   auto hint = reader.begin();
 
   const auto header = ParseFixHeader(reader, hint);
@@ -153,7 +154,8 @@ Expected<Reject> FixMessageParser::OnReject(hffix::message_reader& reader) {
   return Reject{*header};
 }
 
-Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message_reader& reader) {
+Expected<MarketDataRequest>
+FixMessageParser::OnMarketDataRequest(hffix::message_reader& reader) {
   auto hint = reader.begin();
 
   auto header = ParseFixHeader(reader, hint);
@@ -220,24 +222,20 @@ Expected<MarketDataRequest> FixMessageParser::OnMarketDataRequest(hffix::message
       account_value = std::move(*account);
     }
 
-    instruments.push_back(
-      MarketDataRequest::Instrument{
-        std::move(*symbol),
-        std::move(*security_type),
-        std::move(*security_group),
-        std::move(*tenor),
-        std::move(*settlement_date),
-        std::move(account_value)});
+    instruments.push_back(MarketDataRequest::Instrument{
+      std::move(*symbol),
+      std::move(*security_type),
+      std::move(*security_group),
+      std::move(*tenor),
+      std::move(*settlement_date),
+      std::move(account_value)});
   }
 
-  return MarketDataRequest{
-    std::move(*header),
-    std::move(*md_req_id),
-    std::move(*subscription_request_type),
-    std::move(instruments)};
+  return MarketDataRequest{std::move(*header), std::move(*md_req_id), std::move(*subscription_request_type), std::move(instruments)};
 }
 
-Expected<MarketDataRequestReject> FixMessageParser::OnMarketDataRequestReject(hffix::message_reader& reader) {
+Expected<MarketDataRequestReject>
+FixMessageParser::OnMarketDataRequestReject(hffix::message_reader& reader) {
   auto hint = reader.begin();
 
   const auto header = ParseFixHeader(reader, hint);
@@ -252,12 +250,12 @@ Expected<MarketDataRequestReject> FixMessageParser::OnMarketDataRequestReject(hf
     return Unexpected<>{md_req_id.error()};
   }
 
-  return MarketDataRequestReject{
-    *header,
-    *md_req_id};
+  return MarketDataRequestReject{*header, *md_req_id};
 }
 
-Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFullRefresh(hffix::message_reader& reader) {
+Expected<MarketDataSnapshotFullRefresh>
+FixMessageParser::OnMarketDataSnapshotFullRefresh(
+  hffix::message_reader& reader) {
   auto hint = reader.begin();
 
   auto header = ParseFixHeader(reader, hint);
@@ -307,7 +305,8 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
   auto tenor = Tenor(reader, hint);
 
   if (!tenor && !settlement_date) {
-    return Unexpected<>{MakeErrorCode(Error::kNotFoundNorTenorNorSettlementDate)};
+    return Unexpected<>{
+      MakeErrorCode(Error::kNotFoundNorTenorNorSettlementDate)};
   }
 
   std::vector<OrderBookLevel> levels;
@@ -327,7 +326,8 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
       level.type = OrderBookLevelType::kOffer;
     } else {
       // log warn/error
-      return Unexpected<>{MakeErrorCode(Error::kUnhandledMdEntryTypeValue)};
+      return Unexpected<>{
+        MakeErrorCode(Error::kUnhandledMdEntryTypeValue)};
     }
 
     auto md_entry_px = MdEntryPx(reader, hint);
@@ -368,7 +368,9 @@ Expected<MarketDataSnapshotFullRefresh> FixMessageParser::OnMarketDataSnapshotFu
   return result;
 }
 
-Expected<std::string> FixMessageParser::Symbol(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::Symbol(hffix::message_reader& reader,
+                         hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::Symbol, hint)) {
     return hint->value().as_string();
   }
@@ -376,7 +378,9 @@ Expected<std::string> FixMessageParser::Symbol(hffix::message_reader& reader, hf
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSymbol)};
 }
 
-Expected<std::string> FixMessageParser::Account(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::Account(hffix::message_reader& reader,
+                          hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::Account, hint)) {
     return hint->value().as_string();
   }
@@ -384,7 +388,9 @@ Expected<std::string> FixMessageParser::Account(hffix::message_reader& reader, h
   return Unexpected<>{MakeErrorCode(Error::kNotFoundAccount)};
 }
 
-Expected<std::string> FixMessageParser::Sender(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::Sender(hffix::message_reader& reader,
+                         hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::SenderCompID, hint)) {
     return hint->value().as_string();
   }
@@ -392,7 +398,9 @@ Expected<std::string> FixMessageParser::Sender(hffix::message_reader& reader, hf
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSenderCompId)};
 }
 
-Expected<std::string> FixMessageParser::Receiver(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::Receiver(hffix::message_reader& reader,
+                           hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::TargetCompID, hint)) {
     return hint->value().as_string();
   }
@@ -400,7 +408,9 @@ Expected<std::string> FixMessageParser::Receiver(hffix::message_reader& reader, 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundTargetCompId)};
 }
 
-Expected<uint64_t> FixMessageParser::HeartbeatInterval(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<uint64_t> FixMessageParser::HeartbeatInterval(
+  hffix::message_reader& reader,
+  hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::HeartBtInt, hint)) {
     return hint->value().as_int<uint64_t>();
   }
@@ -408,7 +418,9 @@ Expected<uint64_t> FixMessageParser::HeartbeatInterval(hffix::message_reader& re
   return Unexpected<>{MakeErrorCode(Error::kNotFoundHeartbeatInterval)};
 }
 
-Expected<std::string> FixMessageParser::SecurityType(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::SecurityType(hffix::message_reader& reader,
+                               hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::SecurityType, hint)) {
     return hint->value().as_string();
   }
@@ -416,7 +428,9 @@ Expected<std::string> FixMessageParser::SecurityType(hffix::message_reader& read
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSecurityType)};
 }
 
-Expected<std::string> FixMessageParser::SecurityGroup(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::SecurityGroup(hffix::message_reader& reader,
+                                hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::SecurityGroup, hint)) {
     return hint->value().as_string();
   }
@@ -424,7 +438,9 @@ Expected<std::string> FixMessageParser::SecurityGroup(hffix::message_reader& rea
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSecurityGroup)};
 }
 
-Expected<uint64_t> FixMessageParser::MsgSeqNum(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<uint64_t>
+FixMessageParser::MsgSeqNum(hffix::message_reader& reader,
+                            hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::MsgSeqNum, hint)) {
     return hint->value().as_int<uint64_t>();
   }
@@ -432,7 +448,9 @@ Expected<uint64_t> FixMessageParser::MsgSeqNum(hffix::message_reader& reader, hf
   return Unexpected<>{MakeErrorCode(Error::kNotFoundMsgSeqNum)};
 }
 
-Expected<TimePoint<Milliseconds>> FixMessageParser::SendingTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<TimePoint<Milliseconds>>
+FixMessageParser::SendingTime(hffix::message_reader& reader,
+                              hffix::message_reader::const_iterator& hint) {
   TimePoint<Milliseconds> tp;
 
   if (reader.find_with_hint(hffix::tag::SendingTime, hint)) {
@@ -446,11 +464,12 @@ Expected<TimePoint<Milliseconds>> FixMessageParser::SendingTime(hffix::message_r
 
     hint->value().as_timestamp(year, month, day, hour, minute, second, millisecond);
 
-    const auto ymd = date::year{ year } / date::month{ (unsigned)month } / date::day{ (unsigned)day };
+    const auto ymd = date::year{year} / date::month{(unsigned) month} /
+                     date::day{(unsigned) day};
     tp = date::sys_days(ymd);
-    tp += std::chrono::minutes{ minute };
-    tp += std::chrono::seconds{ second };
-    tp += std::chrono::milliseconds{ millisecond };
+    tp += std::chrono::minutes{minute};
+    tp += std::chrono::seconds{second};
+    tp += std::chrono::milliseconds{millisecond};
 
     return tp;
   }
@@ -458,7 +477,9 @@ Expected<TimePoint<Milliseconds>> FixMessageParser::SendingTime(hffix::message_r
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSendingTime)};
 }
 
-Expected<TimePoint<Milliseconds>> FixMessageParser::LastUpdateTime(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<TimePoint<Milliseconds>>
+FixMessageParser::LastUpdateTime(hffix::message_reader& reader,
+                                 hffix::message_reader::const_iterator& hint) {
   TimePoint<Milliseconds> tp;
 
   if (reader.find_with_hint(hffix::tag::LastUpdateTime, hint)) {
@@ -472,11 +493,12 @@ Expected<TimePoint<Milliseconds>> FixMessageParser::LastUpdateTime(hffix::messag
 
     hint->value().as_timestamp(year, month, day, hour, minute, second, millisecond);
 
-    const auto ymd = date::year{ year } / date::month{ (unsigned)month } / date::day{ (unsigned)day };
+    const auto ymd = date::year{year} / date::month{(unsigned) month} /
+                     date::day{(unsigned) day};
     tp = date::sys_days(ymd);
-    tp += std::chrono::minutes{ minute };
-    tp += std::chrono::seconds{ second };
-    tp += std::chrono::milliseconds{ millisecond };
+    tp += std::chrono::minutes{minute};
+    tp += std::chrono::seconds{second};
+    tp += std::chrono::milliseconds{millisecond};
 
     return tp;
   }
@@ -484,7 +506,9 @@ Expected<TimePoint<Milliseconds>> FixMessageParser::LastUpdateTime(hffix::messag
   return Unexpected<>{MakeErrorCode(Error::kNotFoundLastUpdateTime)};
 }
 
-Expected<uint64_t> FixMessageParser::NoMdEntries(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<uint64_t>
+FixMessageParser::NoMdEntries(hffix::message_reader& reader,
+                              hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::NoMDEntries, hint)) {
     return hint->value().as_int<uint64_t>();
   }
@@ -492,7 +516,9 @@ Expected<uint64_t> FixMessageParser::NoMdEntries(hffix::message_reader& reader, 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundNoMdEntries)};
 }
 
-Expected<std::string> FixMessageParser::Tenor(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::Tenor(hffix::message_reader& reader,
+                        hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(6215, hint)) {
     return hint->value().as_string();
   }
@@ -500,7 +526,9 @@ Expected<std::string> FixMessageParser::Tenor(hffix::message_reader& reader, hff
   return Unexpected<>{MakeErrorCode(Error::kNotFoundTenor)};
 }
 
-Expected<std::string> FixMessageParser::SettlementDate(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::SettlementDate(hffix::message_reader& reader,
+                                 hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::SettlDate, hint)) {
     return hint->value().as_string();
   }
@@ -508,7 +536,9 @@ Expected<std::string> FixMessageParser::SettlementDate(hffix::message_reader& re
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSettlementDate)};
 }
 
-Expected<std::string> FixMessageParser::MdReqId(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::MdReqId(hffix::message_reader& reader,
+                          hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::MDReqID, hint)) {
     return hint->value().as_string();
   }
@@ -516,7 +546,9 @@ Expected<std::string> FixMessageParser::MdReqId(hffix::message_reader& reader, h
   return Unexpected<>{MakeErrorCode(Error::kNotFoundMdReqId)};
 }
 
-Expected<char> FixMessageParser::MdEntryType(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<char>
+FixMessageParser::MdEntryType(hffix::message_reader& reader,
+                              hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::MDEntryType, hint)) {
     return hint->value().as_char();
   }
@@ -524,7 +556,9 @@ Expected<char> FixMessageParser::MdEntryType(hffix::message_reader& reader, hffi
   return Unexpected<>{MakeErrorCode(Error::kNotFoundMdEntryType)};
 }
 
-Expected<std::string> FixMessageParser::MdEntryPx(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string>
+FixMessageParser::MdEntryPx(hffix::message_reader& reader,
+                            hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::MDEntryPx, hint)) {
     return hint->value().as_string();
   }
@@ -532,7 +566,9 @@ Expected<std::string> FixMessageParser::MdEntryPx(hffix::message_reader& reader,
   return Unexpected<>{MakeErrorCode(Error::kNotFoundMdEntryPx)};
 }
 
-Expected<uint64_t> FixMessageParser::MdEntrySize(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<uint64_t>
+FixMessageParser::MdEntrySize(hffix::message_reader& reader,
+                              hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::MDEntrySize, hint)) {
     return hint->value().as_int<uint64_t>();
   }
@@ -540,7 +576,9 @@ Expected<uint64_t> FixMessageParser::MdEntrySize(hffix::message_reader& reader, 
   return Unexpected<>{MakeErrorCode(Error::kNotFoundMdEntrySize)};
 }
 
-Expected<std::string> FixMessageParser::SubscriptionRequestType(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<std::string> FixMessageParser::SubscriptionRequestType(
+  hffix::message_reader& reader,
+  hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::SubscriptionRequestType, hint)) {
     return hint->value().as_string();
   }
@@ -548,7 +586,9 @@ Expected<std::string> FixMessageParser::SubscriptionRequestType(hffix::message_r
   return Unexpected<>{MakeErrorCode(Error::kNotFoundSubscriptionRequestType)};
 }
 
-Expected<uint64_t> FixMessageParser::NoRelatedSym(hffix::message_reader& reader, hffix::message_reader::const_iterator& hint) {
+Expected<uint64_t>
+FixMessageParser::NoRelatedSym(hffix::message_reader& reader,
+                               hffix::message_reader::const_iterator& hint) {
   if (reader.find_with_hint(hffix::tag::NoRelatedSym, hint)) {
     return hint->value().as_int<uint64_t>();
   }

@@ -10,34 +10,38 @@ namespace mdo {
 //!
 //! WARN: do not use current_thread_data it's for internal use only!
 //! Using this variable is very easy to make a mistake in your code!
-//! Instead of it use a call GetThreadData(Thread::Current()) or GetThreadData(thread).
+//! Instead of it use a call GetThreadData(Thread::Current()) or
+//! GetThreadData(thread).
 //!
 extern thread_local std::shared_ptr<ThreadData> current_thread_data;
 
 class Thread : public Object {
  public:
-  friend const std::shared_ptr<ThreadData>& GetThreadData(const Thread* thread) noexcept;
+  friend const std::shared_ptr<ThreadData>&
+  GetThreadData(const Thread* thread) noexcept;
 
   //!
-  //! This signal is emitted from the associated thread right before it finishes executing.
-  //! When this signal is emitted, the event loop has already stopped running.
-  //! No more events will be processed in the thread.
+  //! This signal is emitted from the associated thread right before it
+  //! finishes executing. When this signal is emitted, the event loop has
+  //! already stopped running. No more events will be processed in the thread.
   //!
   Signal<void> Finished;
 
   //!
-  //! This signal is emitted from the associated thread when it starts executing, before the Run() function is called.
+  //! This signal is emitted from the associated thread when it starts
+  //! executing, before the Run() function is called.
   //!
   Signal<void> Started;
 
   //!
-  //! Returns a pointer to a Thread which manages the currently executing thread.
+  //! Returns a pointer to a Thread which manages the currently executing
+  //! thread.
   //!
   static Thread* Current();
 
   //!
-  //! Yields execution of the current thread to another runnable thread, if any.
-  //! Note that the operating system decides to which thread to switch.
+  //! Yields execution of the current thread to another runnable thread, if
+  //! any. Note that the operating system decides to which thread to switch.
   //!
   static void YieldThread();
 
@@ -52,10 +56,11 @@ class Thread : public Object {
   static void SetCurrentThreadName(const std::string& name) noexcept;
 
   //!
-  //! Creates a new Thread object that will execute the function f with the arguments args.
-  //! The new thread is not started – it must be started by an explicit call to Start().
-  //! This allows you to connect to its signals, move Objects to the thread and so on.
-  //! The function f will be called in the new thread.
+  //! Creates a new Thread object that will execute the function f with the
+  //! arguments args. The new thread is not started – it must be started by an
+  //! explicit call to Start(). This allows you to connect to its signals,
+  //! move Objects to the thread and so on. The function f will be called in
+  //! the new thread.
   //!
   //! Returns the newly created Thread instance.
   //!
@@ -66,9 +71,7 @@ class Thread : public Object {
           : Thread(std::move(alternative_entry_point)) {}
     };
 
-    const auto adopted_invoke = [=] {
-      f(std::forward<Args>(args)...);
-    };
+    const auto adopted_invoke = [=] { f(std::forward<Args>(args)...); };
 
     auto thread = std::make_unique<NewEnabler>(adopted_invoke);
 
@@ -88,7 +91,8 @@ class Thread : public Object {
   const std::string& Name() const noexcept;
 
   //!
-  //! Sets a name that will be assigned to the thread when it would be started.
+  //! Sets a name that will be assigned to the thread when it would be
+  //! started.
   //!
   void SetName(const std::string& name);
 
@@ -105,11 +109,13 @@ class Thread : public Object {
 
   //!
   //! Blocks the thread until either of these conditions is met:
-  //!  - The thread associated with this Thread object has finished execution (i.e. when it returns from Run()).
+  //!  - The thread associated with this Thread object has finished execution
+  //!  (i.e. when it returns from Run()).
   //!    This function will return true if the thread has finished.
   //!    It also returns true if the thread has not been started yet.
   //!
-  //!  - The timeout is reached. This function will return false if the timeout is reached.
+  //!  - The timeout is reached. This function will return false if the
+  //!  timeout is reached.
   //!
   bool WaitFor(const std::chrono::milliseconds& ms) const noexcept;
 
@@ -130,18 +136,22 @@ class Thread : public Object {
 
   //!
   //! Request the interruption of the thread.
-  //! That request is advisory and it is up to code running on the thread to decide if and how it should act upon such request.
-  //! This function does not stop any event loop running on the thread and does not terminate it in any way.
+  //! That request is advisory and it is up to code running on the thread to
+  //! decide if and how it should act upon such request. This function does
+  //! not stop any event loop running on the thread and does not terminate it
+  //! in any way.
   //!
   //! Note: This function is thread-safe.
   //!
   void RequestInterruption() const noexcept;
 
   //!
-  //! Return true if the task running on this thread should be stopped. An interruption can be requested by RequestInterruption().
-  //! This function can be used to make long running tasks cleanly interruptible.
-  //! Never checking or acting on the value returned by this function is safe, however it is advisable do so regularly in long running functions.
-  //! Take care not to call it too often, to keep the overhead low.
+  //! Return true if the task running on this thread should be stopped. An
+  //! interruption can be requested by RequestInterruption(). This function
+  //! can be used to make long running tasks cleanly interruptible. Never
+  //! checking or acting on the value returned by this function is safe,
+  //! however it is advisable do so regularly in long running functions. Take
+  //! care not to call it too often, to keep the overhead low.
   //!
   bool IsInterruptionRequested() const noexcept;
 
@@ -158,9 +168,8 @@ class Thread : public Object {
  private:
   void StopImpl();
 
-  explicit Thread(
-    std::function<void()> alternative_entry_point,
-    std::shared_ptr<ThreadData> data = nullptr);
+  explicit Thread(std::function<void()> alternative_entry_point,
+                  std::shared_ptr<ThreadData> data = nullptr);
 
   static void Initialize(Thread& thread);
 

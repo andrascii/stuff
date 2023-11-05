@@ -11,7 +11,9 @@ void* operator new(std::size_t count) {
   }
 
   if (void* ptr = std::malloc(count)) {
-    std::printf("Allocated %lud bytes started at %p\n", (unsigned long) count, ptr);
+    std::printf("Allocated %lud bytes started at %p\n",
+                (unsigned long) count,
+                ptr);
     return ptr;
   }
 
@@ -28,9 +30,7 @@ struct Node {
     std::cout << "Node " << std::quoted(name) << " created\n";
   }
 
-  ~Node() {
-    std::cout << "Node " << std::quoted(name) << " destroyed\n";
-  }
+  ~Node() { std::cout << "Node " << std::quoted(name) << " destroyed\n"; }
 
   std::vector<Node*> edges;
   std::string name;
@@ -50,24 +50,22 @@ void FreeGraph(Node* graph) {
 
     for (auto* edge : node->edges) {
       const auto already_marked_to_visit =
-        std::find(to_visit.begin(), to_visit.end(), edge) != to_visit.end();
+        std::find(to_visit.begin(), to_visit.end(), edge) !=
+        to_visit.end();
 
       const auto is_edge_visited =
-        std::find(visited.begin(), visited.end(), edge) != visited.end();
+        std::find(visited.begin(), visited.end(), edge) !=
+        visited.end();
 
       if (is_edge_visited) {
-        std::cout
-          << "Edge "
-          << std::quoted(edge->name)
-          << " has already been visited\n";
+        std::cout << "Edge " << std::quoted(edge->name)
+                  << " has already been visited\n";
         continue;
       }
 
       if (!already_marked_to_visit) {
-        std::cout
-          << "Edge " << std::quoted(edge->name)
-          << " marked to visit"
-          << std::endl;
+        std::cout << "Edge " << std::quoted(edge->name)
+                  << " marked to visit" << std::endl;
         to_visit.push_back(edge);
       }
     }

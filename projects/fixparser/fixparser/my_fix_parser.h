@@ -31,13 +31,17 @@ class MyFixParser {
   Expected<Heartbeat> OnHeartbeat(const MessageLabels& labels);
   Expected<TestRequest> OnTestRequest(const MessageLabels& labels);
   Expected<Reject> OnReject(const MessageLabels& labels);
-  Expected<MarketDataRequest> OnMarketDataRequest(const MessageLabels& labels);
-  Expected<MarketDataRequestReject> OnMarketDataRequestReject(const MessageLabels& labels);
-  Expected<MarketDataSnapshotFullRefresh> OnMarketDataSnapshotFullRefresh(const MessageLabels& labels);
+  Expected<MarketDataRequest>
+  OnMarketDataRequest(const MessageLabels& labels);
+  Expected<MarketDataRequestReject>
+  OnMarketDataRequestReject(const MessageLabels& labels);
+  Expected<MarketDataSnapshotFullRefresh>
+  OnMarketDataSnapshotFullRefresh(const MessageLabels& labels);
 
  private:
   std::unordered_map<tag::Field, std::string_view> field_dictionary_;
-  std::unordered_map<std::string_view, std::string_view> message_name_dictionary_;
+  std::unordered_map<std::string_view, std::string_view>
+    message_name_dictionary_;
 };
 
 }// namespace my

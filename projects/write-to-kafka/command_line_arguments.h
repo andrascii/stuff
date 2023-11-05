@@ -6,11 +6,8 @@ namespace write_to_kafka {
 
 class CommandLineArguments {
  public:
-  static Expected<std::shared_ptr<CommandLineArguments>> Read(
-    int argc,
-    char** argv,
-    const std::string& app_name,
-    const std::string& app_description);
+  static Expected<std::shared_ptr<CommandLineArguments>>
+  Read(int argc, char** argv, const std::string& app_name, const std::string& app_description);
 
   //
   // DB settings
@@ -21,11 +18,10 @@ class CommandLineArguments {
   const std::vector<std::string>& Unmatched() const noexcept;
 
  private:
-  explicit CommandLineArguments(
-    std::filesystem::path json_config_path,
-    bool help_requested,
-    std::string help,
-    std::vector<std::string> unmatched);
+  explicit CommandLineArguments(std::filesystem::path json_config_path,
+                                bool help_requested,
+                                std::string help,
+                                std::vector<std::string> unmatched);
 
  private:
   std::filesystem::path json_config_path_;

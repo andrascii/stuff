@@ -111,11 +111,7 @@ class TimerService::Impl {
 
     RemoveTimer(id);
 
-    AddTimerImpl(
-      context.id,
-      context.object,
-      context.ms,
-      context.single_shot);
+    AddTimerImpl(context.id, context.object, context.ms, context.single_shot);
   }
 
  private:
@@ -125,7 +121,8 @@ class TimerService::Impl {
   }
 
   void AddTimerImpl(int id, Object* object, const std::chrono::milliseconds& ms, bool single_shot) {
-    auto context = std::make_unique<TimerContext>(object, this, ms, id, single_shot);
+    auto context =
+      std::make_unique<TimerContext>(object, this, ms, id, single_shot);
 
     std::scoped_lock _{mutex_};
     to_add_.push_back(context.get());
@@ -158,13 +155,17 @@ class TimerService::Impl {
       const auto it = contexts_.find(timer_id);
 
       if (it == contexts_.end()) {
-        SPDLOG_WARN("occurred timer tick for unknown timer id '{}', possibly it was deleted", timer_id);
+        SPDLOG_WARN(
+          "occurred timer tick for unknown timer id '{}', "
+          "possibly it was deleted",
+          timer_id);
         continue;
       }
 
       const auto& context = it->second;
 
-      Dispatcher::Dispatch(TimerMessage{context->id, nullptr, context->object});
+      Dispatcher::Dispatch(
+        TimerMessage{context->id, nullptr, context->object});
 
       if (context->single_shot) {
         RemoveTimer(context->id);
@@ -227,9 +228,8 @@ std::atomic<TimerService::Impl*> TimerService::Impl::this_ptr;
 
 class TimerService::Impl {
  public:
-  Impl()
-      : kq_{kqueue()},
-        events_count_{} {
+  Impl() : kq_{kqueue()},
+           events_count_{} {
     if (kq_ == -1) {
       LOG_CRITICAL("error initializing kqueue");
       std::terminate();
@@ -254,9 +254,7 @@ class TimerService::Impl {
     managing_thread_->Start();
   }
 
-  void Stop() {
-    managing_thread_->Stop();
-  }
+  void Stop() { managing_thread_->Stop(); }
 
   int AddTimer(Object* object, const std::chrono::milliseconds& ms, bool single_shot) {
     int timer_id = NextTimerId();
@@ -266,10 +264,7 @@ class TimerService::Impl {
     {
       std::scoped_lock _{mutex_};
 
-      contexts_[timer_id] = TimerContext{
-        object,
-        ms,
-        single_shot};
+      contexts_[timer_id] = TimerContext{object, ms, single_shot};
     }
 
     events_count_.fetch_add(1, std::memory_order_relaxed);
@@ -339,7 +334,8 @@ class TimerService::Impl {
       timespec timeout{};
       timeout.tv_sec = 1;
 
-      int n = kevent(kq_, nullptr, 0, events.data(), events.size(), &timeout);
+      int n =
+        kevent(kq_, nullptr, 0, events.data(), events.size(), &timeout);
 
       if (n <= 0) {
         continue;
@@ -348,7 +344,10 @@ class TimerService::Impl {
       for (int i = 0; i < n; ++i) {
         if (events[i].filter == EVFILT_TIMER) {
           LOG_TRACE("dispatching timer tick for timer id: {}", events[i].ident);
-          Dispatcher::Dispatch(TimerMessage(events[i].ident, nullptr, (Object*) events[i].udata));
+          Dispatcher::Dispatch(TimerMessage(
+            events[i].ident,
+            nullptr,
+            (Object*) events[i].udata));
         }
       }
     }
@@ -380,9 +379,7 @@ class TimerService::Impl {
     }
   }
 
-  ~Impl() {
-    close(kq_);
-  }
+  ~Impl() { close(kq_); }
 
   void Start() {
     if (f_.valid()) {
@@ -391,9 +388,7 @@ class TimerService::Impl {
 
     request_interruption_.store(false, std::memory_order_relaxed);
 
-    f_ = std::async(std::launch::async, [this] {
-      TimerThread();
-    });
+    f_ = std::async(std::launch::async, [this] { TimerThread(); });
   }
 
   void Stop() {
@@ -460,8 +455,10 @@ class TimerService::Impl {
 
  private:
   void SetTimer(int id, const std::chrono::milliseconds& ms, bool single_shot) const {
-    const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(ms);
-    const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(ms);
+    const auto seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(ms);
+    const auto nanoseconds =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(ms);
     const auto remaining_nanoseconds = nanoseconds - seconds;
 
     struct itimerspec its {};
@@ -496,7 +493,8 @@ class TimerService::Impl {
         read(events[i].data.fd, &val, 8);
 
         if (events[i].events & (EPOLLIN | EPOLLERR)) {
-          const auto extract_context = [this](const auto timer_id) -> std::optional<TimerContext> {
+          const auto extract_context = [this](const auto timer_id)
+            -> std::optional<TimerContext> {
             std::scoped_lock _{mutex_};
 
             const auto it = timer_fds_.find(timer_id);
@@ -514,15 +512,23 @@ class TimerService::Impl {
             return ctx;
           };
 
-          const auto optional_context = extract_context(events[i].data.fd);
+          const auto optional_context =
+            extract_context(events[i].data.fd);
 
           if (!optional_context.has_value()) {
-            SPDLOG_WARN("occurred timer tick for unknown timer id '{}', possibly it was deleted", events[i].data.fd);
+            SPDLOG_WARN(
+              "occurred timer tick for unknown timer id "
+              "'{}', possibly it was deleted",
+              events[i].data.fd);
             continue;
           }
 
-          SPDLOG_TRACE("dispatching timer tick for timer id: {}", events[i].data.fd);
-          Dispatcher::Dispatch(std::make_shared<TimerMessage>(events[i].data.fd, nullptr, optional_context->object));
+          SPDLOG_TRACE("dispatching timer tick for timer id: {}",
+                       events[i].data.fd);
+          Dispatcher::Dispatch(std::make_shared<TimerMessage>(
+            events[i].data.fd,
+            nullptr,
+            optional_context->object));
         }
       }
 
@@ -551,26 +557,21 @@ TimerService* TimerService::Instance() {
     NewOpEnabler() : TimerService() {}
   };
 
-  static std::unique_ptr<NewOpEnabler> instance = std::make_unique<NewOpEnabler>();
+  static std::unique_ptr<NewOpEnabler> instance =
+    std::make_unique<NewOpEnabler>();
 
   return instance.get();
 }
 
-TimerService::~TimerService() {
-  impl_->Stop();
-}
+TimerService::~TimerService() { impl_->Stop(); }
 
 int TimerService::AddTimer(NotNull<Object*> object, const milliseconds& ms, bool single_shot) {
   return impl_->AddTimer(object, ms, single_shot);
 }
 
-void TimerService::RemoveTimer(int id) {
-  return impl_->RemoveTimer(id);
-}
+void TimerService::RemoveTimer(int id) { return impl_->RemoveTimer(id); }
 
-void TimerService::ResetTimer(int id) {
-  return impl_->ResetTimer(id);
-}
+void TimerService::ResetTimer(int id) { return impl_->ResetTimer(id); }
 
 TimerService::TimerService() : impl_{std::make_unique<Impl>()} {
   impl_->Start();

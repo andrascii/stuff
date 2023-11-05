@@ -6,8 +6,6 @@ TestMessage::TestMessage(const std::string& data, Object* sender, Object* receiv
     : MessageBase(sender, receiver),
       data_{data} {}
 
-const std::string& TestMessage::Data() const noexcept {
-  return data_;
-}
+const std::string& TestMessage::Data() const noexcept { return data_; }
 
 }// namespace mdo

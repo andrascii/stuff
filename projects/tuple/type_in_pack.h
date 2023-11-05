@@ -5,7 +5,8 @@
 
 template <size_t Idx, typename Searching, typename Head, typename... Tail>
 struct TypeInPackHelper {
-  static_assert(!(!std::is_same<Searching, Head>::value && sizeof...(Tail) == 0),
+  static_assert(!(!std::is_same<Searching, Head>::value &&
+                  sizeof...(Tail) == 0),
                 "Tuple doesn't contain specified type");
 
   using Type = typename TypeInPackHelper<Idx + 1, Searching, Tail...>::Type;

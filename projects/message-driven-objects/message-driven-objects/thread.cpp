@@ -27,7 +27,8 @@ void SetThreadName(DWORD thread_id, const std::string& thread_name) {
   __try {
     const DWORD MS_VC_EXCEPTION = 0x406D1388;
     RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*) &info);
-  } __except (EXCEPTION_EXECUTE_HANDLER) {}
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+  }
 }
 
 }// namespace
@@ -38,7 +39,8 @@ namespace mdo {
 
 thread_local std::shared_ptr<ThreadData> current_thread_data = nullptr;
 
-const std::shared_ptr<ThreadData>& GetThreadData(const Thread* thread) noexcept {
+const std::shared_ptr<ThreadData>&
+GetThreadData(const Thread* thread) noexcept {
   return thread->data_;
 }
 
@@ -50,14 +52,13 @@ Thread* Thread::Current() {
   current_thread_data = std::make_unique<ThreadData>();
   current_thread_data->SetId(std::this_thread::get_id());
   current_thread_data->SetIsAdopted(true);
-  current_thread_data->SetThread(new AdoptedThread(current_thread_data));// how to delete it?
+  current_thread_data->SetThread(
+    new AdoptedThread(current_thread_data));// how to delete it?
 
   return current_thread_data->Thread();
 }
 
-void Thread::YieldThread() {
-  std::this_thread::yield();
-}
+void Thread::YieldThread() { std::this_thread::yield(); }
 
 void Thread::Sleep(const std::chrono::milliseconds& ms) {
   std::this_thread::sleep_for(ms);
@@ -91,16 +92,15 @@ std::unique_ptr<Thread> Thread::Create(const char* name) {
 Thread::~Thread() {
   StopImpl();
 
-  const auto thread_name = name_.empty() ? ToString(std::this_thread::get_id()) : name_;
+  const auto thread_name =
+    name_.empty() ? ToString(std::this_thread::get_id()) : name_;
 
   LOG_INFO("thread '{}' destroyed", thread_name);
 
   data_->SetThread(nullptr);
 }
 
-const std::string& Thread::Name() const noexcept {
-  return name_;
-}
+const std::string& Thread::Name() const noexcept { return name_; }
 
 void Thread::SetName(const std::string& name) {
   name_ = name;
@@ -159,12 +159,11 @@ bool Thread::WaitFor(const std::chrono::milliseconds& ms) const noexcept {
   return true;
 }
 
-void Thread::Stop() {
-  StopImpl();
-}
+void Thread::Stop() { StopImpl(); }
 
 bool Thread::IsRunning() const noexcept {
-  return future_.valid() && future_.wait_for(0s) == std::future_status::timeout;
+  return future_.valid() &&
+         future_.wait_for(0s) == std::future_status::timeout;
 }
 
 void Thread::RequestInterruption() const noexcept {
@@ -190,7 +189,8 @@ void Thread::Run() {
   }
 
   LOG_TRACE(
-    "the '{}' thread started, current queue '{}' contains '{}' pending messages",
+    "the '{}' thread started, current queue '{}' contains '{}' "
+    "pending messages",
     tid,
     (void*) &current_thread_data->Queue(),
     current_thread_data->Queue().Size());
@@ -220,16 +220,17 @@ void Thread::Run() {
 
   //
   // TODO: what if some object still lives and sends to us a messages?
-  // we need here block incoming messages but should continue handle that already received
+  // we need here block incoming messages but should continue handle that
+  // already received
   //
   /*current_thread_data->Queue().SetInterruptFlag(false);
-  std::error_code ec;
+    std::error_code ec;
 
-  do {
-    std::deque<Message> messages;
-    ec = current_thread_data->Queue().Poll(messages, 1s);
-    HandleMessages(messages);
-  } while (ec != std::errc::timed_out);*/
+    do {
+      std::deque<Message> messages;
+      ec = current_thread_data->Queue().Poll(messages, 1s);
+      HandleMessages(messages);
+    } while (ec != std::errc::timed_out);*/
 
   //
   // emit 'Finished' signal
@@ -248,17 +249,20 @@ void Thread::HandleMessage(Message&& message) {
   const auto receiver_thread = receiver->Thread();
 
   if (this_thread == receiver_thread) {
-    LOG_TRACE("the thread '{}' received and handling a message", this_thread->Name());
+    LOG_TRACE("the thread '{}' received and handling a message",
+              this_thread->Name());
 
     //
     // block ability to destroy an Object class objects
-    // to be sure that we can safely call message->Receiver()->OnMessage(message);
+    // to be sure that we can safely call
+    // message->Receiver()->OnMessage(message);
     //
     std::scoped_lock _{ObjectsRegistry::Instance()};
 
     if (!ObjectsRegistry::Instance().HasObject(receiver)) {
       LOG_WARNING(
-        "the object {} that lived in thread {} is dead so the message to it is skipped",
+        "the object {} that lived in thread {} is dead so the "
+        "message to it is skipped",
         static_cast<void*>(receiver),
         ToString(current_thread_data->Id()));
 
@@ -268,7 +272,8 @@ void Thread::HandleMessage(Message&& message) {
     receiver->OnMessage(message);
   } else {
     LOG_TRACE(
-      "the thread '{}' received a message for the '{}' thread, dispatching it further",
+      "the thread '{}' received a message for the '{}' thread, "
+      "dispatching it further",
       this_thread->Name(),
       receiver_thread->Name());
 
@@ -279,7 +284,8 @@ void Thread::HandleMessage(Message&& message) {
 void Thread::HandleMessages(std::vector<Message>& messages) {
   for (auto& message : messages) {
     if (std::holds_alternative<SetThreadNameMessage>(message)) {
-      const auto set_thread_name_message = std::get<SetThreadNameMessage>(message);
+      const auto set_thread_name_message =
+        std::get<SetThreadNameMessage>(message);
       SetCurrentThreadName(set_thread_name_message.Name());
       continue;
     }
@@ -290,8 +296,10 @@ void Thread::HandleMessages(std::vector<Message>& messages) {
 
 std::string Thread::CurrentThreadId() {
   //
-  // 1. const auto id = ToString(current_thread_data->Id()); - invalid line, because we can start thread in the any other thread
-  // 2. each evaluation of current_thread_data should compare its value with nullptr
+  // 1. const auto id = ToString(current_thread_data->Id()); - invalid line,
+  // because we can start thread in the any other thread
+  // 2. each evaluation of current_thread_data should compare its value with
+  // nullptr
   //
   const auto id = ToString(current_thread_data->Id());
   const auto& thread_name = current_thread_data->Thread()->Name();
@@ -303,7 +311,8 @@ std::string Thread::CurrentThreadId() {
   return thread_name;
 }
 
-Thread::Thread(std::shared_ptr<ThreadData> data) : Thread{{}, std::move(data)} {}
+Thread::Thread(std::shared_ptr<ThreadData> data)
+    : Thread{{}, std::move(data)} {}
 
 void Thread::StopImpl() {
   const auto is_adopted = data_->IsAdopted();
@@ -339,7 +348,8 @@ void Thread::StopImpl() {
   LOG_TRACE("the '{}' thread has stopped", tid);
 }
 
-Thread::Thread(std::function<void()> alternative_entry_point, std::shared_ptr<ThreadData> data)
+Thread::Thread(std::function<void()> alternative_entry_point,
+               std::shared_ptr<ThreadData> data)
     : Finished{this},
       Started{this},
       data_{std::move(data)},

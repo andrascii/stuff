@@ -2,15 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME tcp-server)
+set(THIS_TARGET_NAME cpp20)
 project(${THIS_TARGET_NAME})
-
-#
-# C++ compiler settings
-#
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 #
 # precompiled header
@@ -26,9 +19,6 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
 # deps
 #
 list(APPEND DEPS ${Boost_LIBRARIES})
-list(APPEND DEPS tl::expected)
-list(APPEND DEPS nlohmann_json::nlohmann_json)
-list(APPEND DEPS cxxopts::cxxopts)
 
 #
 # collecting sources and headers
