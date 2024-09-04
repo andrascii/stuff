@@ -1,8 +1,9 @@
-#include <iostream>
+#include <arpa/inet.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 #include <unistd.h>
+
+#include <iostream>
 
 int main() {
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -13,10 +14,10 @@ int main() {
 
   sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
-  serverAddress.sin_port = htons(12345); // Укажите нужный порт сервера здесь
-  serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // Укажите IP-адрес сервера здесь
+  serverAddress.sin_port = htons(12345);                 // Укажите нужный порт сервера здесь
+  serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");// Укажите IP-адрес сервера здесь
 
-  if (connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
+  if (connect(clientSocket, (struct sockaddr*) &serverAddress, sizeof(serverAddress)) < 0) {
     std::cerr << "Failed to connect to server" << std::endl;
     return 1;
   }

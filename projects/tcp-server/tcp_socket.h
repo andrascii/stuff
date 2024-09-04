@@ -13,7 +13,7 @@
 //
 class TcpSocket {
  public:
-  TcpSocket(const std::shared_ptr<IEventProcessor>& event_processor);
+  TcpSocket(std::shared_ptr<IEventProcessor> event_processor);
 
   bool IsValid() const noexcept;
 
@@ -22,7 +22,7 @@ class TcpSocket {
   bool Bind(const std::string& host, unsigned short port) noexcept;
   bool Bind(const sockaddr_in& address) noexcept;
 
-  bool Listen(const std::function<void(const TcpSocket&)> on_accept) noexcept;
+  bool Listen() noexcept;
 
   void Close() noexcept;
   void Shutdown() noexcept;
@@ -30,6 +30,8 @@ class TcpSocket {
  private:
   void OnRead(int descriptor) noexcept;
   void OnWrite(int descriptor) noexcept;
+
+  void EnsureSocketCreated();
 
  private:
   int descriptor_;

@@ -37,8 +37,8 @@ std::string ReadRequiredStringOption(const nlohmann::json& json,
   return json[field_name];
 }
 
-bool ReadRequiredBoolOption(const nlohmann::json& json,
-                            const std::string& field_name) {
+[[maybe_unused]] bool ReadRequiredBoolOption(const nlohmann::json& json,
+                                             const std::string& field_name) {
   ThrowIfFieldDoesNotExists(json, field_name);
   ThrowIfInvalidType<bool>(json, field_name);
   return json[field_name];

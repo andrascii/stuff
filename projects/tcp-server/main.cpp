@@ -89,27 +89,7 @@ int main(int argc, char** argv) {
 
   TcpSocket socket{ep};
   socket.Bind("0.0.0.0", 12345);
-  socket.Listen({});
+  socket.Listen();
 
   std::this_thread::sleep_for(300s);
-
-  /*sockaddr_in server_addr{};
-  // sockaddr_in client_addr{};
-
-  int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-
-  if (socket_fd == -1) {
-    std::cerr << "socket creation failed...\n";
-    return EXIT_FAILURE;
-  }
-
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_addr.sin_port = htons(cmd_line_arguments.port);
-
-  if (bind(socket_fd, (sockaddr*) &server_addr, sizeof(server_addr)) != 0) {
-    std::cerr << "socket bind failed...\n";
-    close(socket_fd);
-    return EXIT_FAILURE;
-  }*/
 }

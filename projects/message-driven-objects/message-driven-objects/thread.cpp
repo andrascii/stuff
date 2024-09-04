@@ -52,8 +52,7 @@ Thread* Thread::Current() {
   current_thread_data = std::make_unique<ThreadData>();
   current_thread_data->SetId(std::this_thread::get_id());
   current_thread_data->SetIsAdopted(true);
-  current_thread_data->SetThread(
-    new AdoptedThread(current_thread_data));// how to delete it?
+  current_thread_data->SetThread(new AdoptedThread(current_thread_data)); // how to delete it?
 
   return current_thread_data->Thread();
 }
@@ -108,12 +107,13 @@ void Thread::SetName(const std::string& name) {
   if (data_->IsAdopted()) {
     SetCurrentThreadName(name_);
   } else if (IsRunning()) {
-    data_->Queue().Push(SetThreadNameMessage(name));
+    data_->Queue().Post(SetThreadNameMessage(name));
   }
 }
 
 void Thread::Start() {
   if (future_.valid()) {
+    LOG_WARNING("attempt to start already started thread");
     return;
   }
 
@@ -257,6 +257,9 @@ void Thread::HandleMessage(Message&& message) {
     // to be sure that we can safely call
     // message->Receiver()->OnMessage(message);
     //
+    // It ensures that receiver object is alive or already dead (doesn't exists) but not in destroy state!
+    // Each object in dtor removes itself from ObjectsRegistry.
+    //
     std::scoped_lock _{ObjectsRegistry::Instance()};
 
     if (!ObjectsRegistry::Instance().HasObject(receiver)) {
@@ -277,7 +280,7 @@ void Thread::HandleMessage(Message&& message) {
       this_thread->Name(),
       receiver_thread->Name());
 
-    GetThreadData(receiver_thread)->Queue().Push(std::move(message));
+    GetThreadData(receiver_thread)->Queue().Post(std::move(message));
   }
 }
 
@@ -360,7 +363,7 @@ Thread::Thread(std::function<void()> alternative_entry_point,
 }
 
 void Thread::Initialize(Thread& thread) {
-  thread.SetThread(&thread);
+  thread.SetThread(&thread); // points to itself (Thread is also Object that points to Thread in which it alives)
   thread.data_->SetThread(&thread);
 }
 

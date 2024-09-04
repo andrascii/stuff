@@ -10,6 +10,10 @@ class Runnable final {
       : to_run_{std::move(to_run)},
         stop_{} {}
 
+  ~Runnable() {
+    Stop();
+  }
+
   void Run() {
     if (future_.valid()) {
       std::cerr << "already started\n";

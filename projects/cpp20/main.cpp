@@ -2,12 +2,17 @@
 #include <type_traits>
 
 template <typename T>
-concept IsPointer = std::is_pointer_v<T>;
+concept IsPointer = requires(T p) {
+  *p;
+  { p < p } -> std::convertible_to<bool>;
+  p == nullptr;
+};
 
 template <typename T>
 T MaxValue(const T& a, const T& b) { return a > b ? a : b; }
 
-template <typename T> requires IsPointer<T>
+template <typename T>
+  requires IsPointer<T>
 auto MaxValue(const T& a, const T& b) {
   return MaxValue(*a, *b);
 }

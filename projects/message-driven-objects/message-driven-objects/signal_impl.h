@@ -43,7 +43,7 @@ class Signal final {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
         Dispatcher::Dispatch(InvokeSlotMessage{
-          [=, this]() mutable {
+          [=]() mutable {
             std::invoke(slot, object, std::forward<Args>(args)...);
           },
           owner_,
@@ -95,7 +95,7 @@ class Signal<void> {
         std::invoke(slot, object);
       } else {
         Dispatcher::Dispatch(InvokeSlotMessage{
-          [=, this] { std::invoke(slot, object); },
+          [=] { std::invoke(slot, object); },
           owner_,
           object});
       }

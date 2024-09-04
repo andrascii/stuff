@@ -22,8 +22,8 @@ Object::Object(mdo::Thread* thread) : thread_{thread} {
 Object::~Object() {
   std::scoped_lock _{mutex_};
 
-  for (auto it{timers_.begin()}; it != timers_.end(); ++it) {
-    TimerService::Instance()->RemoveTimer(*it);
+  for (const auto& id : timers_) {
+    TimerService::Instance()->RemoveTimer(id);
   }
 
   timers_.clear();
@@ -32,8 +32,7 @@ Object::~Object() {
 }
 
 int Object::StartTimer(const std::chrono::milliseconds& ms) noexcept {
-  const auto id =
-    TimerService::Instance()->AddTimer(const_cast<Object*>(this), ms);
+  const auto id = TimerService::Instance()->AddTimer(this, ms);
 
   {
     std::scoped_lock _{mutex_};

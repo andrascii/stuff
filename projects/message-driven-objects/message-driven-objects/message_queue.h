@@ -8,7 +8,7 @@ class MessageQueue {
  public:
   MessageQueue();
 
-  void Push(Message&& message);
+  void Post(Message&& message);
 
   //!
   //! Extracts a message from queue and assigns 'message' argument to

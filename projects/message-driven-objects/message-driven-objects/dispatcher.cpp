@@ -15,6 +15,9 @@ Dispatcher& Dispatcher::Instance() {
 }
 
 Dispatcher::~Dispatcher() {
+  std::cout << "current_thread_data ptr: " << current_thread_data.get() << std::endl;
+  std::cout << "current_thread_data->Thread() ptr: " << current_thread_data->Thread() << std::endl;
+
   LOG_INFO("dispatcher destroyed in thread '{}'",
            current_thread_data->Thread()->Name());
 }
@@ -49,7 +52,7 @@ void Dispatcher::Dispatch(Message&& message) {
 
   const auto data = GetThreadData(receiver_thread);
 
-  data->Queue().Push(std::move(message));
+  data->Queue().Post(std::move(message));
 }
 
 }// namespace mdo

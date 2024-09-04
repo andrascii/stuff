@@ -4,7 +4,7 @@ namespace mdo {
 
 MessageQueue::MessageQueue() : interrupt_{} {}
 
-void MessageQueue::Push(Message&& message) {
+void MessageQueue::Post(Message&& message) {
   std::unique_lock _{mutex_};
   messages_.push_back(std::move(message));
   condition_.notify_all();

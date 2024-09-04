@@ -45,6 +45,21 @@ void print(Head&& head, T&&... args) {
   print(std::forward<T&&>(args)...);
 }
 
+int mystrcmp(const char* lhs, const char* rhs) {
+  while (*lhs && (*lhs == *rhs)) {
+    ++lhs;
+    ++rhs;
+  }
+
+  const int r = *lhs - *rhs;
+
+  if (!r) {
+    return r;
+  }
+
+  return r > 0 ? 1 : -1;
+}
+
 int main() {
   foo<0, 2, 3, 4, 5>();
   // print_sequence(IndexSequence<int, 3>{});

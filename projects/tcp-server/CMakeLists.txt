@@ -29,6 +29,7 @@ list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS tl::expected)
 list(APPEND DEPS nlohmann_json::nlohmann_json)
 list(APPEND DEPS cxxopts::cxxopts)
+list(APPEND DEPS fmt::fmt)
 
 #
 # collecting sources and headers

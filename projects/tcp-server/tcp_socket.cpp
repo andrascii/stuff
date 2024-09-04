@@ -2,23 +2,23 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <fmt/format.h>
 #include <sys/event.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <cstring>
+#include <utility>
 
-TcpSocket::TcpSocket(const std::shared_ptr<IEventProcessor>& event_processor)
+TcpSocket::TcpSocket(std::shared_ptr<IEventProcessor> event_processor)
     : descriptor_{-1},
-      event_processor_{event_processor} {
-  descriptor_ = socket(AF_INET, SOCK_STREAM, 0);
+      event_processor_{std::move(event_processor)} {
+  EnsureSocketCreated();
 
   if (descriptor_ == -1) {
-    throw std::runtime_error{"socket creation failed..."};
+    throw std::runtime_error{
+      fmt::format("socket creation failed: {}", strerror(errno))};
   }
-
-  int flags = fcntl(descriptor_, F_GETFL, 0);
-  fcntl(descriptor_, F_SETFL, flags | O_NONBLOCK);
 
   event_processor_->RegisterEvent(
     descriptor_,
@@ -26,8 +26,6 @@ TcpSocket::TcpSocket(const std::shared_ptr<IEventProcessor>& event_processor)
     [this](int id) { OnRead(id); },
     [this](int id) { OnWrite(id); });
 }
-
-bool TcpSocket::IsValid() const noexcept { return descriptor_ != -1; }
 
 int TcpSocket::NativeHandle() const noexcept { return descriptor_; }
 
@@ -40,31 +38,23 @@ bool TcpSocket::Bind(const std::string& host, unsigned short port) noexcept {
 }
 
 bool TcpSocket::Bind(const sockaddr_in& address) noexcept {
-  if (!IsValid()) {
-    std::cerr << "socket is in invalid state, recreate TcpSocket object\n";
-    return false;
-  }
-
-  int result = bind(descriptor_, (sockaddr*) &address, sizeof(address));
+  const auto result = bind(descriptor_, (sockaddr*) &address, sizeof(address));
 
   if (result != 0) {
-    std::cerr << "socket bind failed...\n";
+    std::cerr << "socket bind failed: " << strerror(errno) << std::endl;
     Close();
+    return false;
   }
 
   return true;
 }
 
-bool TcpSocket::Listen(const std::function<void(const TcpSocket&)> on_accept) noexcept {
-  if (!IsValid()) {
-    std::cerr << "socket is in invalid state, recreate TcpSocket object\n";
-    return false;
-  }
-
-  auto result = listen(descriptor_, SOMAXCONN);
+bool TcpSocket::Listen() noexcept {
+  const auto result = listen(descriptor_, SOMAXCONN);
 
   if (result) {
     std::cerr << errno << ": " << strerror(errno) << std::endl;
+    return false;
   }
 
   return true;
@@ -72,26 +62,46 @@ bool TcpSocket::Listen(const std::function<void(const TcpSocket&)> on_accept) no
 
 void TcpSocket::Close() noexcept {
   close(descriptor_);
-  descriptor_ = -1;
+  EnsureSocketCreated();
 }
 
 void TcpSocket::Shutdown() noexcept { shutdown(descriptor_, SHUT_RDWR); }
 
 void TcpSocket::OnRead(int descriptor) noexcept {
-  (void)descriptor;
-  std::cout << "on read called\n";
+  int client_socket = -1;
+  sockaddr client_address{};
+  socklen_t size{};
+
+  if (descriptor == descriptor_) {
+    client_socket = accept(descriptor_, &client_address, &size);
+
+    if (client_socket < 0) {
+      std::cerr << fmt::format("error accepting connection: {}", strerror(errno));
+      return;
+    }
+  }
 
   char buf[4096];
   int n = 0;
 
-  while ((n = read(fd, buf, sizeof buf)) > 0) {
-    printf("read %d bytes\n", n);
-    int r = write(fd, buf, n);
-    exit_if(r <= 0, "write error");
+  while ((n = read(client_socket, buf, sizeof buf)) > 0) {
+    std::cout << "read " << n << " bytes: " << buf << std::endl;
+    write(client_socket, buf, n);
   }
 }
 
 void TcpSocket::OnWrite(int descriptor) noexcept {
-  (void)descriptor;
+  (void) descriptor;
   std::cout << "on write called\n";
+}
+
+void TcpSocket::EnsureSocketCreated() {
+  if (descriptor_ != -1) {
+    return;
+  }
+
+  descriptor_ = socket(AF_INET, SOCK_STREAM, 0);
+
+  int flags = fcntl(descriptor_, F_GETFL, 0);
+  fcntl(descriptor_, F_SETFL, flags | O_NONBLOCK);
 }

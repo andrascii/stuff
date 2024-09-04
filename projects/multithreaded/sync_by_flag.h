@@ -56,8 +56,7 @@ class Sync {
   std::deque<std::string> GetData() {
     // awaiting while flag_ is false (it means that writer writes something)
     while (!quit_.load(std::memory_order_relaxed) &&
-           !flag_.test(std::memory_order_acquire))
-      ;
+           !flag_.test(std::memory_order_acquire));
 
     if (quit_.load(std::memory_order_relaxed)) {
       return {};

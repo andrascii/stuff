@@ -2,6 +2,7 @@
 
 #include <sys/event.h>
 #include <unistd.h>
+
 #include <utility>
 
 FreeBsdEventProcessor::FreeBsdEventProcessor() : event_count_{} {
@@ -56,9 +57,7 @@ void FreeBsdEventProcessor::ProcessEvents() {
 
     if (event.filter == EVFILT_READ) {
       optional_callback = ReadCallbackFor(event.ident);
-    }
-
-    if (event.filter == EVFILT_WRITE) {
+    } else if (event.filter == EVFILT_WRITE) {
       optional_callback = WriteCallbackFor(event.ident);
     }
 
