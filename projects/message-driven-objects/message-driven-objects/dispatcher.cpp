@@ -15,11 +15,9 @@ Dispatcher& Dispatcher::Instance() {
 }
 
 Dispatcher::~Dispatcher() {
-  std::cout << "current_thread_data ptr: " << current_thread_data.get() << std::endl;
-  std::cout << "current_thread_data->Thread() ptr: " << current_thread_data->Thread() << std::endl;
-
-  LOG_INFO("dispatcher destroyed in thread '{}'",
-           current_thread_data->Thread()->Name());
+  if (GetThreadData(Thread::Current())->Thread() != Thread()) {
+    std::abort();
+  }
 }
 
 std::error_code Dispatcher::Exec() {
