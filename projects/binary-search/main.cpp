@@ -5,10 +5,7 @@
 
 template <typename C>
 void print(const C& container) {
-  std::copy(
-    container.begin(),
-    container.end(),
-    std::ostream_iterator<typename C::value_type>{std::cout, " "});
+  std::copy(container.begin(), container.end(), std::ostream_iterator<typename C::value_type>{std::cout, " "});
 
   std::cout << std::endl;
 }
@@ -21,7 +18,8 @@ auto Search(T first, T last, const V& value) noexcept -> T {
   while (std::distance(range_begin, range_end) > 0) {
     const auto range_distance = std::distance(range_begin, range_end);
     const auto range_middle = range_distance / 2;
-    const auto middle_it = std::next(range_begin, range_middle ? range_middle : 1);
+    const auto middle_it =
+      std::next(range_begin, range_middle ? range_middle : 1);
 
     if (*middle_it == value) {
       return middle_it;

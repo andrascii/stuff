@@ -37,11 +37,16 @@ enum class DataSetType {
 
 auto CreateDataSet(DataSetType type) -> DataSet {
   switch (type) {
-    case DataSetType::TypeDataSet1: return DataSet1{};
-    case DataSetType::TypeDataSet2: return DataSet2{};
-    case DataSetType::TypeDataSet3: return DataSet3{};
-    case DataSetType::TypeDataSet4: return DataSet4{};
-    case DataSetType::TypeDataSet5: return DataSet5{};
+    case DataSetType::TypeDataSet1:
+      return DataSet1{};
+    case DataSetType::TypeDataSet2:
+      return DataSet2{};
+    case DataSetType::TypeDataSet3:
+      return DataSet3{};
+    case DataSetType::TypeDataSet4:
+      return DataSet4{};
+    case DataSetType::TypeDataSet5:
+      return DataSet5{};
   }
 
   throw std::runtime_error("Unknown data set");
@@ -70,22 +75,38 @@ int main(int argc, char* argv[]) {
   (void) argv;
 
   DataSet data_set = CreateDataSet(DataSetType::TypeDataSet4);
-  //assert(TypeAtIndex<data_set.index(), >);
+  // assert(TypeAtIndex<data_set.index(), >);
 
-  std::visit([](auto&& data) {
-    if constexpr (std::is_same_v<DataSet1, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
-      std::cout << "Data set value: " << data.value << std::endl;
-    } else if constexpr (std::is_same_v<DataSet2, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
-      std::cout << "Data set value: " << data.value << std::endl;
-    } else if constexpr (std::is_same_v<DataSet3, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
-      std::cout << "Data set value: " << data.value << std::endl;
-    } else if constexpr (std::is_same_v<DataSet4, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
-      std::cout << "Data set value: " << data.value << std::endl;
-    } else if constexpr (std::is_same_v<DataSet5, std::remove_reference_t<std::remove_cv_t<decltype(data)>>>) {
-      std::cout << "Data set value: " << data.value << std::endl;
-    }
-  },
-             data_set);
+  std::visit(
+    [](auto&& data) {
+      if constexpr (std::is_same_v<
+                      DataSet1,
+                      std::remove_reference_t<
+                        std::remove_cv_t<decltype(data)>>>) {
+        std::cout << "Data set value: " << data.value << std::endl;
+      } else if constexpr (std::is_same_v<
+                             DataSet2,
+                             std::remove_reference_t<
+                               std::remove_cv_t<decltype(data)>>>) {
+        std::cout << "Data set value: " << data.value << std::endl;
+      } else if constexpr (std::is_same_v<
+                             DataSet3,
+                             std::remove_reference_t<
+                               std::remove_cv_t<decltype(data)>>>) {
+        std::cout << "Data set value: " << data.value << std::endl;
+      } else if constexpr (std::is_same_v<
+                             DataSet4,
+                             std::remove_reference_t<
+                               std::remove_cv_t<decltype(data)>>>) {
+        std::cout << "Data set value: " << data.value << std::endl;
+      } else if constexpr (std::is_same_v<
+                             DataSet5,
+                             std::remove_reference_t<
+                               std::remove_cv_t<decltype(data)>>>) {
+        std::cout << "Data set value: " << data.value << std::endl;
+      }
+    },
+    data_set);
 
   std::cout << "Handle variant value by CallbacksPackage:" << std::endl;
 
@@ -107,9 +128,15 @@ int main(int argc, char* argv[]) {
   get<2>(tuple) = 11.003f;
 
   // checking TypeAtIndex metafunction vagueness implementation
-  static_assert(std::is_same<TypeAtSpecifiedIndex<0, int, double, float>, int>::value, "Invalid type");
-  static_assert(std::is_same<TypeAtSpecifiedIndex<1, int, double, float>, double>::value, "Invalid type");
-  static_assert(std::is_same<TypeAtSpecifiedIndex<2, int, double, float>, float>::value, "Invalid type");
+  static_assert(
+    std::is_same<TypeAtSpecifiedIndex<0, int, double, float>, int>::value,
+    "Invalid type");
+  static_assert(std::is_same<TypeAtSpecifiedIndex<1, int, double, float>,
+                             double>::value,
+                "Invalid type");
+  static_assert(
+    std::is_same<TypeAtSpecifiedIndex<2, int, double, float>, float>::value,
+    "Invalid type");
 
   std::cout << get<0>(tuple) << std::endl;
   std::cout << get<1>(tuple) << std::endl;

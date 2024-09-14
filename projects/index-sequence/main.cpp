@@ -27,9 +27,7 @@ struct IndexSequence<T, Head> {
 */
 
 template <int... S>
-void foo() {
-  std::cout << sizeof...(S) << std::endl;
-}
+void foo() { std::cout << sizeof...(S) << std::endl; }
 /*
 template<typename T, T... ints>
 void print_sequence(IndexSequence<T, ints...> int_seq) {
@@ -39,9 +37,7 @@ void print_sequence(IndexSequence<T, ints...> int_seq) {
 }*/
 
 template <typename Head>
-void print(Head&& head) {
-  std::cout << head << ' ';
-}
+void print(Head&& head) { std::cout << head << ' '; }
 
 template <typename Head, typename... T>
 void print(Head&& head, T&&... args) {
@@ -49,9 +45,24 @@ void print(Head&& head, T&&... args) {
   print(std::forward<T&&>(args)...);
 }
 
+int mystrcmp(const char* lhs, const char* rhs) {
+  while (*lhs && (*lhs == *rhs)) {
+    ++lhs;
+    ++rhs;
+  }
+
+  const int r = *lhs - *rhs;
+
+  if (!r) {
+    return r;
+  }
+
+  return r > 0 ? 1 : -1;
+}
+
 int main() {
   foo<0, 2, 3, 4, 5>();
-  //print_sequence(IndexSequence<int, 3>{});
+  // print_sequence(IndexSequence<int, 3>{});
 
   print(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 }

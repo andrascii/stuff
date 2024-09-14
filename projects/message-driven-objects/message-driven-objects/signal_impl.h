@@ -29,36 +29,34 @@ class Signal final {
 
   template <typename ObjectType>
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
-    static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
+    static_assert(std::is_base_of_v<Object, ObjectType>,
+                  "ObjectType must be derived from class Object");
 
-    Slot wrapper = [=](Args&&... args) {
+    Slot wrapper = [=, this](Args&&... args) {
       if (!Utils::IsThreadRunning(object->Thread())) {
-        LOG_WARNING("signal receiver object's thread has not yet been started so this emit would be skipped by the object");
+        LOG_WARNING(
+          "signal receiver object's thread has not yet been started "
+          "so this emit would be skipped by the object");
       }
 
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object, std::forward<Args>(args)...);
       } else {
-        Dispatcher::Dispatch(
-          InvokeSlotMessage{
-            [=]() mutable {
-              std::invoke(slot, object, std::forward<Args>(args)...);
-            },
-            owner_,
-            object});
+        Dispatcher::Dispatch(InvokeSlotMessage{
+          [=]() mutable {
+            std::invoke(slot, object, std::forward<Args>(args)...);
+          },
+          owner_,
+          object});
       }
     };
 
     slots_.push_back(wrapper);
   }
 
-  void Connect(FunctionSlot slot) {
-    slots_.emplace_back(slot);
-  }
+  void Connect(FunctionSlot slot) { slots_.emplace_back(slot); }
 
-  void DisconnectAll() noexcept {
-    slots_.clear();
-  }
+  void DisconnectAll() noexcept { slots_.clear(); }
 
  private:
   Object* owner_;
@@ -83,36 +81,32 @@ class Signal<void> {
 
   template <typename ObjectType>
   void Connect(ObjectType* object, MethodSlot<ObjectType> slot) {
-    static_assert(std::is_base_of_v<Object, ObjectType>, "ObjectType must be derived from class Object");
+    static_assert(std::is_base_of_v<Object, ObjectType>,
+                  "ObjectType must be derived from class Object");
 
-    Slot wrapper = [=]() {
+    Slot wrapper = [=, this]() {
       if (!Utils::IsThreadRunning(object->Thread())) {
-        LOG_WARNING("signal receiver object's thread has not yet been started so this emit would be skipped by the object");
+        LOG_WARNING(
+          "signal receiver object's thread has not yet been started "
+          "so this emit would be skipped by the object");
       }
 
       if (Utils::CurrentThread() == object->Thread()) {
         std::invoke(slot, object);
       } else {
-        Dispatcher::Dispatch(
-          InvokeSlotMessage{
-            [=] {
-              std::invoke(slot, object);
-            },
-            owner_,
-            object});
+        Dispatcher::Dispatch(InvokeSlotMessage{
+          [=] { std::invoke(slot, object); },
+          owner_,
+          object});
       }
     };
 
     slots_.push_back(wrapper);
   }
 
-  void Connect(Slot slot) {
-    slots_.emplace_back(slot);
-  }
+  void Connect(Slot slot) { slots_.emplace_back(slot); }
 
-  void DisconnectAll() noexcept {
-    slots_.clear();
-  }
+  void DisconnectAll() noexcept { slots_.clear(); }
 
  private:
   Object* owner_;

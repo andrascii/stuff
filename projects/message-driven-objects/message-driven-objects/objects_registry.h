@@ -13,7 +13,8 @@ class ObjectsRegistry {
       NewOpEnabler() : ObjectsRegistry() {}
     };
 
-    static std::unique_ptr<ObjectsRegistry> instance = std::make_unique<NewOpEnabler>();
+    static std::unique_ptr<ObjectsRegistry> instance =
+      std::make_unique<NewOpEnabler>();
 
     return *instance;
   }
@@ -23,7 +24,8 @@ class ObjectsRegistry {
 
   virtual ~ObjectsRegistry() {
     if (!objects_.empty()) {
-      //Logger()->error("ObjectsRegistry destroys but some Objects is still alive");
+      // Logger()->error("ObjectsRegistry destroys but some Objects is
+      // still alive");
     }
   }
 
@@ -47,13 +49,9 @@ class ObjectsRegistry {
     return objects_.contains(object);
   }
 
-  void lock() const noexcept {
-    mutex_.lock();
-  }
+  void lock() const noexcept { mutex_.lock(); }
 
-  void unlock() const noexcept {
-    mutex_.unlock();
-  }
+  void unlock() const noexcept { mutex_.unlock(); }
 
  private:
   ObjectsRegistry() = default;

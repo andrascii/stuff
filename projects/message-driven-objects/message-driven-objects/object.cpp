@@ -9,11 +9,9 @@
 
 namespace mdo {
 
-Object::Object()
-    : Object{Thread::Current()} {}
+Object::Object() : Object{Thread::Current()} {}
 
-Object::Object(mdo::Thread* thread)
-    : thread_{thread} {
+Object::Object(mdo::Thread* thread) : thread_{thread} {
   if (!Thread()) {
     thread_ = Thread::Current();
   }
@@ -24,8 +22,8 @@ Object::Object(mdo::Thread* thread)
 Object::~Object() {
   std::scoped_lock _{mutex_};
 
-  for (auto it{timers_.begin()}; it != timers_.end(); ++it) {
-    TimerService::Instance()->RemoveTimer(*it);
+  for (const auto& id : timers_) {
+    TimerService::Instance()->RemoveTimer(id);
   }
 
   timers_.clear();
@@ -34,7 +32,7 @@ Object::~Object() {
 }
 
 int Object::StartTimer(const std::chrono::milliseconds& ms) noexcept {
-  const auto id = TimerService::Instance()->AddTimer(const_cast<Object*>(this), ms);
+  const auto id = TimerService::Instance()->AddTimer(this, ms);
 
   {
     std::scoped_lock _{mutex_};
@@ -61,24 +59,12 @@ void Object::ResetTimer(int id) const noexcept {
 void Object::OnMessage(Message& message) {
   std::visit(
     Overloaded{
-      [this](InvokeSlotMessage& msg) {
-        OnInvokeSlotMessage(msg);
-      },
-      [this](TestMessage& msg) {
-        OnTestMessage(msg);
-      },
-      [this](BenchmarkMessage& msg) {
-        OnBenchmarkMessage(msg);
-      },
-      [this](TimerMessage& msg) {
-        OnTimerMessage(msg);
-      },
-      [](SetThreadNameMessage&) {
-        abort();
-      },
-      [](std::monostate&) {
-        abort();
-      }},
+      [this](InvokeSlotMessage& msg) { OnInvokeSlotMessage(msg); },
+      [this](TestMessage& msg) { OnTestMessage(msg); },
+      [this](BenchmarkMessage& msg) { OnBenchmarkMessage(msg); },
+      [this](TimerMessage& msg) { OnTimerMessage(msg); },
+      [](SetThreadNameMessage&) { abort(); },
+      [](std::monostate&) { abort(); }},
     message);
 }
 

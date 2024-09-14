@@ -9,7 +9,9 @@ Producer::Producer(const Config& config)
 std::error_code Producer::Write(const std::string& message) noexcept {
   try {
     std::cout << fmt::format("writing '{}' to '{}', topic '{}'", message, config_.KafkaBrokerList(), config_.KafkaTopic());
-    producer_.produce(cppkafka::MessageBuilder(config_.KafkaTopic()).partition(0).payload(message));
+    producer_.produce(cppkafka::MessageBuilder(config_.KafkaTopic())
+                        .partition(0)
+                        .payload(message));
     producer_.flush();
     return std::error_code{};
   } catch (const std::exception& ex) {
@@ -18,7 +20,8 @@ std::error_code Producer::Write(const std::string& message) noexcept {
   }
 }
 
-cppkafka::Configuration Producer::CreateConfiguration(const Config& config) noexcept {
+cppkafka::Configuration
+Producer::CreateConfiguration(const Config& config) noexcept {
   return cppkafka::Configuration{
     {"metadata.broker.list", config.KafkaBrokerList()}};
 }

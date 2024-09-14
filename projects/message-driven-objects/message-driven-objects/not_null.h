@@ -12,7 +12,10 @@ struct IsComparableToNullptr : std::false_type {};
 template <typename T>
 struct IsComparableToNullptr<
   T,
-  std::enable_if_t<std::is_convertible<decltype(std::declval<T>() != nullptr), bool>::value>> : std::true_type {};
+  std::enable_if_t<std::is_convertible<
+    decltype(std::declval<T>() != nullptr),
+    bool>::value>>
+    : std::true_type {};
 
 #if defined(NN_THROW_ON_CONTRACT)
 inline void Expects(bool condition) {
@@ -37,32 +40,29 @@ inline void Expects(bool condition) {
 template <typename T>
 class NotNull {
  public:
-  using ReturnType = std::conditional_t<
-    std::is_copy_constructible<T>::value,
-    T,
-    const T&>;
+  using ReturnType =
+    std::conditional_t<std::is_copy_constructible<T>::value, T, const T&>;
 
-  static_assert(
-    details::IsComparableToNullptr<T>::value,
-    "T cannot be compared to nullptr.");
+  static_assert(details::IsComparableToNullptr<T>::value,
+                "T cannot be compared to nullptr.");
 
   NotNull(std::nullptr_t) = delete;
 
-  constexpr NotNull(T t)
-      : pointer_{std::move(t)} {
+  constexpr NotNull(T t) : pointer_{std::move(t)} {
     details::Expects(pointer_ != nullptr);
   }
 
   template <typename U>
-  constexpr NotNull(U&& u)
-      : pointer_{std::forward<U>(u)} {
-    static_assert(std::is_convertible<U, T>::value, "U must be convertible to T");
+  constexpr NotNull(U&& u) : pointer_{std::forward<U>(u)} {
+    static_assert(std::is_convertible<U, T>::value,
+                  "U must be convertible to T");
     details::Expects(pointer_ != nullptr);
   }
 
   template <typename U>
   constexpr NotNull(const NotNull<U>& other) : NotNull(other.Get()) {
-    static_assert(std::is_convertible<U, T>::value, "U must be convertible to T");
+    static_assert(std::is_convertible<U, T>::value,
+                  "U must be convertible to T");
   }
 
   [[nodiscard]] constexpr ReturnType Get() const {
@@ -70,17 +70,11 @@ class NotNull {
     return pointer_;
   }
 
-  constexpr operator T() const {
-    return Get();
-  }
+  constexpr operator T() const { return Get(); }
 
-  constexpr decltype(auto) operator->() const {
-    return Get();
-  }
+  constexpr decltype(auto) operator->() const { return Get(); }
 
-  constexpr decltype(auto) operator*() const {
-    return *Get();
-  }
+  constexpr decltype(auto) operator*() const { return *Get(); }
 
   NotNull& operator=(std::nullptr_t) = delete;
 
@@ -106,44 +100,40 @@ auto MakeNotNull(T&& t) noexcept {
 }
 
 template <class T, class U>
-auto operator==(
-  const NotNull<T>& lhs,
-  const NotNull<U>& rhs) noexcept(noexcept(lhs.get() == rhs.get())) -> decltype(lhs.get() == rhs.get()) {
+auto operator==(const NotNull<T>& lhs, const NotNull<U>& rhs) noexcept(
+  noexcept(lhs.get() == rhs.get())) -> decltype(lhs.get() == rhs.get()) {
   return lhs.get() == rhs.get();
 }
 
 template <class T, class U>
-auto operator!=(
-  const NotNull<T>& lhs,
-  const NotNull<U>& rhs) noexcept(noexcept(lhs.get() != rhs.get())) -> decltype(lhs.get() != rhs.get()) {
+auto operator!=(const NotNull<T>& lhs, const NotNull<U>& rhs) noexcept(
+  noexcept(lhs.get() != rhs.get())) -> decltype(lhs.get() != rhs.get()) {
   return lhs.get() != rhs.get();
 }
 
 template <class T, class U>
-auto operator<(
-  const NotNull<T>& lhs,
-  const NotNull<U>& rhs) noexcept(noexcept(lhs.get() < rhs.get())) -> decltype(lhs.get() < rhs.get()) {
+auto operator<(const NotNull<T>& lhs,
+               const NotNull<U>& rhs) noexcept(noexcept(lhs.get() < rhs.get()))
+  -> decltype(lhs.get() < rhs.get()) {
   return lhs.get() < rhs.get();
 }
 
 template <class T, class U>
-auto operator<=(
-  const NotNull<T>& lhs,
-  const NotNull<U>& rhs) noexcept(noexcept(lhs.get() <= rhs.get())) -> decltype(lhs.get() <= rhs.get()) {
+auto operator<=(const NotNull<T>& lhs, const NotNull<U>& rhs) noexcept(
+  noexcept(lhs.get() <= rhs.get())) -> decltype(lhs.get() <= rhs.get()) {
   return lhs.get() <= rhs.get();
 }
 
 template <class T, class U>
-auto operator>(
-  const NotNull<T>& lhs,
-  const NotNull<U>& rhs) noexcept(noexcept(lhs.get() > rhs.get())) -> decltype(lhs.get() > rhs.get()) {
+auto operator>(const NotNull<T>& lhs,
+               const NotNull<U>& rhs) noexcept(noexcept(lhs.get() > rhs.get()))
+  -> decltype(lhs.get() > rhs.get()) {
   return lhs.get() > rhs.get();
 }
 
 template <class T, class U>
-auto operator>=(
-  const NotNull<T>& lhs,
-  const NotNull<U>& rhs) noexcept(noexcept(lhs.get() >= rhs.get())) -> decltype(lhs.get() >= rhs.get()) {
+auto operator>=(const NotNull<T>& lhs, const NotNull<U>& rhs) noexcept(
+  noexcept(lhs.get() >= rhs.get())) -> decltype(lhs.get() >= rhs.get()) {
   return lhs.get() >= rhs.get();
 }
 

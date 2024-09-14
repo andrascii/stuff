@@ -46,10 +46,9 @@ class Sync {
         if (data_.empty()) {
           swap(data, data_);
         } else {
-          std::copy(
-            std::make_move_iterator(data.begin()),
-            std::make_move_iterator(data.end()),
-            std::back_inserter(data_));
+          std::copy(std::make_move_iterator(data.begin()),
+                    std::make_move_iterator(data.end()),
+                    std::back_inserter(data_));
 
           data.clear();
         }
@@ -69,10 +68,9 @@ class Sync {
       if (data_.empty()) {
         swap(data, data_);
       } else {
-        std::copy(
-          std::make_move_iterator(data.begin()),
-          std::make_move_iterator(data.end()),
-          std::back_inserter(data_));
+        std::copy(std::make_move_iterator(data.begin()),
+                  std::make_move_iterator(data.end()),
+                  std::back_inserter(data_));
 
         data.clear();
       }
@@ -87,15 +85,11 @@ class Sync {
     condition_.notify_one();
   }
 
-  bool IsQuit() const {
-    return quit_;
-  }
+  bool IsQuit() const { return quit_; }
 
   std::deque<std::string> GetData() {
     std::unique_lock _{mutex_};
-    condition_.wait(_, [this] {
-      return quit_ || !data_.empty();
-    });
+    condition_.wait(_, [this] { return quit_ || !data_.empty(); });
 
     std::deque<std::string> data;
     swap(data, data_);
@@ -128,7 +122,8 @@ inline void Writer1(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -155,7 +150,8 @@ inline void Writer2(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -166,7 +162,9 @@ inline void Writer2(Sync& s) {
 }
 
 inline void Writer3(Sync& s) {
-  printf("started Writer3, accumulating elements while try_lock returns false, pushing accumulated data when try_lock returned true\n");
+  printf(
+    "started Writer3, accumulating elements while try_lock returns "
+    "false, pushing accumulated data when try_lock returned true\n");
 
   const auto start = high_resolution_clock::now();
   auto prev = start;
@@ -188,7 +186,8 @@ inline void Writer3(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -199,7 +198,10 @@ inline void Writer3(Sync& s) {
 }
 
 inline void Writer4(Sync& s) {
-  printf("started Writer4, accumulating batch of elements of size 100 while try_lock returns false, pushing accumulated data when try_lock returned true\n");
+  printf(
+    "started Writer4, accumulating batch of elements of size 100 while "
+    "try_lock returns false, pushing accumulated data when try_lock "
+    "returned true\n");
 
   const auto start = high_resolution_clock::now();
   auto prev = start;
@@ -224,7 +226,8 @@ inline void Writer4(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -235,7 +238,9 @@ inline void Writer4(Sync& s) {
 }
 
 inline void Writer5(Sync& s) {
-  printf("started Writer5, pushing data by batch of size 100 and waiting on mutex\n");
+  printf(
+    "started Writer5, pushing data by batch of size 100 and waiting on "
+    "mutex\n");
 
   const auto start = high_resolution_clock::now();
   auto prev = start;
@@ -260,7 +265,8 @@ inline void Writer5(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -289,7 +295,8 @@ inline void Reader(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("received per ms: %lld\n", (received / duration_cast<milliseconds>(delta).count()));
+      printf("received per ms: %lld\n",
+             (received / duration_cast<milliseconds>(delta).count()));
     }
   }
 }

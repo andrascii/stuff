@@ -39,8 +39,10 @@ void Foo() {
   const auto end = high_resolution_clock::now();
 
   const auto delta = end - start;
-  std::cout << "1000 write operations took " << delta.count() << " nanoseconds\n";
-  std::cout << "1 write operation took " << delta.count() / 1000 << " nanoseconds\n";
+  std::cout << "1000 write operations took " << delta.count()
+            << " nanoseconds\n";
+  std::cout << "1 write operation took " << delta.count() / 1000
+            << " nanoseconds\n";
 
   close(fd);
 }
@@ -83,8 +85,8 @@ void Reader() {
 
     std::cout << "flag was set, queue contains elements: ";
 
-    const auto is_null = std::find_if_not(queue.begin(), queue.end(), [](size_t v) {
-      return v == 0;
+    const auto is_null = std::find_if_not(queue.begin(), queue.end(), [](size_t
+v) { return v == 0;
     }) == queue.end();
 
     const auto is_grow = queue[0] == 1 && queue[1] == 2 && queue[2] == 3;
@@ -113,176 +115,176 @@ void Reader() {
 
 void ByFlag() {
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_flag::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer1(s);
-    });
+    auto writer = std::thread([&s] { Writer1(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_flag::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer2(s);
-    });
+    auto writer = std::thread([&s] { Writer2(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_flag::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer3(s);
-    });
+    auto writer = std::thread([&s] { Writer3(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_flag::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer4(s);
-    });
+    auto writer = std::thread([&s] { Writer4(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 }
 
 void ByMutex() {
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_mutex::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer1(s);
-    });
+    auto writer = std::thread([&s] { Writer1(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_mutex::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer2(s);
-    });
+    auto writer = std::thread([&s] { Writer2(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_mutex::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer3(s);
-    });
+    auto writer = std::thread([&s] { Writer3(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_mutex::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer4(s);
-    });
+    auto writer = std::thread([&s] { Writer4(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 
   {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
 
     by_mutex::Sync s;
 
-    auto writer = std::thread([&s] {
-      Writer5(s);
-    });
+    auto writer = std::thread([&s] { Writer5(s); });
 
-    auto reader = std::thread([&s] {
-      Reader(s);
-    });
+    auto reader = std::thread([&s] { Reader(s); });
 
     writer.join();
     reader.join();
 
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf(
+      "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      "~~~~~~~~~~~~\n");
   }
 }
 

@@ -48,14 +48,16 @@ Expected<T> StringToInteger(const char* begin, const char* end) {
   const auto is_valid_non_negative = std::is_unsigned_v<T> && is_negative;
 
   if (is_valid_non_negative) {
-    return Unexpected<>{MakeErrorCode(Error::kConvertingNegativeStringNumberToUnsignedNumber)};
+    return Unexpected<>{MakeErrorCode(
+      Error::kConvertingNegativeStringNumberToUnsignedNumber)};
   }
 
   for (; begin < end; ++begin) {
     const auto is_digit = *begin >= '0' && *begin <= '9';
 
     if (!is_digit) {
-      return Unexpected<>{MakeErrorCode(Error::kStringValueIsNotNumberParsingError)};
+      return Unexpected<>{
+        MakeErrorCode(Error::kStringValueIsNotNumberParsingError)};
     }
 
     value = value * 10 + (*begin - '0');
@@ -76,13 +78,9 @@ Parses ascii and returns a LocalMktDate or UTCDate.
 \param[out] day Day.
 \return True if successful and the out arguments were set.
  */
-inline bool atodate(
-  char const* begin,
-  char const* end,
-  int& year,
-  int& month,
-  int& day) {
-  if (end - begin != 8) return false;
+inline bool atodate(char const* begin, char const* end, int& year, int& month, int& day) {
+  if (end - begin != 8)
+    return false;
 
   year = atoi<int>(begin, begin + 4);
   month = atoi<int>(begin + 4, begin + 6);
@@ -104,13 +102,7 @@ Parses ascii and returns a time.
 \param[out] millisecond Millisecond.
 \return True if successful and the out arguments were set.
 */
-inline bool atotime(
-  char const* begin,
-  char const* end,
-  int& hour,
-  int& minute,
-  int& second,
-  int& millisecond) {
+inline bool atotime(char const* begin, char const* end, int& hour, int& minute, int& second, int& millisecond) {
   if (end - begin != 8 && end - begin != 12) {
     return false;
   }
@@ -139,10 +131,7 @@ Parses ascii and returns a std::chrono::time_point.
 \return True if successful and the out arguments were set.
 */
 template <typename TimePoint>
-inline bool atotimepoint(
-  char const* begin,
-  char const* end,
-  TimePoint& tp) {
+inline bool atotimepoint(char const* begin, char const* end, TimePoint& tp) {
   // TODO: after c++20 this simplifies to
   // std::chrono::parse("%Y%m%d-%T", tp);
   int year, month, day, hour, minute, second, millisecond;
@@ -159,16 +148,16 @@ inline bool atotimepoint(
   year -= month <= 2;
   const unsigned era = (year >= 0 ? year : year - 399) / 400;
   const unsigned yoe = static_cast<unsigned>(year - era * 400);
-  const unsigned doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
+  const unsigned doy =
+    (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
   const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-  const unsigned long days_since_epoch = era * 146097 + static_cast<unsigned>(doe) - 719468;
+  const unsigned long days_since_epoch =
+    era * 146097 + static_cast<unsigned>(doe) - 719468;
 
-  tp = TimePoint(
-    std::chrono::seconds(days_since_epoch * 24 * 3600) +
-    std::chrono::hours(hour) +
-    std::chrono::minutes(minute) +
-    std::chrono::seconds(second) +
-    std::chrono::milliseconds(millisecond));
+  tp = TimePoint(std::chrono::seconds(days_since_epoch * 24 * 3600) +
+                 std::chrono::hours(hour) + std::chrono::minutes(minute) +
+                 std::chrono::seconds(second) +
+                 std::chrono::milliseconds(millisecond));
 
   return true;
 }
@@ -189,7 +178,8 @@ Expected<FixMessage> MyFixParser::Parse(std::string_view fix_message) {
     auto equal_sign_index = fix_message.find('=', i);
 
     if (equal_sign_index == std::string::npos) {
-      return Unexpected<>{MakeErrorCode(Error::kNotFoundEqualSignInFieldParseError)};
+      return Unexpected<>{
+        MakeErrorCode(Error::kNotFoundEqualSignInFieldParseError)};
     }
 
     const auto field = StringToInteger<int>(
@@ -200,14 +190,19 @@ Expected<FixMessage> MyFixParser::Parse(std::string_view fix_message) {
       return Unexpected<>{field.error()};
     }
 
-    auto field_delimiter_index = fix_message.find('\x01', equal_sign_index + 1);
+    auto field_delimiter_index =
+      fix_message.find('\x01', equal_sign_index + 1);
 
     if (field_delimiter_index == std::string::npos) {
-      return Unexpected<>{MakeErrorCode(Error::kNotFoundFieldDelimiterParseError)};
+      return Unexpected<>{
+        MakeErrorCode(Error::kNotFoundFieldDelimiterParseError)};
     }
 
-    const char* field_value_begin = fix_message.data() + equal_sign_index + 1;
-    labels[static_cast<tag::Field>(*field)] = std::string_view{field_value_begin, field_delimiter_index - equal_sign_index - 1};
+    const char* field_value_begin =
+      fix_message.data() + equal_sign_index + 1;
+    labels[static_cast<tag::Field>(*field)] = std::string_view{
+      field_value_begin,
+      field_delimiter_index - equal_sign_index - 1};
 
     i = field_delimiter_index + 1;
   }
@@ -239,7 +234,8 @@ Expected<FixMessage> MyFixParser::Parse(std::string_view fix_message) {
   return Unexpected<>{MakeErrorCode(Error::kUnhandledMessageType)};
 }
 
-Expected<FixMessageHeader> MyFixParser::ParseFixHeader(const MyFixParser::MessageLabels& labels) {
+Expected<FixMessageHeader>
+MyFixParser::ParseFixHeader(const MyFixParser::MessageLabels& labels) {
   const auto sender_it = labels.find(tag::SenderCompID);
   const auto target_it = labels.find(tag::TargetCompID);
   const auto msg_seq_num_it = labels.find(tag::MsgSeqNum);
@@ -276,11 +272,10 @@ Expected<FixMessageHeader> MyFixParser::ParseFixHeader(const MyFixParser::Messag
     return Unexpected<>{msg_seq_num.error()};
   }
 
-  return FixMessageHeader{
-    std::string{sender_it->second},
-    std::string{target_it->second},
-    tp,
-    *msg_seq_num};
+  return FixMessageHeader{std::string{sender_it->second},
+                          std::string{target_it->second},
+                          tp,
+                          *msg_seq_num};
 }
 
 Expected<Logon> MyFixParser::OnLogon(const MyFixParser::MessageLabels& labels) {
@@ -304,55 +299,54 @@ Expected<Logon> MyFixParser::OnLogon(const MyFixParser::MessageLabels& labels) {
     return Unexpected<>{heart_bt_int.error()};
   }
 
-  return Logon{
-    std::move(*header),
-    *heart_bt_int};
+  return Logon{std::move(*header), *heart_bt_int};
 }
-Expected<Logout> MyFixParser::OnLogout(const MyFixParser::MessageLabels& labels) {
+Expected<Logout>
+MyFixParser::OnLogout(const MyFixParser::MessageLabels& labels) {
   auto header = ParseFixHeader(labels);
 
   if (!header) {
     return Unexpected<>{header.error()};
   }
 
-  return Logout{
-    *header};
+  return Logout{*header};
 }
 
-Expected<Heartbeat> MyFixParser::OnHeartbeat(const MyFixParser::MessageLabels& labels) {
+Expected<Heartbeat>
+MyFixParser::OnHeartbeat(const MyFixParser::MessageLabels& labels) {
   auto header = ParseFixHeader(labels);
 
   if (!header) {
     return Unexpected<>{header.error()};
   }
 
-  return Heartbeat{
-    *header};
+  return Heartbeat{*header};
 }
 
-Expected<TestRequest> MyFixParser::OnTestRequest(const MyFixParser::MessageLabels& labels) {
+Expected<TestRequest>
+MyFixParser::OnTestRequest(const MyFixParser::MessageLabels& labels) {
   auto header = ParseFixHeader(labels);
 
   if (!header) {
     return Unexpected<>{header.error()};
   }
 
-  return TestRequest{
-    *header};
+  return TestRequest{*header};
 }
 
-Expected<Reject> MyFixParser::OnReject(const MyFixParser::MessageLabels& labels) {
+Expected<Reject>
+MyFixParser::OnReject(const MyFixParser::MessageLabels& labels) {
   auto header = ParseFixHeader(labels);
 
   if (!header) {
     return Unexpected<>{header.error()};
   }
 
-  return Reject{
-    *header};
+  return Reject{*header};
 }
 
-Expected<MarketDataRequest> MyFixParser::OnMarketDataRequest(const MyFixParser::MessageLabels& labels) {
+Expected<MarketDataRequest>
+MyFixParser::OnMarketDataRequest(const MyFixParser::MessageLabels& labels) {
   auto header = ParseFixHeader(labels);
 
   if (!header) {
@@ -360,7 +354,8 @@ Expected<MarketDataRequest> MyFixParser::OnMarketDataRequest(const MyFixParser::
   }
 
   const auto md_req_id = labels.find(tag::MDReqID);
-  const auto subscription_request_type = labels.find(tag::SubscriptionRequestType);
+  const auto subscription_request_type =
+    labels.find(tag::SubscriptionRequestType);
   const auto no_related_sym = labels.find(tag::NoRelatedSym);
 
   if (md_req_id == labels.end()) {
@@ -368,7 +363,8 @@ Expected<MarketDataRequest> MyFixParser::OnMarketDataRequest(const MyFixParser::
   }
 
   if (subscription_request_type == labels.end()) {
-    return Unexpected<>{MakeErrorCode(Error::kNotFoundSubscriptionRequestType)};
+    return Unexpected<>{
+      MakeErrorCode(Error::kNotFoundSubscriptionRequestType)};
   }
 
   if (no_related_sym == labels.end()) {
@@ -379,16 +375,19 @@ Expected<MarketDataRequest> MyFixParser::OnMarketDataRequest(const MyFixParser::
 
   /*for (uint64_t i = 0; i < *no_related_sym; ++i) {
 
-  }*/
+    }*/
 
   return my::Expected<MarketDataRequest>();
 }
 
-Expected<MarketDataRequestReject> MyFixParser::OnMarketDataRequestReject(const MyFixParser::MessageLabels&) {
+Expected<MarketDataRequestReject>
+MyFixParser::OnMarketDataRequestReject(const MyFixParser::MessageLabels&) {
   return my::Expected<MarketDataRequestReject>();
 }
 
-Expected<MarketDataSnapshotFullRefresh> MyFixParser::OnMarketDataSnapshotFullRefresh(const MyFixParser::MessageLabels&) {
+Expected<MarketDataSnapshotFullRefresh>
+MyFixParser::OnMarketDataSnapshotFullRefresh(
+  const MyFixParser::MessageLabels&) {
   return my::Expected<MarketDataSnapshotFullRefresh>();
 }
 

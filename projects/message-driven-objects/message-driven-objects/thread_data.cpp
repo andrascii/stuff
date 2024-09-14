@@ -11,21 +11,13 @@ ThreadData::ThreadData()
       interruption_requested_{false},
       is_adopted_{false} {}
 
-void ThreadData::lock() const {
-  mutex_.lock();
-}
+void ThreadData::lock() const { mutex_.lock(); }
 
-void ThreadData::unlock() const {
-  mutex_.unlock();
-}
+void ThreadData::unlock() const { mutex_.unlock(); }
 
-MessageQueue& ThreadData::Queue() noexcept {
-  return queue_;
-}
+MessageQueue& ThreadData::Queue() noexcept { return queue_; }
 
-const MessageQueue& ThreadData::Queue() const noexcept {
-  return queue_;
-}
+const MessageQueue& ThreadData::Queue() const noexcept { return queue_; }
 
 const std::thread::id& ThreadData::Id() const noexcept {
   std::scoped_lock _{*this};

@@ -10,13 +10,8 @@ namespace mdo {
 
 class Thread;
 
-using Message = std::variant<
-  std::monostate,
-  InvokeSlotMessage,
-  TestMessage,
-  BenchmarkMessage,
-  SetThreadNameMessage,
-  TimerMessage>;
+using Message =
+  std::variant<std::monostate, InvokeSlotMessage, TestMessage, BenchmarkMessage, SetThreadNameMessage, TimerMessage>;
 
 const auto GetReceiver = [](auto&& msg) -> Object* {
   using T = std::decay_t<decltype(msg)>;

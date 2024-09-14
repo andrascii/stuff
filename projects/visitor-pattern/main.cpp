@@ -30,22 +30,18 @@ class WidgetCastVisitor;
 template <typename T>
 class WidgetCastVisitor<T*> : public WidgetVisitor {
  public:
-  WidgetCastVisitor()
-      : result_{nullptr} {}
+  WidgetCastVisitor() : result_{nullptr} {}
 
   //
-  // This overload is used to catch actual type but we fall into this function only if
-  // the expected type (see widget_cast<T>) and actual type are the same.
+  // This overload is used to catch actual type but we fall into this function
+  // only if the expected type (see widget_cast<T>) and actual type are the
+  // same.
   //
   // Here we just saving it.
   //
-  void Visit(T* widget) override {
-    result_ = widget;
-  }
+  void Visit(T* widget) override { result_ = widget; }
 
-  [[nodiscard]] T* Result() const {
-    return result_;
-  }
+  [[nodiscard]] T* Result() const { return result_; }
 
  private:
   T* result_;
@@ -64,9 +60,7 @@ class RadioButton : public IWidget {
     visitor->Visit(const_cast<RadioButton*>(this));
   }
 
-  int Radius() {
-    return 42;
-  }
+  int Radius() { return 42; }
 };
 
 class CheckBox : public IWidget {
@@ -75,13 +69,9 @@ class CheckBox : public IWidget {
     visitor->Visit(const_cast<CheckBox*>(this));
   }
 
-  int Width() {
-    return 142;
-  }
+  int Width() { return 142; }
 
-  int Height() {
-    return 142;
-  }
+  int Height() { return 142; }
 };
 
 class ComboBox : public IWidget {
@@ -90,13 +80,9 @@ class ComboBox : public IWidget {
     visitor->Visit(const_cast<ComboBox*>(this));
   }
 
-  const char* BackgroundColor() {
-    return "Green";
-  }
+  const char* BackgroundColor() { return "Green"; }
 
-  int MaxNumberOfElement() {
-    return 15;
-  }
+  int MaxNumberOfElement() { return 15; }
 };
 
 template <typename T>
@@ -117,28 +103,20 @@ T widget_cast(const IWidget* widget) {
 // Usage example and benchmarks
 //
 void PrintWidgetDetails(RadioButton* radio_button) {
-  std::cout
-    << "Radio Button radius is "
-    << radio_button->Radius()
-    << std::endl;
+  std::cout << "Radio Button radius is " << radio_button->Radius()
+            << std::endl;
 }
 
 void PrintWidgetDetails(CheckBox* check_box) {
-  std::cout
-    << "Check Box width is "
-    << check_box->Width()
-    << ", height is "
-    << check_box->Height()
-    << std::endl;
+  std::cout << "Check Box width is " << check_box->Width() << ", height is "
+            << check_box->Height() << std::endl;
 }
 
 void PrintWidgetDetails(ComboBox* combo_box) {
-  std::cout
-    << "Combo Box background color is "
-    << combo_box->BackgroundColor()
-    << ", max number of elements in is "
-    << combo_box->MaxNumberOfElement()
-    << std::endl;
+  std::cout << "Combo Box background color is "
+            << combo_box->BackgroundColor()
+            << ", max number of elements in is "
+            << combo_box->MaxNumberOfElement() << std::endl;
 }
 
 template <typename T>
@@ -149,20 +127,14 @@ void TryCast(IWidget* widget) {
   const auto actual = widget_cast<T>(widget);
 
   if (actual) {
-    std::cout
-      << widget
-      << " successfully casted to "
-      << desired_type
-      << std::endl;
+    std::cout << widget << " successfully casted to " << desired_type
+              << std::endl;
 
     PrintWidgetDetails(actual);
   } else {
-    std::cout
-      << widget
-      << " wasn't casted to "
-      << desired_type
-      << " because this object is of type "
-      << boost::core::demangle(typeid(*widget).name()) << std::endl;
+    std::cout << widget << " wasn't casted to " << desired_type
+              << " because this object is of type "
+              << boost::core::demangle(typeid(*widget).name()) << std::endl;
   }
 
   std::cout << std::endl;
@@ -182,13 +154,11 @@ void BenchmarkDynamicCast(size_t iteration_count) {
   }
 
   const auto end = std::chrono::system_clock::now();
-  const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  const auto elapsed =
+    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  std::cout
-    << "dynamic_cast's elapsed time: "
-    << elapsed.count()
-    << "ms"
-    << std::endl;
+  std::cout << "dynamic_cast's elapsed time: " << elapsed.count() << "ms"
+            << std::endl;
 }
 
 void BenchmarkWidgetCast(size_t iteration_count) {
@@ -205,17 +175,16 @@ void BenchmarkWidgetCast(size_t iteration_count) {
   }
 
   const auto end = std::chrono::system_clock::now();
-  const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  const auto elapsed =
+    std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  std::cout
-    << "widget_cast's elapsed time: "
-    << elapsed.count()
-    << "ms"
-    << std::endl;
+  std::cout << "widget_cast's elapsed time: " << elapsed.count() << "ms"
+            << std::endl;
 }
 
 int main() {
-  const std::shared_ptr<IWidget> radio_button = std::make_shared<RadioButton>();
+  const std::shared_ptr<IWidget> radio_button =
+    std::make_shared<RadioButton>();
   const std::shared_ptr<IWidget> check_box = std::make_shared<CheckBox>();
   const std::shared_ptr<IWidget> combo_box = std::make_shared<ComboBox>();
 

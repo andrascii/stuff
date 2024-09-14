@@ -10,6 +10,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <deque>
+#include <filesystem>
 #include <functional>
 #include <future>
 #include <iostream>
@@ -27,7 +28,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <filesystem>
 
 //
 // Boost

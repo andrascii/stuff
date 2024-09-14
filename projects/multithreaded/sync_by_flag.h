@@ -35,10 +35,9 @@ class Sync {
       if (data_.empty()) {
         swap(v, data_);
       } else {
-        std::copy(
-          std::make_move_iterator(v.begin()),
-          std::make_move_iterator(v.end()),
-          std::back_inserter(data_));
+        std::copy(std::make_move_iterator(v.begin()),
+                  std::make_move_iterator(v.end()),
+                  std::back_inserter(data_));
 
         v.clear();
       }
@@ -50,18 +49,14 @@ class Sync {
     return false;
   }
 
-  void Quit() {
-    quit_.store(true, std::memory_order_relaxed);
-  }
+  void Quit() { quit_.store(true, std::memory_order_relaxed); }
 
-  bool IsQuit() const {
-    return quit_.load(std::memory_order_relaxed);
-  }
+  bool IsQuit() const { return quit_.load(std::memory_order_relaxed); }
 
   std::deque<std::string> GetData() {
     // awaiting while flag_ is false (it means that writer writes something)
-    while (!quit_.load(std::memory_order_relaxed) && !flag_.test(std::memory_order_acquire))
-      ;
+    while (!quit_.load(std::memory_order_relaxed) &&
+           !flag_.test(std::memory_order_acquire));
 
     if (quit_.load(std::memory_order_relaxed)) {
       return {};
@@ -103,7 +98,8 @@ inline void Writer1(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -114,7 +110,9 @@ inline void Writer1(Sync& s) {
 }
 
 inline void Writer2(Sync& s) {
-  printf("started Writer2, pushing accumulated data if flag is false, if its value is true - accumulating\n");
+  printf(
+    "started Writer2, pushing accumulated data if flag is false, if its "
+    "value is true - accumulating\n");
 
   const auto start = high_resolution_clock::now();
   auto prev = start;
@@ -136,7 +134,8 @@ inline void Writer2(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -147,7 +146,9 @@ inline void Writer2(Sync& s) {
 }
 
 inline void Writer3(Sync& s) {
-  printf("started Writer3, pushing data by batch of size 100 with loop waiting on flag_\n");
+  printf(
+    "started Writer3, pushing data by batch of size 100 with loop "
+    "waiting on flag_\n");
 
   const auto start = high_resolution_clock::now();
   auto prev = start;
@@ -163,7 +164,8 @@ inline void Writer3(Sync& s) {
 
     const auto size = accumulated.size();
 
-    while (!s.Push2(accumulated)) {}
+    while (!s.Push2(accumulated)) {
+    }
     sent += size;
 
     const auto current = high_resolution_clock::now();
@@ -171,7 +173,8 @@ inline void Writer3(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -182,7 +185,9 @@ inline void Writer3(Sync& s) {
 }
 
 inline void Writer4(Sync& s) {
-  printf("started Writer4, pushing data by batch of size 100 if cant write then accumulating (lock-free and wait-free)\n");
+  printf(
+    "started Writer4, pushing data by batch of size 100 if cant write "
+    "then accumulating (lock-free and wait-free)\n");
 
   const auto start = high_resolution_clock::now();
   auto prev = start;
@@ -207,7 +212,8 @@ inline void Writer4(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("sent per ms: %lld\n", (sent / duration_cast<milliseconds>(delta).count()));
+      printf("sent per ms: %lld\n",
+             (sent / duration_cast<milliseconds>(delta).count()));
       if (++iterations == 5) {
         s.Quit();
         printf("writer done\n");
@@ -231,7 +237,8 @@ inline void Reader(Sync& s) {
 
     if (current - prev > 3s) {
       prev = current;
-      printf("received per ms: %lld\n", (received / duration_cast<milliseconds>(delta).count()));
+      printf("received per ms: %lld\n",
+             (received / duration_cast<milliseconds>(delta).count()));
     }
   }
 

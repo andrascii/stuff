@@ -87,11 +87,14 @@ std::vector<IndexPair> Find2(std::vector<int> v, int sum) {
 
 void PrintPairs(const std::vector<int>& v, const std::vector<IndexPair>& pairs, int sum) {
   if (pairs.empty()) {
-    std::cout << "not found pairs of numbers whose sum is equal to " << sum << ":" << std::endl;
+    std::cout << "not found pairs of numbers whose sum is equal to " << sum
+              << ":" << std::endl;
   } else {
-    std::cout << "pairs of numbers whose sum is equal to " << sum << ":" << std::endl;
+    std::cout << "pairs of numbers whose sum is equal to " << sum << ":"
+              << std::endl;
     for (const auto& [i1, i2] : pairs) {
-      std::cout << "[" << i1 << "; " << i2 << "] - " << v[i1] << " + " << v[i2] << " = " << v[i1] + v[i2] << std::endl;
+      std::cout << "[" << i1 << "; " << i2 << "] - " << v[i1] << " + "
+                << v[i2] << " = " << v[i1] + v[i2] << std::endl;
     }
   }
 
@@ -103,7 +106,8 @@ int main() {
 
   int sum = 0;
 
-  std::cout << "type in the sum to found indexes of numbers whose sum must be equal: ";
+  std::cout << "type in the sum to found indexes of numbers whose sum must "
+               "be equal: ";
   std::cin >> sum;
 
   const auto pairs1 = Find1(v, sum);

@@ -6,6 +6,13 @@ set(THIS_TARGET_NAME tcp-server)
 project(${THIS_TARGET_NAME})
 
 #
+# C++ compiler settings
+#
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+#
 # precompiled header
 #
 set(PRECOMPILED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h")
@@ -21,6 +28,8 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
 list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS tl::expected)
 list(APPEND DEPS nlohmann_json::nlohmann_json)
+list(APPEND DEPS cxxopts::cxxopts)
+list(APPEND DEPS fmt::fmt)
 
 #
 # collecting sources and headers

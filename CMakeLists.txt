@@ -90,7 +90,8 @@ find_package(hffix CONFIG REQUIRED)
 find_package(date CONFIG REQUIRED)
 find_package(RdKafka CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
-find_package(protobuf CONFIG REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
+find_package(cxxopts CONFIG REQUIRED)
 
 #
 # C++ compiler settings

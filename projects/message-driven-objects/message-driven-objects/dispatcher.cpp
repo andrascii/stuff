@@ -15,7 +15,9 @@ Dispatcher& Dispatcher::Instance() {
 }
 
 Dispatcher::~Dispatcher() {
-  LOG_INFO("dispatcher destroyed in thread '{}'", current_thread_data->Thread()->Name());
+  if (GetThreadData(Thread::Current())->Thread() != Thread()) {
+    std::abort();
+  }
 }
 
 std::error_code Dispatcher::Exec() {
@@ -48,7 +50,7 @@ void Dispatcher::Dispatch(Message&& message) {
 
   const auto data = GetThreadData(receiver_thread);
 
-  data->Queue().Push(std::move(message));
+  data->Queue().Post(std::move(message));
 }
 
 }// namespace mdo
