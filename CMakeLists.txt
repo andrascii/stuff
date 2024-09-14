@@ -47,35 +47,35 @@ include(add_clang_format)
 
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 
-include(FindPackageHandleStandardArgs)
-include(SelectLibraryConfigurations)
-
-find_path(
-  CPPKAFKA_INCLUDES
-  NAMES cppkafka.h
-  HINTS ${CURRENT_INSTALLED_DIR}
-  PATH_SUFFIXES cppkafka
-)
-
-message(STATUS "CPPKAFKA DEBUG PATH: ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
-
-find_library(
-  CPPKAFKA_LIBRARY_DEBUG
-  NAMES cppkafka
-  PATH_SUFFIXES lib
-  PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug"
-  NO_DEFAULT_PATH REQUIRED
-)
-
-find_library(
-  CPPKAFKA_LIBRARY_RELEASE
-  NAMES cppkafka
-  PATH_SUFFIXES lib
-  PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}"
-  NO_DEFAULT_PATH REQUIRED
-)
-
-select_library_configurations(CPPKAFKA)
+#include(FindPackageHandleStandardArgs)
+#include(SelectLibraryConfigurations)
+#
+#find_path(
+#  CPPKAFKA_INCLUDES
+#  NAMES cppkafka.h
+#  HINTS ${CURRENT_INSTALLED_DIR}
+#  PATH_SUFFIXES cppkafka
+#)
+#
+#message(STATUS "CPPKAFKA DEBUG PATH: ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
+#
+#find_library(
+#  CPPKAFKA_LIBRARY_DEBUG
+#  NAMES cppkafka
+#  PATH_SUFFIXES lib
+#  PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug"
+#  NO_DEFAULT_PATH REQUIRED
+#)
+#
+#find_library(
+#  CPPKAFKA_LIBRARY_RELEASE
+#  NAMES cppkafka
+#  PATH_SUFFIXES lib
+#  PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}"
+#  NO_DEFAULT_PATH REQUIRED
+#)
+#
+#select_library_configurations(CPPKAFKA)
 
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost REQUIRED)
