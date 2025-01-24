@@ -14,7 +14,6 @@ set(PRECOMPILED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h")
 # deps include directories
 #
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
-list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CPPKAFKA_INCLUDES}")
 
 #
 # deps
@@ -23,9 +22,9 @@ list(APPEND DEPS ${Boost_LIBRARIES})
 list(APPEND DEPS spdlog::spdlog)
 list(APPEND DEPS tl::expected)
 list(APPEND DEPS nlohmann_json::nlohmann_json)
-list(APPEND DEPS ${CPPKAFKA_LIBRARY})
 list(APPEND DEPS RdKafka::rdkafka)
 list(APPEND DEPS RdKafka::rdkafka++)
+list(APPEND DEPS CppKafka::cppkafka)
 
 #
 # collecting sources and headers

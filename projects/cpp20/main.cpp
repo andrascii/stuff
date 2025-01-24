@@ -69,6 +69,8 @@ struct X {
   static constexpr int m = 4;
 };
 
+const int X::n;
+
 const int* p = &X::n, * q = &X::m;
 
 void Func(const int& v) {

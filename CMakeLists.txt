@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-#if (WIN32)
-#  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/conaninstall.bat ${CMAKE_BINARY_DIR})
-#else()
-#  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/conaninstall.sh ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-#endif()
-
 #
 # by default generates project to build release package
 #
@@ -26,9 +20,6 @@ endif()
 
 project("stuff" LANGUAGES C CXX)
 
-#include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-#conan_basic_setup()
-
 #
 # adding another one path to find .cmake files
 #
@@ -47,36 +38,6 @@ include(add_clang_format)
 
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 
-#include(FindPackageHandleStandardArgs)
-#include(SelectLibraryConfigurations)
-#
-#find_path(
-#  CPPKAFKA_INCLUDES
-#  NAMES cppkafka.h
-#  HINTS ${CURRENT_INSTALLED_DIR}
-#  PATH_SUFFIXES cppkafka
-#)
-#
-#message(STATUS "CPPKAFKA DEBUG PATH: ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug")
-#
-#find_library(
-#  CPPKAFKA_LIBRARY_DEBUG
-#  NAMES cppkafka
-#  PATH_SUFFIXES lib
-#  PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug"
-#  NO_DEFAULT_PATH REQUIRED
-#)
-#
-#find_library(
-#  CPPKAFKA_LIBRARY_RELEASE
-#  NAMES cppkafka
-#  PATH_SUFFIXES lib
-#  PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}"
-#  NO_DEFAULT_PATH REQUIRED
-#)
-#
-#select_library_configurations(CPPKAFKA)
-
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost REQUIRED)
 find_package(GTest REQUIRED)
@@ -89,6 +50,7 @@ find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(hffix CONFIG REQUIRED)
 find_package(date CONFIG REQUIRED)
 find_package(RdKafka CONFIG REQUIRED)
+find_package(CppKafka CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(cxxopts CONFIG REQUIRED)
