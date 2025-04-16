@@ -1,8 +1,9 @@
 #include "test_message_sender.h"
-#include "test_message.h"
+
 #include "dispatcher.h"
-#include "thread.h"
 #include "logger.h"
+#include "test_message.h"
+#include "thread.h"
 
 namespace benchmarks {
 
@@ -10,9 +11,9 @@ using namespace mdo;
 using namespace std::chrono;
 
 TestMessageSender::TestMessageSender(mdo::Thread* thread, size_t gen_msg_count, Object* receiver)
-  : Object{thread},
-    gen_msg_count_{gen_msg_count},
-    receiver_{receiver} {
+    : Object{thread},
+      gen_msg_count_{gen_msg_count},
+      receiver_{receiver} {
   Thread()->Started.Connect(this, &TestMessageSender::OnThreadStarted);
 }
 
@@ -49,10 +50,9 @@ void TestMessageSender::OnThreadStarted() {
         metrics.time_avg,
         metrics.time_min,
         duration_cast<milliseconds>(metrics.time_max),
-        duration_cast<milliseconds>(metrics.time_median)
-      );
+        duration_cast<milliseconds>(metrics.time_median));
     }
   }
 }
 
-}
+}// namespace benchmarks

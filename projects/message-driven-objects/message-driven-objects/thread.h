@@ -1,6 +1,5 @@
 #pragma once
 
-#include "message_queue.h"
 #include "object.h"
 #include "signal_impl.h"
 #include "thread_data.h"

@@ -1,8 +1,8 @@
-#include "object.h"
-#include "thread.h"
 #include "dispatcher.h"
-#include "timer_message.h"
+#include "object.h"
 #include "test_message.h"
+#include "thread.h"
+#include "timer_message.h"
 
 using namespace mdo;
 
@@ -72,7 +72,7 @@ TEST(ObjectTests, SignalToFunctionSlot) {
    public:
     A() : TestSignal{this} {}
 
-   Signal<void> TestSignal;
+    Signal<void> TestSignal;
   };
 
   std::shared_ptr<A> a = std::make_shared<A>();

@@ -1,28 +1,27 @@
 #pragma once
 
-#include "object.h"
 #include "measure.h"
+#include "object.h"
 
 namespace benchmarks {
 
 using namespace mdo;
 
 class TestMessageSender : public Object {
-public:
+ public:
   TestMessageSender(
-   mdo::Thread* thread,
+    mdo::Thread* thread,
     size_t gen_msg_count,
-    Object* receiver
-  );
+    Object* receiver);
 
   ~TestMessageSender();
 
   void OnThreadStarted();
 
-private:
+ private:
   size_t gen_msg_count_;
   Object* receiver_;
   Measure measure_;
 };
 
-}
+}// namespace benchmarks

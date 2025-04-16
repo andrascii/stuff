@@ -4,6 +4,15 @@
 #include "objects_registry.h"
 #include "set_thread_name_message.h"
 
+//
+// WARN: Проблемы
+// 1. Создание объектов выполняется в одном отдельно взятом потоке
+// 2. Разрушается объект также только в одном потоке (в каком?)
+// 3. Уничтожающийся объект может получить сообщение от другого объекта, т.к. поток продолжает свою работу
+//   и ObjectsRegistry не спасает от этого, потому, что он не дает уничтожить только самую базовую часть объекта типа Object.
+// 4. Сейчас код устроен так, что сперва нужно остановить поток, потом уже разрушать объект, приаттаченный к этому потоку. См. бенчмарки.
+//
+
 #if defined(USE_WINDOWS_SET_THREAD_NAME_HACK)
 
 namespace {
@@ -52,7 +61,7 @@ Thread* Thread::Current() {
   current_thread_data = std::make_unique<ThreadData>();
   current_thread_data->SetId(std::this_thread::get_id());
   current_thread_data->SetIsAdopted(true);
-  current_thread_data->SetThread(new AdoptedThread(current_thread_data)); // how to delete it?
+  current_thread_data->SetThread(new AdoptedThread(current_thread_data));// how to delete it?
 
   return current_thread_data->Thread();
 }
@@ -195,7 +204,7 @@ void Thread::Run() {
     (void*) &current_thread_data->Queue(),
     current_thread_data->Queue().Size());
 
-  for (; !current_thread_data->InterruptionRequested();) {
+  while (!current_thread_data->InterruptionRequested()) {
     std::vector<Message> messages;
     const auto error = current_thread_data->Queue().Poll(messages, 1s);
 
@@ -260,6 +269,11 @@ void Thread::HandleMessage(Message&& message) {
     // It ensures that receiver object is alive or already dead (doesn't exists) but not in destroy state!
     // Each object in dtor removes itself from ObjectsRegistry.
     //
+    // WARN: this approach is invalid!
+    // Because the Object type usually just a first subobject of the real object!
+    // So when actual object start calling his dtor, that part of the overall object already dead.
+    // Need to reconsider the approach to sending messages to dying objects!
+    //
     std::scoped_lock _{ObjectsRegistry::Instance()};
 
     if (!ObjectsRegistry::Instance().HasObject(receiver)) {
@@ -300,7 +314,7 @@ void Thread::HandleMessages(std::vector<Message>& messages) {
 std::string Thread::CurrentThreadId() {
   //
   // 1. const auto id = ToString(current_thread_data->Id()); - invalid line,
-  // because we can start thread in the any other thread
+  // because we can start thread in any other thread
   // 2. each evaluation of current_thread_data should compare its value with
   // nullptr
   //
@@ -363,7 +377,7 @@ Thread::Thread(std::function<void()> alternative_entry_point,
 }
 
 void Thread::Initialize(Thread& thread) {
-  thread.SetThread(&thread); // points to itself (Thread is also Object that points to Thread in which it alives)
+  thread.SetThread(&thread);// points to itself (Thread is also Object that points to Thread in which it alives)
   thread.data_->SetThread(&thread);
 }
 

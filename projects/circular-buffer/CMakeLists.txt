@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include(make_executable_sanitized_target)
 
-set(THIS_TARGET_NAME cpp20)
+set(THIS_TARGET_NAME circular-buffer)
 project(${THIS_TARGET_NAME})
 
 #
@@ -19,7 +19,6 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
 # deps
 #
 list(APPEND DEPS ${Boost_LIBRARIES})
-list(APPEND DEPS fmt::fmt)
 
 #
 # collecting sources and headers

@@ -39,10 +39,8 @@ std::shared_ptr<spdlog::logger> Logger() noexcept {
 
   std::call_once(flag, [name] {
     try {
-      const auto file_sink =
-        std::make_shared<DailyFileSink>(kLogFileName, 0, 0);
-      const auto instance =
-        std::make_shared<logger>(logger(name, {file_sink}));
+      const auto file_sink = std::make_shared<DailyFileSink>(kLogFileName, 0, 0);
+      const auto instance = std::make_shared<logger>(logger(name, {file_sink}));
       register_logger(instance);
       set_default_logger(instance);
       flush_every(3s);
@@ -62,8 +60,7 @@ std::error_code EnableConsoleLogging() noexcept {
   using namespace spdlog;
 
   try {
-    Logger()->sinks().push_back(
-      std::make_shared<sinks::stdout_color_sink_mt>());
+    Logger()->sinks().push_back(std::make_shared<sinks::stdout_color_sink_mt>());
   } catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;
     return std::make_error_code(std::errc::operation_canceled);
@@ -77,8 +74,7 @@ std::error_code DisableConsoleLogging() noexcept {
 
   try {
     Logger()->sinks().clear();
-    Logger()->sinks().push_back(
-      std::make_shared<DailyFileSink>(kLogFileName, 0, 0));
+    Logger()->sinks().push_back(std::make_shared<DailyFileSink>(kLogFileName, 0, 0));
   } catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;
     return std::make_error_code(std::errc::operation_canceled);

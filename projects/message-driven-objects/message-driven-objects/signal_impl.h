@@ -64,7 +64,7 @@ class Signal final {
 };
 
 template <>
-class Signal<void> {
+class Signal<void> final {
  public:
   template <typename ObjectType>
   using MethodSlot = void (ObjectType::*)();

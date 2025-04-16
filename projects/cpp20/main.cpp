@@ -1,4 +1,7 @@
+#include <fmt/format.h>
+
 #include <iostream>
+#include <ostream>
 #include <type_traits>
 
 bool my_less(const auto& lhs, const auto& rhs) {
@@ -14,13 +17,17 @@ concept IsFloatingPoint = std::is_floating_point_v<T>;
 template <typename T>
 concept CanCallRunMethod = requires(T p) { p.Run(); };
 
-template <typename T> requires(!IsPointer<T>)
+template <typename T>
+  requires(!IsPointer<T>)
 T MaxValue(T a, T b) {
   return a > b ? a : b;
 }
 
-template <typename T> requires IsPointer<T>
-auto MaxValue(T a, T b) requires std::three_way_comparable_with<decltype(*a), decltype(*b)> {
+template <typename T>
+  requires IsPointer<T>
+auto MaxValue(T a, T b)
+  requires std::three_way_comparable_with<decltype(*a), decltype(*b)>
+{
   return MaxValue(*a, *b);
 }
 
@@ -32,13 +39,17 @@ auto IsEqual(const IsPointer auto& a, const IsPointer auto& b) {
   return IsEqual(*a, *b);
 }
 
-auto IsEqual(const IsFloatingPoint auto& a, const IsFloatingPoint auto& b) requires(std::is_same_v<decltype(a), decltype(b)>) {
+auto IsEqual(const IsFloatingPoint auto& a, const IsFloatingPoint auto& b)
+  requires(std::is_same_v<decltype(a), decltype(b)>)
+{
   using CommonType = std::common_type_t<decltype(a), decltype(b)>;
   return a - b <= std::numeric_limits<CommonType>::epsilon();
 }
 
 template <typename T>
-auto CallRun(const T& object) requires CanCallRunMethod<T> {
+auto CallRun(const T& object)
+  requires CanCallRunMethod<T>
+{
   return object.Run();
 }
 
@@ -60,7 +71,9 @@ concept SupportsPushBack = requires(Coll c, T v) {
 };
 
 template <typename Coll, typename T>
-void Add(Coll& coll, const T& val) requires (SupportsPushBack<Coll, T> && std::convertible_to<T, typename Coll::value_type>) {
+void Add(Coll& coll, const T& val)
+  requires(SupportsPushBack<Coll, T> && std::convertible_to<T, typename Coll::value_type>)
+{
   coll.push_back(val);
 }
 
@@ -71,20 +84,55 @@ struct X {
 
 const int X::n;
 
-const int* p = &X::n, * q = &X::m;
+const int *p = &X::n, *q = &X::m;
 
 void Func(const int& v) {
   std::cout << "passed: " << v << std::endl;
 }
 
+template <typename F>
+concept NoexceptInvocable = std::invocable<F> && noexcept(std::declval<F>()());
+
+class Finally final {
+ public:
+  using F = std::function<void()>;
+
+  template <NoexceptInvocable F>
+  explicit Finally(F callback) : m_callback{callback} {
+    //static_assert(noexcept(std::declval<F>()()) && "callback must be noexcept");
+  }
+
+  ~Finally() {
+    if (m_callback) {
+      m_callback();
+    }
+  }
+
+ private:
+  F m_callback;
+};
+
+void func1() {
+  std::cout << "func1\n";
+}
+
+void func2() noexcept {
+  std::cout << "func2\n";
+}
+
 int main() {
-  (void)p;
-  (void)q;
+  double pi = 3.14123143242423;
+  std::cout << fmt::format(fmt::runtime("{:.2f}"), pi) << std::endl;
+
+  Finally f{func2};
+
+  (void) p;
+  (void) q;
 
   std::cout << "p: " << p << std::endl;
   Func(X::n);
 
-  std::vector v{ 1,12,2,7,9,0,3,4,5 };
+  std::vector v{1, 12, 2, 7, 9, 0, 3, 4, 5};
   std::vector v2 = v;
   std::sort(v.begin(), v.end(), my_less<int, int>);
   std::ranges::sort(v2);
@@ -102,7 +150,7 @@ int main() {
 
   std::cout << "MaxValue(x, y): " << MaxValue(x, y) << std::endl;
   std::cout << "MaxValue(&x, &y): " << MaxValue(&x, &y) << std::endl;
-  std::cout << "MaxValue(&xp, &yp): " << MaxValue(&xp, &yp) << std::endl; // recursive calls MaxValue<T**> => MaxValue<T*> => MaxValue<T>
+  std::cout << "MaxValue(&xp, &yp): " << MaxValue(&xp, &yp) << std::endl;// recursive calls MaxValue<T**> => MaxValue<T*> => MaxValue<T>
   std::cout << std::boolalpha << "IsEqual(1.0, 1.0): " << IsEqual(1.0, 1.0) << std::endl;
   std::cout << std::boolalpha << "IsEqual(1.1, 1.0): " << IsEqual(1.1, 1.0) << std::endl;
   std::cout << std::boolalpha << "IsEqual(x, y): " << IsEqual(x, y) << std::endl;

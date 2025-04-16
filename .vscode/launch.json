@@ -6,10 +6,11 @@
   "configurations": [
     {
       "name": "(lldb) Launch",
-      "type": "cppdbg",
+      "type": "lldb-dap",
       "request": "launch",
+      "name": "Debug",
       "program": "${command:cmake.launchTargetPath}",
-      "args": ["/Users/apugachev/work/repos/fix2.log"],
+      "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
